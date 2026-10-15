@@ -1,0 +1,163 @@
+import { useEffect, useRef, useState } from 'react';
+import { Link } from 'react-router-dom';
+import { BiPhone, BiEnvelope, BiMap, BiTime, BiLogoFacebook, BiLogoInstagram, BiLogoTiktok } from 'react-icons/bi';
+import './Footer.css';
+
+const Footer = () => {
+  const sectionRef = useRef(null);
+  const currentYear = new Date().getFullYear();
+  const [isVisible, setIsVisible] = useState(false);
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (entry.isIntersecting) {
+          setIsVisible(true);
+          observer.disconnect(); // Only trigger once
+        }
+      },
+      { threshold: 0.2 } // Trigger when 20% visible
+    );
+
+    if (sectionRef.current) {
+      observer.observe(sectionRef.current);
+    }
+
+    return () => observer.disconnect();
+  }, []);
+
+  // Pre-defined food pieces to form the pile
+  const foodPieces = [
+    { src: '/images/siomai 1.png', left: '-5%', bottom: '-5%', width: 'clamp(150px, 15vw, 250px)', rot: '-12deg', delay: '0s', z: 3 },
+    { src: '/images/siomai front.png', left: '8%', bottom: '2%', width: 'clamp(180px, 18vw, 280px)', rot: '5deg', delay: '0.1s', z: 4 },
+    { src: '/images/siomai 1.png', left: '20%', bottom: '-8%', width: 'clamp(160px, 16vw, 260px)', rot: '22deg', delay: '0.05s', z: 2 },
+    { src: '/images/siomai front.png', left: '35%', bottom: '5%', width: 'clamp(140px, 14vw, 220px)', rot: '-18deg', delay: '0.2s', z: 5 },
+    { src: '/images/siomai 1.png', left: '48%', bottom: '-2%', width: 'clamp(200px, 20vw, 300px)', rot: '8deg', delay: '0.15s', z: 3 },
+    { src: '/images/siomai front.png', left: '60%', bottom: '10%', width: 'clamp(160px, 15vw, 240px)', rot: '-5deg', delay: '0.25s', z: 4 },
+    { src: '/images/siomai 1.png', left: '72%', bottom: '-5%', width: 'clamp(180px, 18vw, 280px)', rot: '15deg', delay: '0.1s', z: 2 },
+    { src: '/images/siomai front.png', left: '85%', bottom: '5%', width: 'clamp(170px, 17vw, 270px)', rot: '-25deg', delay: '0.3s', z: 5 },
+    { src: '/images/siomai 1.png', left: '95%', bottom: '-10%', width: 'clamp(200px, 20vw, 320px)', rot: '35deg', delay: '0.05s', z: 3 },
+    
+    // Additional smaller background scatter
+    { src: '/images/siomai 1.png', left: '15%', bottom: '15%', width: 'clamp(100px, 10vw, 150px)', rot: '45deg', delay: '0.4s', z: 1 },
+    { src: '/images/siomai front.png', left: '55%', bottom: '25%', width: 'clamp(120px, 12vw, 180px)', rot: '-40deg', delay: '0.35s', z: 1 },
+    { src: '/images/siomai 1.png', left: '80%', bottom: '18%', width: 'clamp(110px, 11vw, 160px)', rot: '60deg', delay: '0.45s', z: 1 },
+  ];
+
+  return (
+    <footer className={`footer-poster ${isVisible ? 'is-visible' : ''}`} id="contact" ref={sectionRef}>
+      
+      {/* ─── Giant Typography ─── */}
+      <div className="footer-poster__giant-text-container" aria-hidden="true">
+        <div className="footer-poster__word-row">
+          <span className="footer-poster__word footer-poster__word--siomai">SIOMAI</span>
+          <img src="/images/siomai street logo.png" alt="" className="footer-poster__word-logo" />
+          <span className="footer-poster__word footer-poster__word--street">STREET</span>
+        </div>
+      </div>
+
+      {/* ─── Falling Food Pile ─── */}
+      <div className="footer-poster__food-pile" aria-hidden="true">
+        {foodPieces.map((piece, index) => (
+          <img
+            key={index}
+            src={piece.src}
+            alt="Siomai"
+            className="footer-poster__food-piece"
+            style={{
+              '--left': piece.left,
+              '--bottom': piece.bottom,
+              '--width': piece.width,
+              '--rot': piece.rot,
+              '--delay': piece.delay,
+              '--z': piece.z
+            }}
+            loading="lazy"
+          />
+        ))}
+      </div>
+
+      {/* ─── Editorial Content Area ─── */}
+      <div className="footer-poster__content-wrapper">
+        
+        {/* Brand details top */}
+        <div className="footer-poster__stamp-row">
+          <span className="footer-poster__stamp">EST. 2015</span>
+          <span className="footer-poster__stamp footer-poster__stamp--red">HOT • FRESH • STREET</span>
+        </div>
+
+        <div className="footer-poster__grid">
+          
+          {/* Navigation */}
+          <div className="footer-poster__col">
+            <h4 className="footer-poster__col-title">EXPLORE</h4>
+            <nav className="footer-poster__nav">
+              <Link to="/"><span>01</span> HOME</Link>
+              <Link to="/#about"><span>02</span> OUR STORY</Link>
+              <Link to="/application#packages"><span>03</span> PACKAGES</Link>
+              <Link to="/application#journey"><span>04</span> FRANCHISE JOURNEY</Link>
+              <Link to="/reviews"><span>05</span> REVIEWS</Link>
+              <Link to="/menu"><span>06</span> FULL MENU</Link>
+            </nav>
+          </div>
+
+          {/* Contact & Socials */}
+          <div className="footer-poster__col footer-poster__col--contact">
+            <h4 className="footer-poster__col-title">GET IN TOUCH</h4>
+            
+            <div className="footer-poster__contact-list">
+              <div className="footer-poster__contact-item">
+                <BiPhone className="footer-poster__contact-icon" />
+                <a href="tel:+639123456789">+63 912 345 6789</a>
+              </div>
+              <div className="footer-poster__contact-item">
+                <BiEnvelope className="footer-poster__contact-icon" />
+                <a href="mailto:franchise@siomaistreet.ph">franchise@siomaistreet.ph</a>
+              </div>
+              <div className="footer-poster__contact-item">
+                <BiMap className="footer-poster__contact-icon" />
+                <span>Manila, Philippines</span>
+              </div>
+              <div className="footer-poster__contact-item">
+                <BiTime className="footer-poster__contact-icon" />
+                <span>Mon-Sat: 8AM - 6PM</span>
+              </div>
+            </div>
+
+            <div className="footer-poster__socials">
+              <a href="#" aria-label="Facebook"><BiLogoFacebook /></a>
+              <a href="#" aria-label="Instagram"><BiLogoInstagram /></a>
+              <a href="#" aria-label="TikTok"><BiLogoTiktok /></a>
+            </div>
+          </div>
+          
+          {/* Action Area */}
+          <div className="footer-poster__col footer-poster__col--action">
+            <div className="footer-poster__logo">
+              Siomai<span>Street</span>
+            </div>
+            <p className="footer-poster__desc">
+              The Philippines' favorite siomai franchise. Bringing joy, flavor, and entrepreneurial opportunity to every street corner since 2015.
+            </p>
+            <Link to="/application" className="footer-poster__cta">
+              APPLY FOR FRANCHISE <span className="arrow">→</span>
+            </Link>
+          </div>
+
+        </div>
+
+        {/* Bottom Copyright */}
+        <div className="footer-poster__bottom-bar">
+          <p>© {currentYear} SIOMAI STREET. ALL RIGHTS RESERVED.</p>
+          <div className="footer-poster__legal">
+            <a href="#">PRIVACY</a>
+            <a href="#">TERMS</a>
+            <a href="#">COOKIES</a>
+          </div>
+        </div>
+      </div>
+    </footer>
+  );
+};
+
+export default Footer;

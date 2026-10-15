@@ -1,0 +1,132 @@
+/* ═══════════════════════════════════════════════════════════
+   STRIKING TICKER TAPE MARQUEE
+   
+   A highly aesthetic, modern brutalist "ticker tape".
+   It's smaller, extremely dense, and uses physical branding cues
+   like a slight tilt and drop shadow to pop off the page.
+   ═══════════════════════════════════════════════════════════ */
+
+.street-marquee {
+  position: relative;
+  width: 100vw;
+  max-width: 100%;
+  overflow: hidden;
+  background: #FFFDF5; /* Seamless transition to Why Choose section */
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  padding: 4rem 0; /* Space to allow the tilted tape to not be clipped */
+  z-index: 5;
+  margin-top: -2rem; /* Pull it up slightly into the previous section */
+}
+
+/* Creates a seamless black connection from the Chef Spencer section, matching the tape's tilt */
+.street-marquee::before {
+  content: "";
+  position: absolute;
+  top: -20vh;
+  bottom: 50%;
+  left: -10vw;
+  width: 120vw;
+  background: #08080C; /* Matches the bottom of the Chef Spencer section */
+  transform: rotate(-1.5deg);
+  transform-origin: bottom center;
+  z-index: -1;
+}
+
+/* ─── PHYSICAL TAPE ELEMENT ─── */
+.street-marquee__tape {
+  background: #FCE46C; /* Striking Brand Yellow */
+  border-top: 2px solid #111;
+  border-bottom: 2px solid #111;
+  box-shadow: 0 10px 20px rgba(0,0,0,0.15); /* Makes it pop */
+  transform: rotate(-1.5deg) scale(1.02); /* Physical tape tilt */
+  padding: 0.5rem 0; /* Tighter, smaller padding */
+  display: flex;
+}
+
+/* ─── SCROLLING TRACK ─── */
+.street-marquee__track {
+  display: flex;
+  align-items: center;
+  white-space: nowrap;
+  will-change: transform;
+  animation: scrollLeft 45s linear infinite;
+}
+
+.street-marquee__content {
+  display: flex;
+  align-items: center;
+}
+
+/* ─── CONTENT STYLING ─── */
+.street-marquee__text {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(1.25rem, 2vw, 1.8rem); /* Much smaller, sleeker font */
+  font-weight: 900;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  color: #110F0D;
+  margin: 0 clamp(1rem, 2vw, 2.5rem);
+}
+
+/* Mix of solid and outline text for a high-end editorial feel */
+.street-marquee__text--outline {
+  color: transparent;
+  -webkit-text-stroke: 1.25px #110F0D;
+}
+
+.street-marquee__img {
+  height: clamp(35px, 4vw, 45px); /* Scaled down significantly */
+  width: auto;
+  object-fit: contain;
+  margin: 0 clamp(0.5rem, 1vw, 1.5rem);
+  filter: drop-shadow(0 3px 6px rgba(0,0,0,0.15));
+}
+
+.street-marquee__star {
+  color: #D61B22; /* Red accent */
+  font-size: clamp(1rem, 1.5vw, 1.5rem);
+  opacity: 0.9;
+}
+
+/* Hover pause */
+.street-marquee__tape:hover .street-marquee__track {
+  animation-play-state: paused;
+}
+
+/* ─── ANIMATION ─── */
+@keyframes scrollLeft {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-50%); }
+}
+
+/* ─── RESPONSIVE ─── */
+@media (max-width: 768px) {
+  .street-marquee {
+    padding: 2rem 0;
+    margin-top: -1rem;
+  }
+  
+  .street-marquee__tape {
+    transform: rotate(-2deg) scale(1.05);
+  }
+  
+  .street-marquee__text {
+    font-size: 1.15rem;
+    margin: 0 0.75rem;
+  }
+  
+  .street-marquee__img {
+    height: 30px;
+    margin: 0 0.5rem;
+  }
+}
+
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  .street-marquee__track {
+    animation: none;
+    transform: translateX(0);
+  }
+}

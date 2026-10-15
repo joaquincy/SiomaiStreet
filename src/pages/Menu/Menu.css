@@ -1,0 +1,191 @@
+/* ─── Menu Page ─── */
+
+/* ─── Page Hero ─── */
+.menu-page-hero {
+  position: relative;
+  min-height: 50vh;
+  display: flex;
+  align-items: center;
+  background: var(--color-charcoal);
+  overflow: hidden;
+  padding-top: var(--nav-height);
+}
+
+.menu-page-hero-overlay {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(135deg, rgba(29, 29, 29, 0.95) 0%, rgba(245, 166, 35, 0.3) 100%);
+  z-index: 1;
+}
+
+.menu-page-hero .container {
+  position: relative;
+  z-index: 2;
+  padding: var(--space-5xl) var(--space-xl);
+}
+
+.menu-page-hero-content {
+  max-width: 700px;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-lg);
+}
+
+.menu-page-title {
+  font-size: var(--fs-h1);
+  font-weight: 900;
+  color: var(--color-white);
+  line-height: 1.1;
+  letter-spacing: -0.5px;
+}
+
+.menu-page-subtitle {
+  font-size: var(--fs-body);
+  color: rgba(255, 255, 255, 0.7);
+  line-height: 1.8;
+  max-width: 550px;
+}
+
+/* ─── Full Menu Section ─── */
+.menu-full {
+  background: var(--color-white);
+}
+
+/* ─── Menu Grid & Cards (mirrored from FeaturedMenu.css) ─── */
+.menu-categories {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-2xl);
+  flex-wrap: wrap;
+}
+
+.menu-category-btn {
+  padding: var(--space-xs) var(--space-lg);
+  background: transparent;
+  color: var(--color-gray-500);
+  border: 2px solid var(--color-gray-200);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  transition: all var(--transition-base);
+  cursor: pointer;
+}
+
+.menu-category-btn:hover {
+  border-color: var(--color-saffron);
+  color: var(--color-saffron);
+}
+
+.menu-category-btn.active {
+  background: var(--gradient-warm);
+  color: var(--color-white);
+  border-color: transparent;
+}
+
+.menu-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: var(--space-xl);
+}
+
+.menu-card {
+  background: var(--color-off-white);
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  transition: all var(--transition-base);
+  border: 1px solid transparent;
+}
+
+.menu-card:hover {
+  transform: translateY(-8px);
+  box-shadow: var(--shadow-lg);
+  border-color: rgba(245, 166, 35, 0.2);
+}
+
+.menu-card-image {
+  position: relative;
+  height: 200px;
+  overflow: hidden;
+}
+
+.menu-card-image img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform var(--transition-slow);
+}
+
+.menu-card:hover .menu-card-image img {
+  transform: scale(1.1);
+}
+
+.menu-card-badge {
+  position: absolute;
+  top: var(--space-sm);
+  left: var(--space-sm);
+  padding: 3px var(--space-sm);
+  background: var(--color-red);
+  color: var(--color-white);
+  font-size: var(--fs-tiny);
+  font-weight: 700;
+  border-radius: var(--radius-full);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.menu-card-info {
+  padding: var(--space-lg);
+}
+
+.menu-card-name {
+  font-size: var(--fs-h4);
+  font-weight: 700;
+  color: var(--color-charcoal);
+  margin-bottom: var(--space-xs);
+}
+
+.menu-card-description {
+  font-size: var(--fs-small);
+  color: var(--color-gray-500);
+  line-height: 1.6;
+  margin-bottom: var(--space-md);
+}
+
+.menu-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+}
+
+.menu-card-price {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h4);
+  font-weight: 800;
+  color: var(--color-saffron-dark);
+}
+
+.menu-card-rating {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: var(--fs-small);
+  color: var(--color-gray-500);
+}
+
+.menu-card-rating .star {
+  color: var(--color-saffron);
+}
+
+@media (max-width: 1024px) {
+  .menu-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 480px) {
+  .menu-grid {
+    grid-template-columns: 1fr;
+  }
+}

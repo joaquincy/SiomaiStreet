@@ -1,0 +1,372 @@
+/* ─── Custom Fonts ─── */
+@font-face {
+  font-family: 'The Last Shuriken';
+  src: url('/fonts/The Last Shuriken.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
+/* CSS Reset */
+*,
+*::before,
+*::after {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+:root {
+  /* ─── Fonts ─── */
+  --font-shuriken: 'The Last Shuriken', sans-serif;
+
+  /* ─── Colors ─── */
+  --color-saffron: #F5A623;
+  --color-saffron-light: #FFEAA7;
+  --color-saffron-dark: #D4891A;
+  --color-red: #E63946;
+  --color-red-light: #FF6B7A;
+  --color-red-dark: #C62828;
+  --color-orange: #FF6B35;
+  --color-charcoal: #1D1D1D;
+  --color-charcoal-light: #2D2D2D;
+  --color-gray-900: #1A1A2E;
+  --color-gray-800: #252540;
+  --color-gray-700: #3A3A55;
+  --color-gray-600: #555;
+  --color-gray-500: #777;
+  --color-gray-400: #999;
+  --color-gray-300: #C4C4C4;
+  --color-gray-200: #E0E0E0;
+  --color-gray-100: #F0F0F0;
+  --color-off-white: #FAFAFA;
+  --color-white: #FFFFFF;
+
+  /* Gradients */
+  --gradient-hero: linear-gradient(135deg, rgba(29, 29, 29, 0.92) 0%, rgba(230, 57, 70, 0.85) 50%, rgba(245, 166, 35, 0.8) 100%);
+  --gradient-warm: linear-gradient(135deg, #F5A623 0%, #FF6B35 50%, #E63946 100%);
+  --gradient-cta: linear-gradient(135deg, #E63946 0%, #FF6B35 100%);
+  --gradient-dark: linear-gradient(180deg, #1D1D1D 0%, #2D2D2D 100%);
+  --gradient-card: linear-gradient(145deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.02) 100%);
+
+  /* ─── Typography ─── */
+  --font-heading: 'Outfit', sans-serif;
+  --font-body: 'Inter', sans-serif;
+
+  --fs-display: clamp(2.5rem, 6vw, 4.5rem);
+  --fs-h1: clamp(2rem, 4vw, 3.5rem);
+  --fs-h2: clamp(1.75rem, 3.5vw, 2.75rem);
+  --fs-h3: clamp(1.25rem, 2vw, 1.75rem);
+  --fs-h4: clamp(1.1rem, 1.5vw, 1.35rem);
+  --fs-body: clamp(0.95rem, 1.2vw, 1.1rem);
+  --fs-small: clamp(0.8rem, 1vw, 0.9rem);
+  --fs-tiny: 0.75rem;
+
+  /* ─── Spacing ─── */
+  --space-xs: 0.5rem;
+  --space-sm: 0.75rem;
+  --space-md: 1rem;
+  --space-lg: 1.5rem;
+  --space-xl: 2rem;
+  --space-2xl: 3rem;
+  --space-3xl: 4rem;
+  --space-4xl: 6rem;
+  --space-5xl: 8rem;
+
+  /* ─── Layout ─── */
+  --max-width: 1200px;
+  --nav-height: 72px;
+
+  /* ─── Radius ─── */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-xl: 24px;
+  --radius-full: 9999px;
+
+  /* ─── Shadows ─── */
+  --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+  --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+  --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+  --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+  --shadow-glow: 0 0 30px rgba(245, 166, 35, 0.25);
+  --shadow-red-glow: 0 0 30px rgba(230, 57, 70, 0.25);
+
+  /* ─── Transitions ─── */
+  --transition-fast: 0.15s ease;
+  --transition-base: 0.3s ease;
+  --transition-slow: 0.5s ease;
+  --transition-spring: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+html {
+  scroll-behavior: smooth;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-charcoal);
+  background-color: var(--color-off-white);
+  line-height: 1.7;
+  overflow-x: hidden;
+}
+
+h1,
+h2,
+h3,
+h4,
+h5,
+h6 {
+  font-family: var(--font-heading);
+  line-height: 1.2;
+  font-weight: 700;
+}
+
+a {
+  text-decoration: none;
+  color: inherit;
+  transition: color var(--transition-fast);
+}
+
+img {
+  max-width: 100%;
+  display: block;
+}
+
+button {
+  font-family: var(--font-body);
+  cursor: pointer;
+  border: none;
+  outline: none;
+}
+
+ul,
+ol {
+  list-style: none;
+}
+
+/* ─── Container ─── */
+.container {
+  width: 100%;
+  max-width: var(--max-width);
+  margin: 0 auto;
+  padding: 0 var(--space-xl);
+}
+
+/* ─── Section Base ─── */
+.section {
+  padding: var(--space-5xl) 0;
+}
+
+.section-dark {
+  background-color: var(--color-charcoal);
+  color: var(--color-white);
+}
+
+/* ─── Section Header ─── */
+.section-header {
+  text-align: center;
+  max-width: 700px;
+  margin: 0 auto var(--space-3xl);
+}
+
+.section-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-xs);
+  padding: var(--space-xs) var(--space-md);
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.12) 0%, rgba(255, 107, 53, 0.08) 100%);
+  color: var(--color-saffron-dark);
+  border-radius: var(--radius-full);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  margin-bottom: var(--space-lg);
+  border: 1px solid rgba(245, 166, 35, 0.2);
+}
+
+.section-dark .section-badge {
+  background: linear-gradient(135deg, rgba(245, 166, 35, 0.15) 0%, rgba(255, 107, 53, 0.1) 100%);
+  color: var(--color-saffron);
+  border-color: rgba(245, 166, 35, 0.3);
+}
+
+.section-title {
+  font-size: var(--fs-h2);
+  font-weight: 800;
+  margin-bottom: var(--space-md);
+  letter-spacing: -0.5px;
+}
+
+.section-subtitle {
+  font-size: var(--fs-body);
+  color: var(--color-gray-500);
+  line-height: 1.8;
+}
+
+.section-dark .section-subtitle {
+  color: var(--color-gray-300);
+}
+
+/* ─── Buttons ─── */
+.btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: var(--space-xs);
+  padding: var(--space-sm) var(--space-xl);
+  font-size: var(--fs-body);
+  font-weight: 600;
+  border-radius: var(--radius-full);
+  transition: all var(--transition-base);
+  position: relative;
+  overflow: hidden;
+}
+
+.btn-primary {
+  background: var(--gradient-cta);
+  color: var(--color-white);
+  box-shadow: 0 4px 15px rgba(230, 57, 70, 0.3);
+}
+
+.btn-primary:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(230, 57, 70, 0.4);
+}
+
+.btn-secondary {
+  background: transparent;
+  color: var(--color-white);
+  border: 2px solid rgba(255, 255, 255, 0.3);
+}
+
+.btn-secondary:hover {
+  background: rgba(255, 255, 255, 0.1);
+  border-color: rgba(255, 255, 255, 0.6);
+  transform: translateY(-2px);
+}
+
+.btn-outline {
+  background: transparent;
+  color: var(--color-red);
+  border: 2px solid var(--color-red);
+}
+
+.btn-outline:hover {
+  background: var(--color-red);
+  color: var(--color-white);
+  transform: translateY(-2px);
+}
+
+.btn-saffron {
+  background: var(--color-saffron);
+  color: var(--color-charcoal);
+  font-weight: 700;
+  box-shadow: 0 4px 15px rgba(245, 166, 35, 0.3);
+}
+
+.btn-saffron:hover {
+  background: var(--color-saffron-dark);
+  transform: translateY(-2px);
+  box-shadow: 0 8px 25px rgba(245, 166, 35, 0.4);
+}
+
+.btn-lg {
+  padding: var(--space-md) var(--space-2xl);
+  font-size: 1.05rem;
+}
+
+/* ─── Scroll Reveal Animation ─── */
+.reveal {
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 0.8s ease, transform 0.8s ease;
+}
+
+.reveal.revealed {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reveal-delay-1 {
+  transition-delay: 0.1s;
+}
+
+.reveal-delay-2 {
+  transition-delay: 0.2s;
+}
+
+.reveal-delay-3 {
+  transition-delay: 0.3s;
+}
+
+.reveal-delay-4 {
+  transition-delay: 0.4s;
+}
+
+/* ─── Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+
+  .reveal {
+    opacity: 1;
+    transform: none;
+    transition: none;
+  }
+
+  .reveal-delay-1,
+  .reveal-delay-2,
+  .reveal-delay-3,
+  .reveal-delay-4 {
+    transition-delay: 0s;
+  }
+}
+
+/* ─── Highlight Text ─── */
+.text-gradient {
+  background: var(--gradient-warm);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+}
+
+.text-saffron {
+  color: var(--color-saffron);
+}
+
+.text-red {
+  color: var(--color-red);
+}
+
+/* ─── Scrollbar ─── */
+html,
+body {
+  scrollbar-width: none;
+  /* Firefox */
+  -ms-overflow-style: none;
+  /* IE/Edge */
+}
+
+html::-webkit-scrollbar,
+body::-webkit-scrollbar {
+  display: none;
+  /* Chrome, Safari, Opera */
+}
+
+/* ─── Selection ─── */
+::selection {
+  background: var(--color-saffron);
+  color: var(--color-charcoal);
+}

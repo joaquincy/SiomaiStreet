@@ -1,0 +1,482 @@
+/* ═══════════════════════════════════════════════
+   NAVBAR — Transparent top bar + Floating scroll pill
+   ═══════════════════════════════════════════════ */
+
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --color-cream: #DE0000;
+  --color-cream-hover: #FFEAA7;
+}
+
+/* ═══════════════════════════════════════════════
+   TOP NAVBAR — Transparent with floating text links
+   ═══════════════════════════════════════════════ */
+.navbar {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: var(--nav-height);
+  background: transparent;
+  border: none;
+  z-index: 1000;
+  display: flex;
+  align-items: center;
+  pointer-events: none;
+}
+
+.navbar.navbar-dark-page {
+  background: #000;
+}
+
+/* ─── Inner Container ─── */
+.navbar-inner {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  max-width: 100%;
+  height: 100%;
+  margin: 0;
+  padding: 0 20px 0 clamp(1.5rem, 3vw, 3.5rem);
+  pointer-events: auto;
+}
+
+/* Hide text links + logo when scrolled */
+.navbar.scrolled .navbar-inner {
+  pointer-events: none;
+}
+
+.navbar.scrolled .navbar-logo,
+.navbar.scrolled .navbar-links {
+  opacity: 0;
+  transform: translateY(-12px);
+  pointer-events: none;
+}
+
+.navbar-logo,
+.navbar-links {
+  transition:
+    opacity 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+/* ─── Logo ─── */
+.navbar-logo {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  z-index: 1001;
+  text-decoration: none;
+  position: relative;
+}
+
+.navbar-logo .logo-image {
+  width: 44px;
+  height: 44px;
+  border-radius: var(--radius-full);
+  object-fit: cover;
+  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  transition:
+    transform 0.4s var(--ease-out-expo),
+    border-color 0.4s ease;
+}
+
+.navbar-logo:hover .logo-image {
+  transform: rotate(-8deg) scale(1.06);
+  border-color: var(--color-saffron);
+}
+
+.logo-text-group {
+  display: flex;
+  flex-direction: column;
+  line-height: 1;
+  gap: 0px;
+}
+
+.logo-text-brand {
+  font-family: var(--font-shuriken);
+  font-size: 24px;
+  font-weight: normal;
+  color: var(--color-cream);
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+}
+
+.logo-text-street {
+  font-family: var(--font-shuriken);
+  font-size: 12px;
+  font-weight: normal;
+  color: rgba(255, 255, 255, 0.35);
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  transition: color 0.3s ease;
+}
+
+.navbar-logo:hover .logo-text-brand {
+  color: var(--color-saffron);
+}
+
+.navbar-logo:hover .logo-text-street {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+/* ─── Nav Links — The Last Shuriken, big, cream ─── */
+.navbar-links {
+  display: flex;
+  align-items: center;
+  gap: clamp(2rem, 3.2vw, 3.5rem);
+  margin-left: auto;
+}
+
+.navbar-links a {
+  font-family: var(--font-shuriken);
+  color: var(--color-cream);
+  font-size: clamp(1.4rem, 1.8vw, 1.75rem);
+  font-weight: normal;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  text-decoration: none;
+  position: relative;
+  padding: 8px 0;
+  cursor: pointer;
+  transition:
+    color 0.3s ease,
+    transform 0.3s var(--ease-out-expo),
+    text-shadow 0.3s ease;
+}
+
+.navbar-links a:hover {
+  color: var(--color-cream-hover);
+  transform: translateY(-2px);
+  text-shadow:
+    0 0 20px rgba(245, 166, 35, 0.3),
+    0 0 40px rgba(245, 166, 35, 0.1);
+}
+
+.navbar-links a::after {
+  content: '';
+  position: absolute;
+  bottom: 2px;
+  left: 0;
+  width: 0;
+  height: 2px;
+  background: linear-gradient(90deg, var(--color-saffron), var(--color-saffron-light));
+  border-radius: 2px;
+  transition: width 0.4s var(--ease-out-expo);
+}
+
+.navbar-links a:hover::after {
+  width: 100%;
+}
+
+.navbar-links a.active {
+  color: var(--color-saffron);
+}
+
+.navbar-links a.active::after {
+  width: 50%;
+  background: var(--color-saffron);
+}
+
+/* ═══════════════════════════════════════════════
+   SCROLL PILL — Floating dark pill on scroll
+   Contains: APPLY button + Hamburger icon
+   ═══════════════════════════════════════════════ */
+.scroll-pill {
+  position: fixed;
+  top: 20px;
+  right: 28px;
+  z-index: 1001;
+  display: flex;
+  align-items: center;
+  gap: 0;
+  background: rgba(12, 10, 8, 0.92);
+  border: 1.5px solid rgba(232, 220, 200, 0.12);
+  border-radius: 100px;
+  padding: 5px;
+  backdrop-filter: blur(16px);
+  -webkit-backdrop-filter: blur(16px);
+  box-shadow:
+    0 8px 32px rgba(0, 0, 0, 0.4),
+    0 2px 8px rgba(0, 0, 0, 0.2);
+
+  /* Hidden by default */
+  opacity: 0;
+  transform: translateY(-20px) scale(0.9);
+  pointer-events: none;
+  transition:
+    opacity 0.45s var(--ease-out-expo),
+    transform 0.45s var(--ease-out-expo);
+}
+
+.scroll-pill.visible {
+  opacity: 1;
+  transform: translateY(0) scale(1);
+  pointer-events: auto;
+}
+
+/* ─── APPLY Button ─── */
+.scroll-pill-apply {
+  font-family: var(--font-shuriken);
+  font-size: 1.05rem;
+  letter-spacing: 3.5px;
+  text-transform: uppercase;
+  text-decoration: none;
+  color: #1a1714;
+  background: var(--color-cream);
+  border: none;
+  border-radius: 100px;
+  padding: 12px 32px;
+  cursor: pointer;
+  white-space: nowrap;
+  transition:
+    background 0.3s ease,
+    color 0.3s ease,
+    transform 0.25s var(--ease-out-expo),
+    box-shadow 0.3s ease;
+}
+
+.scroll-pill-apply:hover {
+  background: var(--color-cream-hover);
+  color: #111;
+  transform: scale(1.03);
+  box-shadow: 0 4px 20px rgba(232, 220, 200, 0.2);
+}
+
+.scroll-pill-apply:active {
+  transform: scale(0.97);
+}
+
+/* ─── Hamburger Button (2-line style) ─── */
+.scroll-pill-hamburger {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 48px;
+  height: 48px;
+  background: transparent;
+  border: 1.5px solid rgba(232, 220, 200, 0.15);
+  border-radius: 50%;
+  cursor: pointer;
+  margin-left: 6px;
+  transition:
+    background 0.3s ease,
+    border-color 0.3s ease,
+    transform 0.25s var(--ease-out-expo);
+}
+
+.scroll-pill-hamburger:hover {
+  background: rgba(232, 220, 200, 0.08);
+  border-color: rgba(232, 220, 200, 0.25);
+}
+
+.scroll-pill-hamburger span {
+  display: block;
+  width: 18px;
+  height: 2px;
+  background: var(--color-cream);
+  border-radius: 2px;
+  transition:
+    transform 0.35s var(--ease-out-expo),
+    opacity 0.25s ease,
+    width 0.3s var(--ease-out-expo);
+}
+
+/* Active state: X icon */
+.scroll-pill-hamburger.active {
+  border-color: rgba(245, 166, 35, 0.3);
+}
+
+.scroll-pill-hamburger.active span:nth-child(1) {
+  transform: translateY(4px) rotate(45deg);
+}
+
+.scroll-pill-hamburger.active span:nth-child(2) {
+  transform: translateY(-4px) rotate(-45deg);
+}
+
+/* ═══════════════════════════════════════════════
+   DARK BACKDROP — behind the side panel
+   ═══════════════════════════════════════════════ */
+.menu-backdrop {
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.5);
+  z-index: 998;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.4s ease;
+}
+
+.menu-backdrop.open {
+  opacity: 1;
+  pointer-events: all;
+}
+
+/* ═══════════════════════════════════════════════
+   SIDE PANEL — Cream slide-out from right
+   ═══════════════════════════════════════════════ */
+.side-panel {
+  position: fixed;
+  top: 0;
+  right: 0;
+  width: min(480px, 90vw);
+  height: 100vh;
+  background: var(--color-cream);
+  z-index: 1002;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 2.5rem 2.5rem 2rem;
+  transform: translateX(100%);
+  transition: transform 0.5s var(--ease-out-expo);
+  overflow-y: auto;
+}
+
+.side-panel.open {
+  transform: translateX(0);
+}
+
+/* ─── Close Button ─── */
+.side-panel-close {
+  position: absolute;
+  top: 20px;
+  right: 24px;
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  border: 1.5px solid rgba(26, 23, 20, 0.15);
+  background: transparent;
+  color: #1a1714;
+  font-size: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.25s var(--ease-out-expo);
+}
+
+.side-panel-close:hover {
+  background: rgba(26, 23, 20, 0.08);
+  border-color: rgba(26, 23, 20, 0.3);
+  transform: rotate(90deg);
+}
+
+/* ─── Nav Links ─── */
+.side-panel-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+  margin-top: 5rem;
+}
+
+.side-panel-nav a {
+  font-family: var(--font-shuriken);
+  font-size: clamp(2rem, 5vw, 2.8rem);
+  font-weight: normal;
+  color: #1a1714;
+  text-transform: uppercase;
+  letter-spacing: 2px;
+  text-decoration: none;
+  padding: 0.6rem 0;
+  line-height: 1.1;
+  border-bottom: 1px solid rgba(26, 23, 20, 0.08);
+  position: relative;
+  transition:
+    color 0.3s ease,
+    padding-left 0.35s var(--ease-out-expo);
+}
+
+.side-panel-nav a:last-child {
+  border-bottom: none;
+}
+
+.side-panel-nav a:hover {
+  color: var(--color-saffron-dark);
+  padding-left: 10px;
+}
+
+.side-panel-nav a.active {
+  color: var(--color-saffron);
+}
+
+/* ─── Social Links ─── */
+.side-panel-socials {
+  display: flex;
+  gap: 12px;
+  margin-top: auto;
+  padding-top: 2rem;
+}
+
+.social-link {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  flex: 1;
+  padding: 14px 18px;
+  border: 1.5px solid rgba(26, 23, 20, 0.15);
+  border-radius: 12px;
+  text-decoration: none;
+  color: #1a1714;
+  font-family: var(--font-shuriken);
+  font-size: 0.8rem;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  transition:
+    background 0.25s ease,
+    border-color 0.25s ease,
+    transform 0.2s var(--ease-out-expo);
+}
+
+.social-link:hover {
+  background: rgba(26, 23, 20, 0.05);
+  border-color: rgba(26, 23, 20, 0.3);
+  transform: translateY(-2px);
+}
+
+.social-link svg {
+  flex-shrink: 0;
+  opacity: 0.7;
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 768px) {
+  .navbar-links {
+    display: none;
+  }
+
+  /* On mobile, show scroll pill always (even at top) */
+  .scroll-pill {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+    top: 14px;
+    right: 16px;
+  }
+
+  .navbar-logo {
+    opacity: 1 !important;
+    transform: none !important;
+    pointer-events: auto !important;
+  }
+
+  .side-panel {
+    width: 100vw;
+    padding: 2rem 1.5rem 1.5rem;
+  }
+
+  .side-panel-nav a {
+    font-size: 2.4rem;
+  }
+}

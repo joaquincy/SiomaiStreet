@@ -1,0 +1,596 @@
+/* ══════════════════════════════════════════
+   COMMUNITY FEEDBACK PAGE
+   ══════════════════════════════════════════ */
+
+/* ─── Page wrapper ─── */
+.cfb-page {
+  min-height: 100vh;
+  background: #f7f7f7;
+  padding-top: var(--nav-height);
+  font-family: var(--font-body);
+}
+
+/* ─── Page Header ─── */
+.cfb-page-header {
+  text-align: center;
+  padding: 3.5rem 1.5rem 2rem;
+  background: #fff;
+  border-bottom: 1px solid #efefef;
+}
+
+.cfb-page-title {
+  font-family: var(--font-heading);
+  font-size: clamp(2rem, 4vw, 2.8rem);
+  font-weight: 900;
+  color: var(--color-charcoal);
+  letter-spacing: -0.5px;
+  margin-bottom: 0.6rem;
+}
+
+.cfb-highlight {
+  color: var(--color-red);
+}
+
+.cfb-page-subtitle {
+  color: var(--color-gray-500);
+  font-size: 0.95rem;
+  line-height: 1.7;
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ─── Layout: sidebar + main ─── */
+.cfb-layout {
+  display: grid;
+  grid-template-columns: 310px 1fr;
+  gap: 1.5rem;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 1.5rem 4rem;
+  align-items: start;
+}
+
+/* ─── Sidebar ─── */
+.cfb-sidebar {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+  position: sticky;
+  top: calc(var(--nav-height) + 1.5rem);
+}
+
+/* ─── Shared Card ─── */
+.cfb-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
+  border: 1px solid #efefef;
+}
+
+/* ─── Overall Rating Card ─── */
+.cfb-overall-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1rem;
+}
+
+.cfb-overall-star-icon {
+  color: var(--color-saffron);
+  font-size: 1.1rem;
+}
+
+.cfb-overall-label {
+  font-weight: 700;
+  font-size: 0.88rem;
+  color: var(--color-charcoal);
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.cfb-overall-score {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.cfb-score-big {
+  font-family: var(--font-heading);
+  font-size: 3.2rem;
+  font-weight: 900;
+  color: var(--color-charcoal);
+  line-height: 1;
+}
+
+.cfb-score-details {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.cfb-star-row {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.cfb-star.filled {
+  color: var(--color-saffron);
+}
+
+.cfb-star.empty {
+  color: #ddd;
+}
+
+.cfb-verified-count {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-gray-400);
+  letter-spacing: 0.5px;
+}
+
+/* ─── Rating Bars ─── */
+.cfb-breakdown {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.cfb-bar-row {
+  display: flex;
+  align-items: center;
+  gap: 0.4rem;
+}
+
+.cfb-bar-label {
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  width: 10px;
+  text-align: right;
+}
+
+.cfb-bar-star {
+  color: var(--color-saffron);
+  font-size: 0.7rem;
+  flex-shrink: 0;
+}
+
+.cfb-bar-track {
+  flex: 1;
+  height: 8px;
+  background: #f0f0f0;
+  border-radius: 99px;
+  overflow: hidden;
+}
+
+.cfb-bar-fill {
+  height: 100%;
+  background: var(--color-saffron);
+  border-radius: 99px;
+  transition: width 0.6s ease;
+}
+
+.cfb-bar-pct {
+  font-size: 0.72rem;
+  color: var(--color-gray-500);
+  width: 28px;
+  text-align: right;
+}
+
+/* ─── Share Your Experience Form ─── */
+.cfb-form-header {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-bottom: 1.1rem;
+}
+
+.cfb-form-icon {
+  font-size: 1.1rem;
+}
+
+.cfb-form-title {
+  font-size: 0.95rem;
+  font-weight: 700;
+  color: var(--color-charcoal);
+}
+
+.cfb-success-msg {
+  background: #e6f9ed;
+  color: #1a7a3f;
+  border-radius: var(--radius-sm);
+  padding: 0.6rem 0.9rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+  margin-bottom: 1rem;
+  border: 1px solid #b2e8c6;
+}
+
+.cfb-form {
+  display: flex;
+  flex-direction: column;
+  gap: 0.9rem;
+}
+
+.cfb-form-group {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+}
+
+.cfb-form-label {
+  font-size: 0.7rem;
+  font-weight: 700;
+  color: var(--color-gray-500);
+  letter-spacing: 0.6px;
+  text-transform: uppercase;
+}
+
+/* Interactive star rating */
+.cfb-rating-input {
+  display: flex;
+  gap: 0.3rem;
+}
+
+.cfb-rating-star {
+  background: none;
+  border: none;
+  cursor: pointer;
+  font-size: 1.4rem;
+  color: #ddd;
+  transition: color var(--transition-fast), transform var(--transition-fast);
+  padding: 0;
+  line-height: 1;
+}
+
+.cfb-rating-star.active,
+.cfb-rating-star:hover {
+  color: var(--color-saffron);
+  transform: scale(1.15);
+}
+
+/* Inputs */
+.cfb-input,
+.cfb-textarea {
+  width: 100%;
+  padding: 0.65rem 0.85rem;
+  border: 1.5px solid #e5e5e5;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.85rem;
+  color: var(--color-charcoal);
+  background: #fafafa;
+  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  resize: none;
+}
+
+.cfb-input::placeholder,
+.cfb-textarea::placeholder {
+  color: #bbb;
+}
+
+.cfb-input:focus,
+.cfb-textarea:focus {
+  outline: none;
+  border-color: var(--color-saffron);
+  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.12);
+  background: #fff;
+}
+
+/* Photo upload */
+.cfb-photo-upload {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  cursor: pointer;
+  font-size: 0.82rem;
+  color: var(--color-gray-500);
+  padding: 0.6rem 0;
+  border-top: 1px dashed #e5e5e5;
+  transition: color var(--transition-fast);
+}
+
+.cfb-photo-upload:hover {
+  color: var(--color-saffron);
+}
+
+.cfb-photo-icon {
+  font-size: 1rem;
+}
+
+/* Submit button */
+.cfb-submit-btn {
+  width: 100%;
+  padding: 0.8rem;
+  background: var(--color-red);
+  color: #fff;
+  border: none;
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 0.9rem;
+  font-weight: 700;
+  cursor: pointer;
+  transition: background var(--transition-fast), transform var(--transition-fast);
+  letter-spacing: 0.3px;
+}
+
+.cfb-submit-btn:hover {
+  background: var(--color-red-dark);
+  transform: translateY(-1px);
+}
+
+.cfb-submit-btn:active {
+  transform: translateY(0);
+}
+
+/* ─── Right Main Panel ─── */
+.cfb-main {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+/* Reviews header row */
+.cfb-reviews-header {
+  display: flex;
+  align-items: flex-end;
+  justify-content: space-between;
+  gap: 1rem;
+  background: #fff;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius-lg);
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #efefef;
+}
+
+.cfb-reviews-title {
+  font-family: var(--font-heading);
+  font-size: 1.15rem;
+  font-weight: 800;
+  color: var(--color-charcoal);
+}
+
+.cfb-reviews-count {
+  font-size: 0.8rem;
+  color: var(--color-gray-500);
+  margin-top: 0.2rem;
+}
+
+/* Sort dropdown */
+.cfb-sort-wrapper {
+  position: relative;
+  display: flex;
+  align-items: center;
+}
+
+.cfb-sort-select {
+  appearance: none;
+  border: 1.5px solid #e5e5e5;
+  border-radius: var(--radius-sm);
+  padding: 0.5rem 2.2rem 0.5rem 0.85rem;
+  font-family: var(--font-body);
+  font-size: 0.82rem;
+  color: var(--color-charcoal);
+  background: #fafafa;
+  cursor: pointer;
+  transition: border-color var(--transition-fast);
+}
+
+.cfb-sort-select:focus {
+  outline: none;
+  border-color: var(--color-saffron);
+}
+
+.cfb-sort-icon {
+  position: absolute;
+  right: 0.6rem;
+  font-size: 1rem;
+  color: var(--color-gray-500);
+  pointer-events: none;
+}
+
+/* ─── Review Cards List ─── */
+.cfb-reviews-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.cfb-review-card {
+  background: #fff;
+  border-radius: var(--radius-lg);
+  padding: 1.4rem 1.5rem;
+  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
+  border: 1px solid #efefef;
+  transition: box-shadow var(--transition-base), transform var(--transition-base);
+}
+
+.cfb-review-card:hover {
+  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
+  transform: translateY(-2px);
+}
+
+/* Review top: avatar + name */
+.cfb-review-top {
+  margin-bottom: 0.8rem;
+}
+
+.cfb-review-user {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+.cfb-review-avatar {
+  width: 40px;
+  height: 40px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #fff;
+  font-weight: 800;
+  font-size: 0.9rem;
+  flex-shrink: 0;
+}
+
+.cfb-review-name-row {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.cfb-review-name {
+  font-weight: 700;
+  font-size: 0.95rem;
+  color: var(--color-charcoal);
+}
+
+.cfb-verified-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.25rem;
+  background: #eaf4ff;
+  color: #2979cc;
+  border-radius: 99px;
+  padding: 0.15rem 0.55rem;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: lowercase;
+  letter-spacing: 0.3px;
+}
+
+.cfb-review-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-top: 0.2rem;
+}
+
+.cfb-review-date {
+  font-size: 0.75rem;
+  color: var(--color-gray-400);
+}
+
+/* Tags */
+.cfb-tags-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.4rem;
+  margin-bottom: 0.75rem;
+}
+
+.cfb-tag {
+  background: #fff4e6;
+  color: #c47a1e;
+  border: 1px solid #fcd9a0;
+  border-radius: 99px;
+  padding: 0.18rem 0.65rem;
+  font-size: 0.62rem;
+  font-weight: 700;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+}
+
+/* Review text */
+.cfb-review-text {
+  font-size: 0.9rem;
+  color: #444;
+  line-height: 1.75;
+  margin-bottom: 0.85rem;
+}
+
+/* Review image */
+.cfb-review-image-wrap {
+  margin-bottom: 1rem;
+  border-radius: var(--radius-md);
+  overflow: hidden;
+  max-width: 260px;
+}
+
+.cfb-review-image {
+  width: 100%;
+  height: 180px;
+  object-fit: cover;
+  display: block;
+  transition: transform var(--transition-slow);
+}
+
+.cfb-review-image:hover {
+  transform: scale(1.03);
+}
+
+/* Footer: helpful */
+.cfb-review-footer {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  padding-top: 0.85rem;
+  border-top: 1px solid #f0f0f0;
+}
+
+.cfb-helpful-label {
+  font-size: 0.8rem;
+  color: var(--color-gray-500);
+}
+
+.cfb-helpful-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: none;
+  border: 1.5px solid #e5e5e5;
+  border-radius: 99px;
+  padding: 0.3rem 0.85rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-gray-500);
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.cfb-helpful-btn:hover {
+  border-color: var(--color-saffron);
+  color: var(--color-saffron);
+  background: rgba(245, 166, 35, 0.06);
+}
+
+.cfb-helpful-btn.voted {
+  border-color: var(--color-saffron);
+  color: var(--color-saffron);
+  background: rgba(245, 166, 35, 0.08);
+}
+
+/* ─── Responsive ─── */
+@media (max-width: 900px) {
+  .cfb-layout {
+    grid-template-columns: 1fr;
+  }
+
+  .cfb-sidebar {
+    position: static;
+  }
+}
+
+@media (max-width: 600px) {
+  .cfb-page-header {
+    padding: 2.5rem 1rem 1.5rem;
+  }
+
+  .cfb-layout {
+    padding: 1.25rem 1rem 3rem;
+  }
+
+  .cfb-reviews-header {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .cfb-review-image-wrap {
+    max-width: 100%;
+  }
+}

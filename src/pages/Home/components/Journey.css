@@ -1,0 +1,582 @@
+/* ═══════════════════════════════════════════════════════════
+   JOURNEY SECTION — Editorial Scroll Storytelling
+   Warm poster aesthetic with grain texture & pill labels
+   ═══════════════════════════════════════════════════════════ */
+
+.journey-section {
+  position: relative;
+  height: 350vh;
+  background: #E8A229;
+  z-index: 2;
+  /* clip-path instead of overflow:hidden — sticky breaks inside overflow:hidden */
+  clip-path: inset(0);
+}
+
+/* Grain texture overlay */
+.journey-section::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  pointer-events: none;
+  z-index: 1;
+}
+
+/* Subtle warm gradient beneath content */
+.journey-section::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 20% 30%, rgba(217, 38, 84, 0.06) 0%, transparent 50%),
+    radial-gradient(ellipse at 80% 70%, rgba(58, 35, 24, 0.05) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Decorative Background Shapes ─── */
+.journey-deco {
+  position: absolute;
+  border-radius: 50%;
+  border: 2px solid rgba(58, 35, 24, 0.06);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.journey-deco--circle-1 {
+  width: 600px;
+  height: 600px;
+  top: 10%;
+  right: -200px;
+}
+
+.journey-deco--circle-2 {
+  width: 400px;
+  height: 400px;
+  bottom: 20%;
+  left: -150px;
+}
+
+/* ─── Sticky Container ─── */
+.journey-sticky {
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  width: 100%;
+  overflow: hidden;
+  contain: layout style paint;
+  z-index: 2;
+}
+
+/* ═══════════════════════════════════════════════════
+   MAIN TITLE
+   ═══════════════════════════════════════════════════ */
+.journey-main-title {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  text-align: center;
+  z-index: 10;
+  will-change: transform, opacity;
+  pointer-events: none;
+}
+
+.journey-main-title h2 {
+  position: relative;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(3.5rem, 9vw, 9rem);
+  line-height: 0.9;
+  font-weight: 900;
+  text-transform: uppercase;
+  color: #3A2318;
+  letter-spacing: -0.03em;
+  margin-bottom: 2rem;
+  /* Subtle text shadow for depth */
+  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+}
+
+/* ─── Pills overlapping text ─── */
+.journey-pill {
+  position: absolute;
+  background: #D92654;
+  color: #F8CC5B;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(0.65rem, 1.4vw, 1rem);
+  font-weight: 800;
+  padding: 0.45em 1.2em;
+  border-radius: 50px;
+  letter-spacing: 1.5px;
+  white-space: nowrap;
+  box-shadow: 0 4px 16px rgba(217, 38, 84, 0.3);
+  pointer-events: none;
+  z-index: 20;
+  text-transform: uppercase;
+}
+
+.journey-pill--1 {
+  top: 8%;
+  left: -2%;
+  transform: rotate(-6deg);
+}
+
+.journey-pill--2 {
+  bottom: 38%;
+  left: 32%;
+  transform: rotate(4deg);
+}
+
+.journey-pill--3 {
+  bottom: 8%;
+  right: -3%;
+  transform: rotate(-10deg);
+}
+
+.journey-main-title p {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.95rem, 1.1vw, 1.15rem);
+  font-weight: 500;
+  color: #5A3A20;
+  max-width: 400px;
+  letter-spacing: 0.3px;
+}
+
+/* ─── Scroll Hint ─── */
+.journey-scroll-hint {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  margin-top: 2.5rem;
+  animation: journeyBounce 2s ease-in-out infinite;
+}
+
+.journey-scroll-hint__line {
+  display: block;
+  width: 1px;
+  height: 28px;
+  background: #3A2318;
+  opacity: 0.4;
+}
+
+.journey-scroll-hint__text {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: #3A2318;
+  opacity: 0.5;
+}
+
+@keyframes journeyBounce {
+
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+
+  50% {
+    transform: translateY(6px);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   PROGRESS LINE
+   ═══════════════════════════════════════════════════ */
+.journey-progress-line {
+  position: absolute;
+  left: clamp(20px, 5vw, 60px);
+  top: 15vh;
+  bottom: 15vh;
+  width: 2px;
+  background: rgba(58, 35, 24, 0.12);
+  z-index: 20;
+}
+
+.journey-progress-fill {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: #D92654;
+  transform-origin: top;
+  will-change: transform;
+}
+
+.journey-progress-dot {
+  position: absolute;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  width: 14px;
+  height: 14px;
+  background: #E8A229;
+  border: 2px solid rgba(58, 35, 24, 0.18);
+  border-radius: 50%;
+  z-index: 2;
+}
+
+.journey-progress-dot-inner {
+  position: absolute;
+  inset: 2px;
+  background: #D92654;
+  border-radius: 50%;
+  transform: scale(0);
+  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+/* ═══════════════════════════════════════════════════
+   STEPS
+   ═══════════════════════════════════════════════════ */
+.journey-step {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  pointer-events: none;
+  will-change: transform, opacity;
+  opacity: 0;
+}
+
+/* Huge background number */
+.journey-step__bg-number {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(16rem, 38vw, 42rem);
+  font-weight: 900;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(58, 35, 24, 0.05);
+  z-index: -1;
+  letter-spacing: -0.05em;
+  user-select: none;
+}
+
+.journey-step__inner {
+  width: 85vw;
+  max-width: 1200px;
+  height: 80vh;
+  display: flex;
+  align-items: center;
+  gap: 6vw;
+  position: relative;
+  z-index: 2;
+  padding-left: clamp(40px, 8vw, 100px);
+}
+
+/* ─── Step Content ─── */
+.journey-step__content {
+  flex: 1;
+  position: relative;
+}
+
+/* Red accent bar on the left of step content */
+.journey-step__accent {
+  position: absolute;
+  left: -20px;
+  top: 0;
+  width: 4px;
+  height: 100%;
+  background: linear-gradient(180deg, #D92654 0%, rgba(217, 38, 84, 0) 100%);
+  border-radius: 4px;
+}
+
+.journey-step__eyebrow {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(0.72rem, 0.9vw, 0.85rem);
+  font-weight: 800;
+  color: #D92654;
+  text-transform: uppercase;
+  letter-spacing: 0.15em;
+  margin-bottom: 1.25rem;
+}
+
+/* Step number circle in eyebrow */
+.journey-step__eyebrow-num {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 28px;
+  height: 28px;
+  background: #D92654;
+  color: #F8CC5B;
+  border-radius: 50%;
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0;
+}
+
+.journey-step__title {
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(2.5rem, 5vw, 5.5rem);
+  font-weight: 900;
+  color: #3A2318;
+  line-height: 1;
+  margin-bottom: 1.25rem;
+  letter-spacing: -0.02em;
+  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+}
+
+/* Red divider line between title and description */
+.journey-step__rule {
+  width: 48px;
+  height: 3px;
+  background: #D92654;
+  border-radius: 3px;
+  margin-bottom: 1.25rem;
+}
+
+.journey-step__desc {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(1rem, 1.15vw, 1.15rem);
+  color: #5A3A20;
+  line-height: 1.65;
+  max-width: 460px;
+  font-weight: 450;
+}
+
+/* ─── Step Visuals ─── */
+.journey-step__visual {
+  flex: 1;
+  will-change: transform;
+  position: relative;
+}
+
+.journey-step__img-wrapper {
+  position: relative;
+  width: 100%;
+  padding-top: 125%;
+  border-radius: 14px;
+  overflow: hidden;
+  box-shadow:
+    0 8px 24px rgba(58, 35, 24, 0.12),
+    0 24px 48px rgba(58, 35, 24, 0.08);
+  border: 3px solid rgba(58, 35, 24, 0.08);
+}
+
+.journey-step__img-wrapper img {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  filter: contrast(1.05) saturate(1.1);
+}
+
+/* Small branding label below image */
+.journey-step__img-label {
+  font-family: 'Outfit', sans-serif;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 3px;
+  color: rgba(58, 35, 24, 0.35);
+  text-align: center;
+  margin-top: 12px;
+}
+
+/* ═══════════════════════════════════════════════════
+   ALIGNMENTS (Asymmetry)
+   ═══════════════════════════════════════════════════ */
+
+/* Left: Text left, Image right */
+.journey-step--left .journey-step__inner {
+  flex-direction: row;
+}
+
+.journey-step--left .journey-step__content {
+  padding-right: 5%;
+}
+
+/* Right: Text right, Image left */
+.journey-step--right .journey-step__inner {
+  flex-direction: row-reverse;
+}
+
+.journey-step--right .journey-step__content {
+  padding-left: 5%;
+}
+
+/* Center: Text bottom, Image top */
+.journey-step--center .journey-step__inner {
+  flex-direction: column-reverse;
+  justify-content: center;
+  gap: 3rem;
+}
+
+.journey-step--center .journey-step__content {
+  text-align: center;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.journey-step--center .journey-step__accent {
+  display: none;
+}
+
+.journey-step--center .journey-step__visual {
+  width: 45%;
+  max-width: 400px;
+  flex: none;
+}
+
+.journey-step--center .journey-step__img-wrapper {
+  padding-top: 100%;
+  border-radius: 50%;
+}
+
+/* Final: Big celebratory text */
+.journey-step--final .journey-step__inner {
+  justify-content: center;
+  text-align: center;
+}
+
+.journey-step--final .journey-step__content {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.journey-step--final .journey-step__accent {
+  display: none;
+}
+
+.journey-step--final .journey-step__title {
+  font-size: clamp(5rem, 18vw, 22rem);
+  margin-bottom: 2rem;
+  line-height: 0.85;
+
+  /* Brand Red with Stronger Grain Texture */
+  background:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
+    #D61B22;
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  color: transparent;
+  /* Fallback */
+
+  /* Hard shadow for extra pop */
+  filter: drop-shadow(0 8px 0 rgba(58, 35, 24, 0.12));
+}
+
+.journey-step--final .journey-step__rule {
+  width: 64px;
+  background: #3A2318;
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .journey-step__inner {
+    padding-left: 60px;
+    gap: 4vw;
+  }
+
+  .journey-deco--circle-1 {
+    width: 400px;
+    height: 400px;
+  }
+
+  .journey-deco--circle-2 {
+    width: 250px;
+    height: 250px;
+  }
+}
+
+@media (max-width: 768px) {
+  .journey-progress-line {
+    left: 20px;
+  }
+
+  .journey-deco {
+    display: none;
+  }
+
+  .journey-step__inner {
+    flex-direction: column !important;
+    justify-content: center;
+    padding-left: 40px;
+    text-align: left !important;
+    gap: 2rem !important;
+    align-items: flex-start !important;
+  }
+
+  .journey-step__content {
+    padding: 0 !important;
+    text-align: left !important;
+    align-items: flex-start !important;
+  }
+
+  .journey-step__accent {
+    display: none;
+  }
+
+  .journey-step__visual {
+    width: 80% !important;
+    max-width: 300px;
+  }
+
+  .journey-step__img-wrapper {
+    padding-top: 100% !important;
+    border-radius: 12px !important;
+  }
+
+  .journey-step--final .journey-step__inner {
+    align-items: center !important;
+    text-align: center !important;
+    padding-left: 0;
+  }
+
+  .journey-step--final .journey-progress-line {
+    opacity: 0.2;
+  }
+
+  .journey-pill {
+    font-size: 0.6rem;
+    padding: 0.3em 0.9em;
+  }
+}
+
+/* ─── REDUCED MOTION ─── */
+@media (prefers-reduced-motion: reduce) {
+  .journey-section {
+    height: auto;
+  }
+
+  .journey-sticky {
+    position: static;
+    height: auto;
+    overflow: visible;
+  }
+
+  .journey-main-title,
+  .journey-step {
+    position: static;
+    opacity: 1 !important;
+    transform: none !important;
+    margin: 4rem 0;
+    pointer-events: auto;
+  }
+
+  .journey-progress-line {
+    display: none;
+  }
+
+  .journey-step__visual {
+    transform: none !important;
+  }
+
+  .journey-scroll-hint {
+    display: none;
+  }
+}

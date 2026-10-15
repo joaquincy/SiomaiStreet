@@ -1,0 +1,494 @@
+/* ═══════════════════════════════════════════════
+   FORM ELEMENTS — Reusable UI components
+   ═══════════════════════════════════════════════ */
+
+/* ─── Form Questions ─── */
+.form-question {
+  margin-bottom: var(--space-2xl);
+}
+
+.form-question:last-child {
+  margin-bottom: 0;
+}
+
+.question-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-md);
+}
+
+.question-number {
+  width: 24px;
+  height: 24px;
+  min-width: 24px;
+  border-radius: var(--radius-full);
+  background: var(--color-red);
+  color: var(--color-white);
+  font-family: var(--font-heading);
+  font-size: 11px;
+  font-weight: 700;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.question-label {
+  font-size: 15px;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  letter-spacing: -0.1px;
+}
+
+.question-label .required {
+  color: var(--color-red);
+  margin-left: 2px;
+}
+
+/* ─── Chip Selectors ─── */
+.chip-group {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+
+.chip {
+  padding: 10px 20px;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-full);
+  font-family: var(--font-body);
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+  white-space: nowrap;
+  user-select: none;
+}
+
+.chip:hover {
+  border-color: var(--color-gray-400);
+  background: var(--color-gray-100);
+}
+
+.chip.selected {
+  border-color: var(--color-red);
+  background: rgba(230, 57, 70, 0.05);
+  color: var(--color-red);
+  font-weight: 600;
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.08);
+}
+
+/* ─── Card Selectors ─── */
+.card-selector-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+}
+
+.card-selector {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-md);
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-md);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base),
+    box-shadow var(--transition-base),
+    transform var(--transition-base);
+  user-select: none;
+  text-align: left;
+}
+
+.card-selector:hover {
+  border-color: var(--color-gray-400);
+  box-shadow: var(--shadow-sm);
+}
+
+.card-selector.selected {
+  border-color: var(--color-red);
+  background: rgba(230, 57, 70, 0.03);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.06);
+}
+
+.card-selector-icon {
+  width: 42px;
+  height: 42px;
+  min-width: 42px;
+  border-radius: var(--radius-sm);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.15rem;
+  transition: background-color var(--transition-base);
+}
+
+.card-selector-icon.warm {
+  background: rgba(245, 166, 35, 0.1);
+  color: var(--color-saffron-dark);
+}
+
+.card-selector-icon.red {
+  background: rgba(230, 57, 70, 0.08);
+  color: var(--color-red);
+}
+
+.card-selector-icon.charcoal {
+  background: rgba(29, 29, 29, 0.06);
+  color: var(--color-gray-600);
+}
+
+.card-selector-icon.blue {
+  background: rgba(59, 130, 246, 0.08);
+  color: #3b82f6;
+}
+
+.card-selector-text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.card-selector-title {
+  font-size: 14px;
+  font-weight: 600;
+  color: var(--color-charcoal);
+  line-height: 1.3;
+}
+
+.card-selector-subtitle {
+  font-size: 12px;
+  color: var(--color-gray-500);
+  line-height: 1.4;
+}
+
+.card-selector.selected .card-selector-title {
+  color: var(--color-red-dark);
+}
+
+/* ─── Toggle (Yes / No) ─── */
+.toggle-group {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  max-width: 320px;
+}
+
+.toggle-option {
+  padding: 12px 24px;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-gray-600);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    color var(--transition-base),
+    background-color var(--transition-base),
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+  user-select: none;
+}
+
+.toggle-option:hover {
+  border-color: var(--color-gray-400);
+  background: var(--color-gray-100);
+}
+
+.toggle-option.selected {
+  background: var(--color-charcoal);
+  border-color: var(--color-charcoal);
+  color: var(--color-white);
+  font-weight: 600;
+  box-shadow: 0 2px 8px rgba(29, 29, 29, 0.15);
+}
+
+/* ─── Select Dropdown ─── */
+.form-select-wrapper {
+  position: relative;
+  max-width: 420px;
+}
+
+.form-select-wrapper .select-icon {
+  position: absolute;
+  left: 14px;
+  top: 50%;
+  transform: translateY(-50%);
+  color: var(--color-gray-400);
+  font-size: 16px;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.form-select {
+  width: 100%;
+  padding: 12px 40px 12px 40px;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-charcoal);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 12 12'%3E%3Cpath fill='%23999' d='M2 4l4 4 4-4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 14px center;
+  background-size: 12px;
+}
+
+.form-select:focus {
+  outline: none;
+  border-color: var(--color-red);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.08);
+}
+
+/* ─── Radio Options ─── */
+.radio-group {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+}
+
+.radio-option {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+  padding: 14px 18px;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base),
+    box-shadow var(--transition-base);
+  user-select: none;
+  text-align: left;
+}
+
+.radio-option:hover {
+  border-color: var(--color-gray-400);
+}
+
+.radio-option.selected {
+  border-color: var(--color-red);
+  background: rgba(230, 57, 70, 0.03);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.06);
+}
+
+.radio-circle {
+  width: 20px;
+  height: 20px;
+  min-width: 20px;
+  border-radius: var(--radius-full);
+  border: 2px solid var(--color-gray-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: border-color var(--transition-base);
+}
+
+.radio-circle::after {
+  content: '';
+  width: 10px;
+  height: 10px;
+  border-radius: var(--radius-full);
+  background: var(--color-red);
+  transform: scale(0);
+  transition: transform 0.2s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+.radio-option.selected .radio-circle {
+  border-color: var(--color-red);
+}
+
+.radio-option.selected .radio-circle::after {
+  transform: scale(1);
+}
+
+.radio-option-label {
+  font-size: 14px;
+  font-weight: 500;
+  color: var(--color-charcoal);
+}
+
+.radio-option.selected .radio-option-label {
+  font-weight: 600;
+}
+
+/* ─── Text Inputs ─── */
+.form-input,
+.form-textarea {
+  width: 100%;
+  padding: 12px 16px;
+  border: 1.5px solid var(--color-gray-200);
+  background: var(--color-white);
+  border-radius: var(--radius-sm);
+  font-family: var(--font-body);
+  font-size: 14px;
+  color: var(--color-charcoal);
+  transition:
+    border-color var(--transition-base),
+    box-shadow var(--transition-base);
+}
+
+.form-input:focus,
+.form-textarea:focus {
+  outline: none;
+  border-color: var(--color-red);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.08);
+}
+
+.form-input::placeholder,
+.form-textarea::placeholder {
+  color: var(--color-gray-400);
+}
+
+.form-textarea {
+  resize: vertical;
+  min-height: 100px;
+  line-height: 1.6;
+}
+
+/* ─── File Upload ─── */
+.file-upload-zone {
+  border: 2px dashed var(--color-gray-300);
+  border-radius: var(--radius-md);
+  padding: var(--space-2xl) var(--space-xl);
+  text-align: center;
+  cursor: pointer;
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+}
+
+.file-upload-zone:hover {
+  border-color: var(--color-red);
+  background: rgba(230, 57, 70, 0.02);
+}
+
+.file-upload-zone .upload-icon {
+  font-size: 32px;
+  color: var(--color-gray-400);
+  margin-bottom: var(--space-sm);
+}
+
+.file-upload-zone .upload-text {
+  font-size: 14px;
+  color: var(--color-gray-500);
+  line-height: 1.5;
+}
+
+.file-upload-zone .upload-text strong {
+  color: var(--color-red);
+  font-weight: 600;
+}
+
+.file-upload-zone .upload-hint {
+  font-size: 12px;
+  color: var(--color-gray-400);
+  margin-top: 4px;
+}
+
+/* ─── Consent Checkboxes ─── */
+.consent-group {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+.consent-item {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-md);
+  padding: 16px;
+  border: 1.5px solid var(--color-gray-200);
+  border-radius: var(--radius-sm);
+  cursor: pointer;
+  background: var(--color-white);
+  transition:
+    border-color var(--transition-base),
+    background-color var(--transition-base);
+  user-select: none;
+  text-align: left;
+  width: 100%;
+}
+
+.consent-item:hover {
+  border-color: var(--color-gray-400);
+}
+
+.consent-item.checked {
+  border-color: var(--color-saffron);
+  background: rgba(245, 166, 35, 0.03);
+}
+
+.consent-checkbox {
+  width: 22px;
+  height: 22px;
+  min-width: 22px;
+  border-radius: 6px;
+  border: 2px solid var(--color-gray-300);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--color-white);
+  font-size: 13px;
+  margin-top: 1px;
+  transition: background-color var(--transition-base), border-color var(--transition-base);
+}
+
+.consent-item.checked .consent-checkbox {
+  background: var(--color-saffron);
+  border-color: var(--color-saffron);
+}
+
+.consent-text {
+  font-size: 14px;
+  color: var(--color-gray-600);
+  line-height: 1.6;
+}
+
+.consent-text strong {
+  color: var(--color-charcoal);
+  font-weight: 600;
+}
+
+/* ─── Responsive — Form Elements ─── */
+@media (max-width: 768px) {
+  .card-selector-group {
+    grid-template-columns: 1fr;
+  }
+
+  .toggle-group {
+    max-width: 100%;
+  }
+
+  .form-select-wrapper {
+    max-width: 100%;
+  }
+}
+
+@media (max-width: 480px) {
+  .chip {
+    padding: 8px 16px;
+    font-size: 12px;
+  }
+}

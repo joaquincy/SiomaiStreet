@@ -1,0 +1,539 @@
+/* ═══════════════════════════════════════════════════════════
+   FRANCHISE PACKAGES — POSTER × MENU BOARD
+   Three side-by-side cards with food-brand personality
+   ═══════════════════════════════════════════════════════════ */
+
+/* ─── Section ─── */
+.pkg {
+  position: relative;
+  background: #110F0D;
+  /* Matched perfectly to the Requirements section */
+  color: #fff;
+  padding: clamp(5rem, 10vw, 8rem) 0;
+  overflow: hidden;
+}
+
+/* Subtle warm grain and noise to match Requirements */
+.pkg::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E"),
+    radial-gradient(ellipse at 25% 100%, rgba(245, 166, 35, 0.06) 0%, transparent 55%),
+    radial-gradient(ellipse at 85% 10%, rgba(230, 57, 70, 0.04) 0%, transparent 50%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+/* ─── Giant Background Typography ─── */
+.pkg__bg-type {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  z-index: 0;
+  pointer-events: none;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 0;
+  opacity: 0.025;
+}
+
+.pkg__bg-word {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(10rem, 22vw, 26rem);
+  font-weight: 900;
+  line-height: 0.8;
+  letter-spacing: -0.05em;
+  white-space: nowrap;
+  color: #fff;
+}
+
+.pkg__bg-word--2 {
+  transform: translateX(15%);
+}
+
+/* ─── Inner Container ─── */
+.pkg__inner {
+  position: relative;
+  z-index: 1;
+  max-width: 1280px;
+  margin: 0 auto;
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+}
+
+/* ═══════════════════════════════════════════════════
+   HEADER
+   ═══════════════════════════════════════════════════ */
+.pkg__header {
+  text-align: center;
+  margin-bottom: clamp(3.5rem, 6vw, 5rem);
+}
+
+.pkg__tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  color: var(--color-red, #E63946);
+  margin-bottom: 1.25rem;
+}
+
+.pkg__tag-line {
+  display: block;
+  width: 22px;
+  height: 2px;
+  background: var(--color-red, #E63946);
+}
+
+.pkg__title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
+  font-weight: 800;
+  line-height: 1.08;
+  letter-spacing: -1.5px;
+  color: #F5F0EA;
+  margin-bottom: 1rem;
+}
+
+.pkg__title-red {
+  color: var(--color-red, #E63946);
+}
+
+.pkg__desc {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
+  line-height: 1.65;
+  color: rgba(255, 255, 255, 0.5);
+  max-width: 520px;
+  margin: 0 auto;
+}
+
+/* ═══════════════════════════════════════════════════
+   THREE CARD ROW
+   ═══════════════════════════════════════════════════ */
+.pkg__row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: clamp(1.5rem, 2.5vw, 2rem);
+  align-items: start;
+}
+
+/* ═══════════════════════════════════════════════════
+   CARD
+   ═══════════════════════════════════════════════════ */
+.pkg__card {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  border-radius: 10px;
+  overflow: visible;
+  transition: transform 0.35s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pkg__card:hover {
+  transform: translateY(-6px);
+  z-index: 5;
+}
+
+/* ─── Image Wrapper ─── */
+.pkg__card-img-wrap {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  border-radius: 10px 10px 0 0;
+  overflow: hidden;
+  background: rgba(255, 255, 255, 0.03);
+}
+
+.pkg__card-img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  transition: transform 0.5s ease;
+}
+
+.pkg__card:hover .pkg__card-img {
+  transform: scale(1.04);
+}
+
+/* ─── Content Panel (cream paper) ─── */
+.pkg__card-body {
+  position: relative;
+  flex: 1;
+  display: flex;
+  flex-direction: column;
+  background: #F7F3ED;
+  color: #1A1714;
+  padding: clamp(1.75rem, 2.5vw, 2.25rem);
+  border-radius: 0 0 10px 10px;
+  overflow: hidden;
+}
+
+/* Oversized number watermark inside card */
+.pkg__card-num {
+  position: absolute;
+  top: -20px;
+  right: 10px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 8rem;
+  font-weight: 900;
+  line-height: 1;
+  color: rgba(0, 0, 0, 0.04);
+  pointer-events: none;
+  user-select: none;
+  z-index: 0;
+}
+
+/* ─── Card Header ─── */
+.pkg__card-head {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 1.25rem;
+}
+
+.pkg__card-tier {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  color: #9A9084;
+}
+
+.pkg__card-name {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(1.5rem, 2vw, 1.85rem);
+  font-weight: 800;
+  letter-spacing: -0.5px;
+  line-height: 1.15;
+  margin-top: 4px;
+  color: #1A1714;
+}
+
+/* ─── Price ─── */
+.pkg__card-price-row {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: flex-start;
+}
+
+.pkg__card-curr {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.1rem;
+  font-weight: 700;
+  margin-top: 0.35rem;
+  margin-right: 3px;
+  color: #444;
+}
+
+.pkg__card-price {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.4rem, 3.5vw, 3.2rem);
+  font-weight: 900;
+  letter-spacing: -1.5px;
+  line-height: 1;
+  color: #1A1714;
+}
+
+.pkg__card-period {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 600;
+  letter-spacing: 1.2px;
+  color: #8A8379;
+  margin-top: 4px;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1.5px solid rgba(0, 0, 0, 0.08);
+}
+
+/* ─── Description ─── */
+.pkg__card-desc {
+  position: relative;
+  z-index: 1;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  color: #555;
+  margin-bottom: 1.5rem;
+}
+
+/* ─── Features ─── */
+.pkg__card-features {
+  position: relative;
+  z-index: 1;
+  margin-bottom: 2rem;
+  flex: 1;
+}
+
+.pkg__card-feat-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 1.5px;
+  color: #1A1714;
+  margin-bottom: 0.85rem;
+}
+
+.pkg__card-feat-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.pkg__card-feat-list li {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  line-height: 1.35;
+  color: #333;
+}
+
+.pkg__card-check {
+  flex-shrink: 0;
+  font-size: 1.15rem;
+  color: var(--color-red, #E63946);
+  margin-top: -1px;
+}
+
+/* ─── CTA Button ─── */
+.pkg__card-btn {
+  position: relative;
+  z-index: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  width: 100%;
+  padding: 1rem;
+  border: none;
+  border-radius: 4px;
+  background: #1A1714;
+  color: #fff;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  transition: background 0.2s ease, transform 0.2s ease;
+  margin-top: auto;
+}
+
+.pkg__card-btn:hover {
+  background: #000;
+  transform: translateY(-2px);
+}
+
+.pkg__card-btn--red {
+  background: var(--color-red, #E63946);
+}
+
+.pkg__card-btn--red:hover {
+  background: #C62828;
+}
+
+.pkg__card-btn-arr {
+  transition: transform 0.2s ease;
+}
+
+.pkg__card-btn:hover .pkg__card-btn-arr {
+  transform: translateX(4px);
+}
+
+/* ═══════════════════════════════════════════════════
+   HERO CARD (KIOSK — MOST POPULAR)
+   ═══════════════════════════════════════════════════ */
+.pkg__card--hero {
+  /* Lift the hero card slightly above the others */
+  margin-top: -1.5rem;
+  z-index: 3;
+}
+
+.pkg__card--hero .pkg__card-img-wrap {
+  aspect-ratio: 5 / 4.5;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.5);
+}
+
+.pkg__card--hero .pkg__card-body {
+  background: #241E1A;
+  color: #F5F0EA;
+  box-shadow: 0 16px 40px rgba(0, 0, 0, 0.4);
+  border: 1px solid rgba(230, 57, 70, 0.15);
+}
+
+.pkg__card--hero .pkg__card-num {
+  color: rgba(230, 57, 70, 0.08);
+}
+
+.pkg__card--hero .pkg__card-tier {
+  color: var(--color-red, #E63946);
+}
+
+.pkg__card--hero .pkg__card-name {
+  color: #F5F0EA;
+}
+
+.pkg__card--hero .pkg__card-curr {
+  color: rgba(255, 255, 255, 0.5);
+}
+
+.pkg__card--hero .pkg__card-price {
+  color: #F5F0EA;
+}
+
+.pkg__card--hero .pkg__card-period {
+  color: rgba(255, 255, 255, 0.4);
+  border-bottom-color: rgba(255, 255, 255, 0.08);
+}
+
+.pkg__card--hero .pkg__card-desc {
+  color: rgba(255, 255, 255, 0.65);
+}
+
+.pkg__card--hero .pkg__card-feat-title {
+  color: rgba(255, 255, 255, 0.8);
+}
+
+.pkg__card--hero .pkg__card-feat-list li {
+  color: rgba(255, 255, 255, 0.85);
+}
+
+.pkg__card--hero .pkg__card-check {
+  color: var(--color-saffron, #F5A623);
+}
+
+/* ─── MOST POPULAR Sticker ─── */
+.pkg__sticker {
+  position: absolute;
+  top: -16px;
+  right: -12px;
+  z-index: 20;
+  background: var(--color-red, #E63946);
+  color: #fff;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 2px;
+  padding: 8px 18px;
+  border-radius: 3px;
+  transform: rotate(3deg);
+  box-shadow: 0 6px 16px rgba(230, 57, 70, 0.35);
+}
+
+/* ═══════════════════════════════════════════════════
+   SLIGHT POSTER ASYMMETRY
+   Left card rotated slightly, right card rotated slightly
+   ═══════════════════════════════════════════════════ */
+.pkg__card:nth-child(1) .pkg__card-img-wrap {
+  transform: rotate(-1.5deg);
+  border-radius: 10px 10px 0 0;
+}
+
+.pkg__card:nth-child(3) .pkg__card-img-wrap {
+  transform: rotate(1deg);
+}
+
+/* ═══════════════════════════════════════════════════
+   ENTRANCE ANIMATION
+   ═══════════════════════════════════════════════════ */
+.pkg__header,
+.pkg__card {
+  opacity: 0;
+  transform: translateY(24px);
+  transition: opacity 0.7s cubic-bezier(0.2, 0.8, 0.2, 1),
+    transform 0.7s cubic-bezier(0.2, 0.8, 0.2, 1);
+}
+
+.pkg__card:nth-child(1) {
+  transition-delay: 0.08s;
+}
+
+.pkg__card:nth-child(2) {
+  transition-delay: 0.16s;
+}
+
+.pkg__card:nth-child(3) {
+  transition-delay: 0.24s;
+}
+
+.pkg.pkg--visible .pkg__header,
+.pkg.pkg--visible .pkg__card {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Hero card keeps its lift after entrance */
+.pkg.pkg--visible .pkg__card--hero {
+  transform: translateY(-1.5rem);
+}
+
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE
+   ═══════════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .pkg__row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .pkg__card:nth-child(3) {
+    grid-column: 1 / -1;
+    max-width: 480px;
+    margin: 0 auto;
+    width: 100%;
+  }
+
+  .pkg__card--hero {
+    margin-top: 0;
+  }
+
+  .pkg.pkg--visible .pkg__card--hero {
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 680px) {
+  .pkg {
+    padding: 4rem 0;
+  }
+
+  .pkg__row {
+    grid-template-columns: 1fr;
+    gap: 2.5rem;
+  }
+
+  .pkg__card:nth-child(3) {
+    max-width: 100%;
+  }
+
+  .pkg__card:nth-child(1) .pkg__card-img-wrap,
+  .pkg__card:nth-child(3) .pkg__card-img-wrap {
+    transform: none;
+  }
+
+  .pkg__bg-word {
+    font-size: 20vw;
+  }
+
+  .pkg__sticker {
+    top: -12px;
+    right: -6px;
+    font-size: 0.65rem;
+    padding: 6px 12px;
+  }
+}

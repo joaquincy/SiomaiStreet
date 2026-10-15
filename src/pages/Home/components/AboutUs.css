@@ -1,0 +1,721 @@
+/* ═══════════════════════════════════════════════
+   MEET CHEF SPENCER — Scroll-Driven Editorial Section
+   Performance: GPU-only transforms, single CSS var, lerp smoothing
+   ═══════════════════════════════════════════════ */
+
+/* ── Section Wrapper ── */
+.chef-section {
+  position: relative;
+  height: 450vh;
+  overflow: visible;
+}
+
+/* ── Sticky inner stage ── */
+.chef-stage {
+  position: sticky;
+  top: 0;
+  width: 100%;
+  height: 100vh;
+  overflow: hidden;
+  contain: layout style paint;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 1 — BACKGROUND
+   ═══════════════════════════════════════════════ */
+.chef-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+}
+
+.chef-bg-red {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 55%;
+  background: linear-gradient(175deg, #C41820 0%, #D61B22 35%, #E8232B 100%);
+  will-change: transform;
+  transform: scaleY(calc(1 - var(--p, 0) * 0.35));
+  transform-origin: top center;
+}
+
+/* Warm ambient glow */
+.chef-bg-red::after {
+  content: '';
+  position: absolute;
+  bottom: -30%;
+  right: 10%;
+  width: 60%;
+  height: 70%;
+  background: radial-gradient(ellipse, rgba(255, 107, 53, 0.1) 0%, transparent 70%);
+  pointer-events: none;
+}
+
+.chef-bg-black {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(180deg, #0D0D12 0%, #08080C 100%);
+  z-index: -1;
+}
+
+.chef-bg-edge {
+  position: absolute;
+  left: 0;
+  width: 100%;
+  bottom: 0;
+  height: 2px;
+  z-index: 2;
+  background: linear-gradient(90deg, rgba(214, 27, 34, 0.4) 0%, rgba(214, 27, 34, 0.1) 60%, transparent 100%);
+  pointer-events: none;
+}
+
+/* Noise — static texture */
+.chef-noise {
+  position: absolute;
+  inset: 0;
+  z-index: 3;
+  pointer-events: none;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-size: 200px 200px;
+  opacity: 0.25;
+  mix-blend-mode: overlay;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 2 — LARGE TITLE TYPOGRAPHY (z:10)
+   ═══════════════════════════════════════════════ */
+.chef-title-group {
+  position: absolute;
+  top: 6%;
+  left: 5%;
+  z-index: 10;
+  will-change: transform, opacity;
+}
+
+.chef-title-once {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: clamp(2.8rem, 6.5vw, 5.8rem);
+  font-weight: 400;
+  line-height: 1;
+  color: #fff;
+  letter-spacing: 4px;
+  text-transform: uppercase;
+  display: block;
+  text-shadow: 2px 3px 10px rgba(0, 0, 0, 0.15);
+}
+
+.chef-title-siomai {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: clamp(5rem, 13vw, 12rem);
+  font-weight: 400;
+  line-height: 0.88;
+  color: #fff;
+  letter-spacing: -2px;
+  text-transform: uppercase;
+  display: block;
+  text-shadow: 3px 5px 16px rgba(0, 0, 0, 0.2);
+  margin-top: 0.05em;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 3 — STOREFRONT (z:12)
+   ═══════════════════════════════════════════════ */
+.chef-storefront {
+  position: absolute;
+  top: 1%;
+  right: 2%;
+  width: clamp(260px, 28vw, 420px);
+  z-index: 12;
+  will-change: transform;
+}
+
+.chef-storefront img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 4 — SIOMAI (z:15)
+   ═══════════════════════════════════════════════ */
+.chef-siomai {
+  position: absolute;
+  z-index: 15;
+  will-change: transform;
+  pointer-events: none;
+  width: clamp(160px, 22vw, 340px);
+  left: 0;
+  top: 0;
+  transform: translate3d(var(--siomai-x, 18%),
+      var(--siomai-y, 48%),
+      0) scale(var(--siomai-s, 0.8)) rotate(var(--siomai-r, -8deg));
+}
+
+.chef-siomai img {
+  width: 100%;
+  height: auto;
+  display: block;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 5 — CHEF CARD (z:20)
+   Positioned LEFT COLUMN, vertically centered
+   ═══════════════════════════════════════════════ */
+.chef-card {
+  position: absolute;
+  bottom: 12%;
+  left: 4%;
+  width: clamp(200px, 17vw, 270px);
+  z-index: 20;
+  will-change: transform, opacity;
+}
+
+.chef-card-inner {
+  background: linear-gradient(155deg, #1a1d42 0%, #12142e 100%);
+  border: 1px solid rgba(214, 27, 34, 0.2);
+  border-radius: 16px;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.5), 0 0 0 1px rgba(255, 255, 255, 0.04);
+  position: relative;
+}
+
+.chef-card-inner::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(160deg, rgba(255, 255, 255, 0.06) 0%, transparent 35%, rgba(0, 0, 0, 0.1) 100%);
+  pointer-events: none;
+  z-index: 1;
+  border-radius: inherit;
+}
+
+.chef-card-photo {
+  width: 100%;
+  aspect-ratio: 5 / 4;
+  background: linear-gradient(135deg, #0e1028 0%, #0a0c1e 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  overflow: hidden;
+}
+
+.chef-card-photo::after {
+  content: '';
+  position: absolute;
+  inset: 12px;
+  border: 1.5px dashed rgba(255, 255, 255, 0.08);
+  border-radius: 8px;
+  pointer-events: none;
+}
+
+.chef-card-photo-label {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.55rem, 0.85vw, 0.7rem);
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.25);
+  text-align: center;
+  letter-spacing: 1.5px;
+  text-transform: uppercase;
+  line-height: 1.8;
+  padding: 1rem;
+  position: relative;
+  z-index: 2;
+}
+
+.chef-card-body {
+  padding: clamp(0.9rem, 1.4vw, 1.2rem) clamp(1rem, 1.8vw, 1.5rem);
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.chef-card-subtitle {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.48rem, 0.65vw, 0.58rem);
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.3);
+}
+
+.chef-card-name {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: clamp(0.72rem, 1.05vw, 0.92rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 1px;
+  text-transform: uppercase;
+  line-height: 1.2;
+}
+
+.chef-card-btn {
+  background: transparent;
+  border: 1.5px solid #D61B22;
+  border-radius: 6px;
+  padding: 8px 14px;
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.48rem, 0.65vw, 0.56rem);
+  font-weight: 700;
+  color: #fff;
+  text-transform: uppercase;
+  letter-spacing: 2.5px;
+  text-align: center;
+  cursor: pointer;
+  transition: background 0.3s ease, box-shadow 0.3s ease;
+  position: relative;
+  z-index: 2;
+  margin-top: 0.3rem;
+}
+
+.chef-card-btn:hover {
+  background: #D61B22;
+  box-shadow: 0 4px 18px rgba(214, 27, 34, 0.35);
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 6 — LEFT-SIDE TEXT REVEALS (z:25)
+   Anchored to bottom-left, BESIDE the card
+   ═══════════════════════════════════════════════ */
+
+.chef-text-col {
+  position: absolute;
+  bottom: 8%;
+  left: 27%;
+  z-index: 25;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 0.5rem;
+  pointer-events: auto;
+  max-width: min(520px, 42vw);
+}
+
+/* Subtitle — "THE MAN BEHIND THE SIOMAI" */
+.chef-subtitle-reveal {
+  will-change: transform, opacity;
+}
+
+.chef-subtitle-text {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.58rem, 0.8vw, 0.75rem);
+  font-weight: 600;
+  letter-spacing: 5px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.55);
+}
+
+/* "MEET CHEF SPENCER" heading + description */
+.chef-meet {
+  will-change: transform, opacity;
+}
+
+.chef-meet-name {
+  font-family: 'Dela Gothic One', sans-serif;
+  font-size: clamp(1rem, 1.45vw, 1.65rem);
+  font-weight: 400;
+  color: #fff;
+  letter-spacing: 2px;
+  text-transform: uppercase;
+  text-shadow: 0 3px 15px rgba(0, 0, 0, 0.35);
+  line-height: 1.2;
+  white-space: nowrap;
+}
+
+.chef-meet-line {
+  width: 50px;
+  height: 3px;
+  background: linear-gradient(90deg, #D61B22, #FF6B35);
+  margin: 0.5rem 0 0;
+  border-radius: 2px;
+}
+
+.chef-meet-desc {
+  font-family: 'Inter', sans-serif;
+  font-size: clamp(0.65rem, 0.85vw, 0.82rem);
+  font-weight: 400;
+  color: rgba(255, 255, 255, 0.45);
+  line-height: 1.7;
+  max-width: 360px;
+  margin-top: 0.5rem;
+  letter-spacing: 0.3px;
+}
+
+/* ═══════════════════════════════════════════════
+   LAYER 7 — "DESCRIPTION OF SIR SPENCER" (z:25)
+   RIGHT COLUMN — clearly separated from left text
+   ═══════════════════════════════════════════════ */
+.chef-desc-group {
+  position: absolute;
+  left: 58%;
+  bottom: 8%;
+  z-index: 25;
+  text-align: right;
+  right: 2%;
+}
+
+.chef-desc-line {
+  display: block;
+  font-family: 'Bebas Neue', sans-serif;
+  font-size: clamp(2.4rem, 5.5vw, 5.5rem);
+  font-weight: 400;
+  line-height: 0.92;
+  color: #D61B22;
+  letter-spacing: 3px;
+}
+
+/* ═══════════════════════════════════════════════
+   DECORATIVE — Editorial vertical line
+   ═══════════════════════════════════════════════ */
+.chef-editorial-line {
+  position: absolute;
+  right: 3.5%;
+  top: 10%;
+  width: 1px;
+  height: 0%;
+  background: linear-gradient(180deg, transparent 0%, rgba(214, 27, 34, 0.25) 30%, rgba(214, 27, 34, 0.25) 70%, transparent 100%);
+  z-index: 8;
+}
+
+/* ═══════════════════════════════════════════════
+   FOOD TRAIL ACCENTS
+   ═══════════════════════════════════════════════ */
+.chef-accent {
+  position: absolute;
+  z-index: 14;
+  pointer-events: none;
+  border-radius: 50%;
+}
+
+.chef-accent--1 {
+  width: 6px;
+  height: 6px;
+  background: #F5A623;
+  top: 52%;
+  left: 22%;
+}
+
+.chef-accent--2 {
+  width: 4px;
+  height: 4px;
+  background: #E63946;
+  top: 56%;
+  left: 26%;
+}
+
+.chef-accent--3 {
+  width: 5px;
+  height: 5px;
+  background: #F5A623;
+  top: 46%;
+  left: 24%;
+}
+
+.chef-accent--4 {
+  width: 3px;
+  height: 3px;
+  background: rgba(255, 255, 255, 0.5);
+  top: 50%;
+  left: 20%;
+}
+
+/* Year stamp */
+.chef-year-stamp {
+  position: absolute;
+  bottom: 6%;
+  right: 4%;
+  z-index: 8;
+  font-family: 'Outfit', sans-serif;
+  font-size: clamp(0.55rem, 0.7vw, 0.65rem);
+  font-weight: 600;
+  letter-spacing: 3px;
+  text-transform: uppercase;
+  color: rgba(255, 255, 255, 0.12);
+  writing-mode: vertical-rl;
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — LARGE DESKTOP (1441px+)
+   ═══════════════════════════════════════════════ */
+@media (min-width: 1441px) {
+  .chef-storefront {
+    width: 460px;
+    right: 3%;
+  }
+
+  .chef-card {
+    width: 300px;
+    left: 5%;
+  }
+
+  .chef-siomai {
+    width: 360px;
+  }
+
+  .chef-desc-line {
+    font-size: 7rem;
+  }
+
+  .chef-meet-name {
+    font-size: 1.85rem;
+    white-space: nowrap;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — TABLET (769–1024px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 1024px) {
+  .chef-section {
+    height: 400vh;
+  }
+
+  .chef-title-group {
+    top: 6%;
+    left: 4%;
+  }
+
+  .chef-title-once {
+    font-size: clamp(2.2rem, 6vw, 4.5rem);
+  }
+
+  .chef-title-siomai {
+    font-size: clamp(4rem, 12vw, 9rem);
+  }
+
+  .chef-storefront {
+    top: 1%;
+    right: 0;
+    width: clamp(200px, 28vw, 340px);
+  }
+
+  .chef-card {
+    top: 30%;
+    left: 3%;
+    width: clamp(170px, 20vw, 230px);
+  }
+
+  .chef-siomai {
+    width: clamp(140px, 20vw, 280px);
+  }
+
+  .chef-desc-group {
+    right: 3%;
+    bottom: 12%;
+  }
+
+  .chef-desc-line {
+    font-size: clamp(2.2rem, 5.5vw, 5.2rem);
+  }
+
+  .chef-text-col {
+    bottom: 8%;
+    left: 26%;
+    max-width: 48vw;
+  }
+
+  .chef-meet-name {
+    font-size: clamp(0.95rem, 1.8vw, 1.35rem);
+    white-space: nowrap;
+  }
+
+  .chef-editorial-line {
+    right: 2.5%;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 768px) {
+  .chef-section {
+    height: 350vh;
+  }
+
+  .chef-title-group {
+    top: 5%;
+    left: 4%;
+  }
+
+  .chef-title-once {
+    font-size: clamp(1.6rem, 7vw, 2.8rem);
+  }
+
+  .chef-title-siomai {
+    font-size: clamp(3rem, 14vw, 5.5rem);
+    letter-spacing: -1px;
+  }
+
+  .chef-storefront {
+    top: 1%;
+    right: -2%;
+    width: clamp(160px, 36vw, 230px);
+  }
+
+  .chef-card {
+    top: 28%;
+    left: 4%;
+    width: clamp(130px, 30vw, 175px);
+  }
+
+  .chef-card-inner {
+    border-radius: 12px;
+  }
+
+  .chef-card-photo {
+    aspect-ratio: 1 / 1;
+  }
+
+  .chef-card-photo-label {
+    font-size: 0.5rem;
+  }
+
+  .chef-card-body {
+    padding: 0.6rem 0.8rem;
+    gap: 0.4rem;
+  }
+
+  .chef-card-btn {
+    font-size: 0.45rem;
+    padding: 5px 10px;
+    letter-spacing: 1.5px;
+  }
+
+  .chef-siomai {
+    width: clamp(120px, 30vw, 200px);
+  }
+
+  /* Stack text below card on mobile */
+  .chef-text-col {
+    bottom: 6%;
+    left: 4%;
+    max-width: 90vw;
+  }
+
+  .chef-meet-name {
+    font-size: clamp(0.9rem, 3.2vw, 1.25rem);
+    white-space: nowrap;
+  }
+
+  .chef-meet-desc {
+    max-width: 280px;
+    font-size: 0.7rem;
+  }
+
+  .chef-desc-group {
+    right: 4%;
+    bottom: 22%;
+  }
+
+  .chef-desc-line {
+    font-size: clamp(1.6rem, 7.5vw, 3.2rem);
+  }
+
+  .chef-editorial-line {
+    display: none;
+  }
+
+  .chef-accent--3,
+  .chef-accent--4 {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   RESPONSIVE — SMALL MOBILE (≤480px)
+   ═══════════════════════════════════════════════ */
+@media (max-width: 480px) {
+  .chef-section {
+    height: 300vh;
+  }
+
+  .chef-title-once {
+    font-size: clamp(1.3rem, 8vw, 2rem);
+  }
+
+  .chef-title-siomai {
+    font-size: clamp(2.4rem, 16vw, 4rem);
+    letter-spacing: -1px;
+  }
+
+  .chef-storefront {
+    width: clamp(130px, 38vw, 190px);
+    top: 1%;
+    right: -3%;
+  }
+
+  .chef-card {
+    width: clamp(115px, 32vw, 155px);
+    top: 28%;
+    left: 3%;
+  }
+
+  .chef-siomai {
+    width: clamp(100px, 30vw, 160px);
+  }
+
+  .chef-desc-group {
+    right: 3%;
+    bottom: 24%;
+  }
+
+  .chef-desc-line {
+    font-size: clamp(1.3rem, 8.5vw, 2.5rem);
+  }
+
+  .chef-text-col {
+    bottom: 5%;
+    left: 3%;
+    max-width: 92vw;
+  }
+
+  .chef-meet-name {
+    font-size: clamp(0.8rem, 3.8vw, 1.1rem);
+    letter-spacing: 1px;
+    white-space: nowrap;
+  }
+
+  .chef-meet-desc {
+    max-width: 220px;
+    font-size: 0.65rem;
+  }
+
+  .chef-accent--3,
+  .chef-accent--4 {
+    display: none;
+  }
+}
+
+/* ═══════════════════════════════════════════════
+   REDUCED MOTION
+   ═══════════════════════════════════════════════ */
+@media (prefers-reduced-motion: reduce) {
+
+  .chef-title-group,
+  .chef-storefront,
+  .chef-card,
+  .chef-siomai,
+  .chef-desc-line,
+  .chef-subtitle-reveal,
+  .chef-meet,
+  .chef-accent {
+    transform: none !important;
+    opacity: 1 !important;
+  }
+
+  .chef-bg-red {
+    transform: none !important;
+    height: 55% !important;
+  }
+
+  .chef-editorial-line {
+    height: 40% !important;
+  }
+}
