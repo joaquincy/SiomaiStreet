@@ -166,6 +166,9 @@ const ApplicationPage = () => {
   const [currentStep, setCurrentStep] = useState(() => Math.min(Math.max(savedDraft.currentStep, 0), APPLICATION_STEPS.length - 1));
   const [formData, setFormData] = useState(() => savedDraft.formData);
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submissionId, setSubmissionId] = useState('');
   const [stepErrors, setStepErrors] = useState([]);
   const [submissionError, setSubmissionError] = useState('');
   const [submissionResult, setSubmissionResult] = useState(null);
@@ -233,6 +236,7 @@ const ApplicationPage = () => {
   /* ─── H2: Validate before advancing ─── */
   const handleNext = async () => {
     setSubmissionError('');
+    setSubmitError('');
     const errors = validateStep(currentStep, formData);
     if (errors.length > 0) {
       setStepErrors(errors);
@@ -241,21 +245,36 @@ const ApplicationPage = () => {
     }
 
     if (currentStep === APPLICATION_STEPS.length - 1) {
+      setSubmitting(true);
       setIsSubmitting(true);
+      setSubmissionError('');
+      setSubmitError('');
 
       try {
-        const result = await submitFranchiseApplication({
-          formData,
-          turnstileToken: formData.turnstileToken,
-        });
+        const payload = { ...formData };
+        const documents = payload.documents || {};
+        delete payload.documents;
+        const body = new FormData();
+        body.append('applicationData', JSON.stringify(payload));
+        for (const [key, file] of Object.entries(documents)) {
+          if (file instanceof File) body.append(key, file, file.name);
+        }
+        const response = await fetch('/api/franchise-applications', { method: 'POST', body });
+        const result = await response.json().catch(() => ({}));
+        if (!response.ok) throw new Error(result.error || 'Your application could not be submitted. Please try again.');
+        const refId = result.id || result.referenceNumber || '';
+        setSubmissionId(refId);
         setSubmissionResult(result);
         setSubmitted(true);
         await clearApplicationDraft().catch(() => {});
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } catch (error) {
-        setSubmissionError(error.message || 'Unable to submit your application. Please try again.');
+        const msg = error.message || 'Your application could not be submitted. Please try again.';
+        setSubmissionError(msg);
+        setSubmitError(msg);
         window.scrollTo({ top: 0, behavior: 'smooth' });
       } finally {
+        setSubmitting(false);
         setIsSubmitting(false);
       }
       return;
@@ -362,12 +381,26 @@ const ApplicationPage = () => {
                 Thank you for your interest in becoming a Siomai Street franchise partner.
                 Our team will review your application and contact you using the details you provided.
               </p>
-              {submissionResult?.referenceNumber && (
+              {(submissionId || submissionResult?.referenceNumber) && (
                 <div className="submission-reference-badge">
                   <span className="ref-label">Reference No.</span>
-                  <span className="ref-value">{submissionResult.referenceNumber}</span>
+                  <span className="ref-value">{submissionId || submissionResult?.referenceNumber}</span>
                 </div>
               )}
+              <p style={{ marginTop: '12px', fontSize: '14px', color: 'var(--color-gray-500)' }}>
+                We&apos;ll contact you at the email address in your application. For help, contact <strong>franchise@siomaistreet.ph</strong>.
+              </p>
+              <button
+                type="button"
+                className="step-nav-continue"
+                style={{ marginTop: '24px' }}
+                onClick={() => {
+                  setSubmitted(false);
+                  setCurrentStep(APPLICATION_STEPS.length - 1);
+                }}
+              >
+                Return to Application
+              </button>
             </div>
           </div>
         </div>
@@ -531,12 +564,15 @@ const ApplicationPage = () => {
           <div className="step-content" key={currentStep}>
             {renderStepContent()}
           </div>
+          {submitError && <div className="step-errors" role="alert">{submitError}</div>}
           <StepNav
             currentStep={currentStep}
             totalSteps={APPLICATION_STEPS.length}
             onBack={handleBack}
             onNext={handleNext}
             nextLabel={nextStepLabel}
+            disabled={submitting}
+            busy={submitting}
           />
         </div>
 
