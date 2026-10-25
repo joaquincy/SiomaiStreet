@@ -106,11 +106,11 @@ const LegalConsents = ({ formData, updateField }) => {
               onChange={(e) => updateField('consent_privacy', e.target.checked)}
             />
             <span className="legal-checkbox-text">
-              I acknowledge that I have read the <span className="privacy-link-placeholder">Privacy Policy</span> and consent to the processing of my personal data.
+              I have reviewed the data notice below and consent to the processing of my personal data for my franchise application.
             </span>
           </label>
           <p className="privacy-notice-pending">
-            The full Privacy Policy document will be available before online submission is activated.
+            Your application includes contact and identity details, business and financial information, and uploaded identity and supporting documents. Siomai Street uses these details to assess your franchise application and contact you about it. Applications are stored in a restricted database and files in private storage; public website visitors cannot read them. For questions or data requests, contact franchise@siomaistreet.ph. A fuller privacy policy should be published before launch.
           </p>
         </div>
       </div>

@@ -1,84 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { BiLike, BiCamera, BiChevronDown } from 'react-icons/bi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
 import './Reviews.css';
 
-const initialReviews = [
-  {
-    id: 1,
-    name: 'Tord Cabanela',
-    initials: 'TC',
-    color: '#E63946',
-    verified: true,
-    date: '2 days ago',
-    rating: 5,
-    tags: ['GREAT VALUE', 'BEST CHILI SAUCE'],
-    text: 'The best siomai in town! The chili garlic sauce is absolutely perfect. I always buy the family pack to take home.',
-    image: 'https://images.unsplash.com/photo-1565299507177-b0ac66763828?w=400&q=80',
-    helpful: 24,
-  },
-  {
-    id: 2,
-    name: 'Rica Paloma',
-    initials: 'RP',
-    color: '#F5A623',
-    verified: true,
-    date: '1 week ago',
-    rating: 5,
-    tags: ['MUST TRY', 'AFFORDABLE'],
-    text: 'My go-to merienda spot. Affordable and masarap. The shrimp siomai is my absolute favorite. Lagi akong bumabalik!',
-    image: null,
-    helpful: 18,
-  },
-  {
-    id: 3,
-    name: 'Mark Tan',
-    initials: 'MT',
-    color: '#4CAF50',
-    verified: true,
-    date: '3 days ago',
-    rating: 5,
-    tags: ['BEST SIOMAI', 'FAMILY PACK'],
-    text: 'Best siomai in our area! My kids love it. We order almost every day. Super worth it for the price. Highly recommended!',
-    image: null,
-    helpful: 31,
-  },
-  {
-    id: 4,
-    name: 'Jenny Lim',
-    initials: 'JL',
-    color: '#9C27B0',
-    verified: true,
-    date: '5 days ago',
-    rating: 4,
-    tags: ['GREAT SERVICE', 'CONSISTENT'],
-    text: 'Consistent quality every time. I love that the portions are generous and the staff is always friendly. Keep it up, Siomai Street!',
-    image: null,
-    helpful: 12,
-  },
-  {
-    id: 5,
-    name: 'Paolo Garcia',
-    initials: 'PG',
-    color: '#2196F3',
-    verified: false,
-    date: '1 week ago',
-    rating: 5,
-    tags: ['OFFICE FAVE', 'GREAT VALUE'],
-    text: 'Discovered this gem near our office. Now the whole team orders from here for lunch. The rice meals are super sulit!',
-    image: null,
-    helpful: 9,
-  },
-];
-
-const ratingBreakdown = [
-  { stars: 5, percent: 60 },
-  { stars: 4, percent: 50 },
-  { stars: 3, percent: 50 },
-  { stars: 2, percent: 0 },
-  { stars: 1, percent: 0 },
-];
 
 const StarRating = ({ rating, size = 16 }) => (
   <span className="cfb-star-row" style={{ fontSize: size }}>
@@ -91,53 +16,97 @@ const StarRating = ({ rating, size = 16 }) => (
 );
 
 const ReviewsPage = () => {
-  const [reviews, setReviews] = useState(initialReviews);
+  const [reviews, setReviews] = useState([]);
+  const [branches, setBranches] = useState([]);
+  const [selectedBranchId, setSelectedBranchId] = useState('');
   const [sort, setSort] = useState('Newest First');
   const [helpfulMap, setHelpfulMap] = useState({});
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [form, setForm] = useState({ name: '', text: '', photo: null });
   const [submitted, setSubmitted] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [submitting, setSubmitting] = useState(false);
+  const [loadError, setLoadError] = useState('');
+
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch('/api/reviews').then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not load reviews.');
+        if (active && Array.isArray(result)) setReviews(result);
+      }),
+      fetch('/api/branches').then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not load branches.');
+        if (active && Array.isArray(result.branches)) setBranches(result.branches);
+      }),
+    ]).catch(() => {
+      if (active) setLoadError('Live reviews or branch locations are temporarily unavailable.');
+    });
+    return () => { active = false; };
+  }, []);
+
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => {
+    const count = reviews.filter((review) => Number(review.rating) === stars).length;
+    return { stars, percent: reviews.length ? Math.round((count / reviews.length) * 100) : 0 };
+  });
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sort === 'Highest Rated') return b.rating - a.rating;
     if (sort === 'Lowest Rated') return a.rating - b.rating;
     if (sort === 'Most Helpful') return b.helpful - a.helpful;
-    return b.id - a.id;
+    if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
+    return Number(b.id) - Number(a.id);
   });
 
-  const handleHelpful = (id) => {
+  const handleHelpful = async (id) => {
     if (helpfulMap[id]) return;
     setHelpfulMap((prev) => ({ ...prev, [id]: true }));
-    setReviews((prev) =>
-      prev.map((r) => (r.id === id ? { ...r, helpful: r.helpful + 1 } : r))
-    );
+    try {
+      const response = await fetch(`/api/reviews/${id}/helpful`, { method: 'POST' });
+      const result = await response.json();
+      if (!response.ok) throw new Error(result.error);
+      setReviews((prev) => prev.map((review) => review.id === id ? { ...review, helpful: result.helpful } : review));
+    } catch {
+      setHelpfulMap((prev) => {
+        const next = { ...prev };
+        delete next[id];
+        return next;
+      });
+    }
   };
 
-  const handleSubmit = (e) => {
+  const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedRating || !form.name.trim() || !form.text.trim()) return;
-    const newReview = {
-      id: Date.now(),
-      name: form.name,
-      initials: form.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
-      color: '#E63946',
-      verified: false,
-      date: 'Just now',
-      rating: selectedRating,
-      tags: [],
-      text: form.text,
-      image: form.photo ? URL.createObjectURL(form.photo) : null,
-      helpful: 0,
-    };
-    setReviews((prev) => [newReview, ...prev]);
-    setForm({ name: '', text: '', photo: null });
-    setSelectedRating(0);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    if (!selectedRating || !selectedBranchId || !form.name.trim() || !form.text.trim()) return;
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const body = new FormData();
+      body.append('displayName', form.name.trim());
+      body.append('text', form.text.trim());
+      body.append('rating', String(selectedRating));
+      body.append('branchId', selectedBranchId);
+      if (form.photo) body.append('photo', form.photo, form.photo.name);
+      const response = await fetch('/api/reviews', { method: 'POST', body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Your review could not be submitted.');
+      setForm({ name: '', text: '', photo: null });
+      setSelectedRating(0);
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      setSubmitError(error.message || 'Your review could not be submitted.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
-  const avgRating = (reviews.reduce((s, r) => s + r.rating, 0) / reviews.length).toFixed(1);
+  const avgRating = reviews.length
+    ? (reviews.reduce((sum, review) => sum + Number(review.rating || 0), 0) / reviews.length).toFixed(1)
+    : '—';
 
   return (
     <main className="cfb-page">
@@ -166,7 +135,7 @@ const ReviewsPage = () => {
               <span className="cfb-score-big">{avgRating}</span>
               <div className="cfb-score-details">
                 <StarRating rating={parseFloat(avgRating)} size={18} />
-                <span className="cfb-verified-count">{reviews.length} VERIFIED REVIEWS</span>
+                <span className="cfb-verified-count">{reviews.length} PUBLISHED REVIEWS</span>
               </div>
             </div>
             <div className="cfb-breakdown">
@@ -194,10 +163,29 @@ const ReviewsPage = () => {
             </div>
 
             {submitted && (
-              <div className="cfb-success-msg">Thank you for your feedback!</div>
+              <div className="cfb-success-msg">Thank you! Your review was submitted and will appear after moderation.</div>
             )}
+            {submitError && <div className="cfb-error-msg" role="alert">{submitError}</div>}
 
             <form onSubmit={handleSubmit} className="cfb-form">
+              <div className="cfb-form-group">
+                <label className="cfb-form-label" htmlFor="cfb-review-branch">BRANCH VISITED</label>
+                <select
+                  id="cfb-review-branch"
+                  className="cfb-input"
+                  value={selectedBranchId}
+                  onChange={(event) => setSelectedBranchId(event.target.value)}
+                  required
+                  disabled={branches.length === 0}
+                >
+                  <option value="">{branches.length ? 'Choose an active branch' : 'No active branches available'}</option>
+                  {branches.map((branch) => (
+                    <option key={branch.branch_id} value={branch.branch_id}>
+                      {branch.branch_name}{branch.branch_address ? ` — ${branch.branch_address}` : ''}
+                    </option>
+                  ))}
+                </select>
+              </div>
               <div className="cfb-form-group">
                 <label className="cfb-form-label">YOUR RATING</label>
                 <div className="cfb-rating-input">
@@ -253,8 +241,8 @@ const ReviewsPage = () => {
                 />
               </label>
 
-              <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn">
-                ✉ Post Feedback
+              <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn" disabled={submitting}>
+                {submitting ? 'Submitting…' : '✉ Post Feedback'}
               </button>
             </form>
           </div>
@@ -265,7 +253,7 @@ const ReviewsPage = () => {
           <div className="cfb-reviews-header">
             <div>
               <h2 className="cfb-reviews-title">Customer Reviews</h2>
-              <p className="cfb-reviews-count">Showing {sortedReviews.length} results</p>
+              <p className="cfb-reviews-count">Showing {sortedReviews.length} results{loadError ? ` · ${loadError}` : ''}</p>
             </div>
             <div className="cfb-sort-wrapper">
               <select
@@ -284,6 +272,7 @@ const ReviewsPage = () => {
           </div>
 
           <div className="cfb-reviews-list">
+            {sortedReviews.length === 0 && <p className="cfb-empty-reviews">No published reviews yet. Be the first to share your experience.</p>}
             {sortedReviews.map((review) => (
               <div className="cfb-review-card" key={review.id}>
                 <div className="cfb-review-top">
@@ -316,6 +305,7 @@ const ReviewsPage = () => {
                   </div>
                 )}
 
+                {review.branchName && <span className="cfb-review-branch">{review.branchName}</span>}
                 <p className="cfb-review-text">&ldquo;{review.text}&rdquo;</p>
 
                 {review.image && (

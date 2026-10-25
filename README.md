@@ -1,5 +1,11 @@
 # React + Vite
 
+## Local development and Supabase
+
+Copy `.env.example` to `.env.local`, set your Supabase project URL and a server-only service role key, then run `npm run dev`. This starts both the site and its API. Do not expose the service role key through a `VITE_` variable or commit `.env.local`.
+
+Before submitting reviews or franchise applications, apply the SQL migration in `supabase/migrations` using the Supabase SQL Editor. More setup details are in [supabase/README.md](supabase/README.md).
+
 This template provides a minimal setup to get React working in Vite with HMR and some Oxlint rules.
 
 Currently, two official plugins are available:

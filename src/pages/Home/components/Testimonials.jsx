@@ -3,60 +3,29 @@ import { BiStar } from 'react-icons/bi';
 import { HiArrowLeft, HiArrowRight } from 'react-icons/hi';
 import './Testimonials.css';
 
-const reviews = [
-  {
-    name: 'Carlo M.',
-    initials: 'CM',
-    location: 'Quezon City',
-    rating: 5,
-    text: 'Grabe ang sarap ng siomai nila! Every time I pass by, di ko mapigilan bumili. The chili garlic sauce is the best! 🔥',
-    platform: 'Google Reviews',
-    image: '/images/franchise-store.png',
-  },
-  {
-    name: 'Rica P.',
-    initials: 'RP',
-    location: 'Makati',
-    rating: 5,
-    text: 'My go-to merienda spot. Affordable and masarap. The shrimp siomai is my absolute favorite. Lagi akong bumabalik!',
-    platform: 'Facebook',
-    image: '/images/wc-siomai-1.jpg',
-  },
-  {
-    name: 'Mark T.',
-    initials: 'MT',
-    location: 'Cebu City',
-    rating: 5,
-    text: 'Best siomai in our area! My kids love it. We order almost every day. Super worth it for the price. Highly recommended!',
-    platform: 'Google Reviews',
-    image: '/images/wc-siomai-3.jpg',
-  },
-  {
-    name: 'Jenny L.',
-    initials: 'JL',
-    location: 'Davao',
-    rating: 5,
-    text: 'Consistent quality every time. I love that the portions are generous and the staff is always friendly. Keep it up, Siomai Street!',
-    platform: 'Facebook',
-    image: '/images/wc-siomai-5.jpg',
-  },
-  {
-    name: 'Paolo G.',
-    initials: 'PG',
-    location: 'Manila',
-    rating: 5,
-    text: 'Discovered this gem near our office. Now the whole team orders from here for lunch. The rice meals are super sulit!',
-    platform: 'Google Reviews',
-    image: '/images/wc-siomai-7.jpg',
-  },
-];
-
 const Testimonials = () => {
+  const [reviews, setReviews] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [isTransitioning, setIsTransitioning] = useState(false);
   const sectionRef = useRef(null);
   const outerTimerRef = useRef(null);
   const innerTimerRef = useRef(null);
+
+  useEffect(() => {
+    let active = true;
+    fetch('/api/reviews')
+      .then(async (response) => {
+        const data = await response.json();
+        if (!response.ok) throw new Error(data.error || 'Could not load reviews.');
+        if (active) {
+          const fetched = Array.isArray(data) ? data : [];
+          setReviews(fetched);
+          setActiveIndex(0);
+        }
+      })
+      .catch(() => { if (active) setReviews([]); });
+    return () => { active = false; };
+  }, []);
 
   // Clean up timers on unmount
   useEffect(() => {
@@ -67,7 +36,7 @@ const Testimonials = () => {
   }, []);
 
   const goTo = useCallback((index) => {
-    if (isTransitioning || index === activeIndex) return;
+    if (isTransitioning || index === activeIndex || reviews.length < 2) return;
     setIsTransitioning(true);
     // Short delay to allow exit animation, then swap content
     outerTimerRef.current = setTimeout(() => {
@@ -75,15 +44,15 @@ const Testimonials = () => {
       // Allow enter animation to start
       innerTimerRef.current = setTimeout(() => setIsTransitioning(false), 50);
     }, 300);
-  }, [activeIndex, isTransitioning]);
+  }, [activeIndex, isTransitioning, reviews.length]);
 
   const next = useCallback(() => {
-    goTo((activeIndex + 1) % reviews.length);
-  }, [activeIndex, goTo]);
+    if (reviews.length) goTo((activeIndex + 1) % reviews.length);
+  }, [activeIndex, goTo, reviews.length]);
 
   const prev = useCallback(() => {
-    goTo((activeIndex - 1 + reviews.length) % reviews.length);
-  }, [activeIndex, goTo]);
+    if (reviews.length) goTo((activeIndex - 1 + reviews.length) % reviews.length);
+  }, [activeIndex, goTo, reviews.length]);
 
   // Entrance animation
   useEffect(() => {
@@ -103,7 +72,9 @@ const Testimonials = () => {
   }, []);
 
   const current = reviews[activeIndex];
-  const counter = `${String(activeIndex + 1).padStart(2, '0')} / ${String(reviews.length).padStart(2, '0')}`;
+  const counter = current
+    ? `${String(activeIndex + 1).padStart(2, '0')} / ${String(reviews.length).padStart(2, '0')}`
+    : '00 / 00';
 
   return (
     <section className="reviews" id="reviews" ref={sectionRef}>
@@ -134,14 +105,11 @@ const Testimonials = () => {
           {/* Image Side */}
           <div className="reviews__image-col">
             <div className="reviews__image-frame">
-              {reviews.map((review, i) => (
-                <img
-                  key={i}
-                  src={review.image}
-                  alt={`Review by ${review.name}`}
-                  className={`reviews__image ${i === activeIndex ? 'reviews__image--active' : ''}`}
-                />
-              ))}
+              <img
+                src={current?.image || '/images/siomai front.png'}
+                alt={current?.image ? `Customer photo from ${current.name}` : 'Siomai Street'}
+                className="reviews__image reviews__image--active"
+              />
               {/* Small brand sticker */}
               <div className="reviews__sticker" aria-hidden="true">
                 <span className="reviews__sticker-text">EST. 2015</span>
@@ -155,25 +123,26 @@ const Testimonials = () => {
             <span className="reviews__quote-mark" aria-hidden="true">"</span>
 
             <div className={`reviews__quote-body ${isTransitioning ? 'reviews__quote-body--exit' : 'reviews__quote-body--enter'}`}>
-              <blockquote className="reviews__quote-text">
-                {current.text}
-              </blockquote>
-
-              <div className="reviews__stars">
-                {[...Array(current.rating)].map((_, i) => (
-                  <BiStar key={i} />
-                ))}
-              </div>
-
-              <div className="reviews__author">
-                <div className="reviews__avatar">{current.initials}</div>
-                <div className="reviews__author-info">
-                  <span className="reviews__author-name">{current.name}</span>
-                  <span className="reviews__author-meta">
-                    Customer • {current.location}
-                  </span>
-                </div>
-              </div>
+              {current ? (
+                <>
+                  <blockquote className="reviews__quote-text">{current.text}</blockquote>
+                  <div className="reviews__stars">
+                    {[...Array(Number(current.rating) || 0)].map((_, i) => <BiStar key={i} />)}
+                  </div>
+                  <div className="reviews__author">
+                    <div className="reviews__avatar">{current.name?.split(/\s+/).map((part) => part[0]).slice(0, 2).join('').toUpperCase()}</div>
+                    <div className="reviews__author-info">
+                      <span className="reviews__author-name">{current.name}</span>
+                      <span className="reviews__author-meta">Customer • {current.branchName || 'Siomai Street'}</span>
+                    </div>
+                  </div>
+                </>
+              ) : (
+                <>
+                  <blockquote className="reviews__quote-text">Customer reviews will appear here after moderation.</blockquote>
+                  <a href="/reviews" className="reviews__author-name">Share your experience</a>
+                </>
+              )}
             </div>
 
             {/* Navigation */}
@@ -190,9 +159,9 @@ const Testimonials = () => {
               <span className="reviews__nav-counter">{counter}</span>
 
               <div className="reviews__nav-dots">
-                {reviews.map((_, i) => (
+                {reviews.map((review, i) => (
                   <button
-                    key={i}
+                    key={review.id}
                     className={`reviews__nav-dot ${i === activeIndex ? 'reviews__nav-dot--active' : ''}`}
                     onClick={() => goTo(i)}
                     aria-label={`Go to review ${i + 1}`}

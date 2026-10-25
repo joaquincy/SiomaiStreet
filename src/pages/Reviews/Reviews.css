@@ -209,6 +209,16 @@
   border: 1px solid #b2e8c6;
 }
 
+.cfb-error-msg {
+  margin-bottom: 0.75rem;
+  padding: 0.7rem 0.85rem;
+  border: 1px solid #f3c2c2;
+  border-radius: 8px;
+  color: #a32626;
+  background: #fff4f4;
+  font-size: 0.85rem;
+}
+
 .cfb-form {
   display: flex;
   flex-direction: column;
