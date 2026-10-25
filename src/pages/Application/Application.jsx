@@ -1,5 +1,7 @@
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { HiOutlineCheck } from 'react-icons/hi';
+import { BiDevices, BiError, BiCheckCircle, BiXCircle } from 'react-icons/bi';
+import { HiOutlineShieldExclamation } from 'react-icons/hi2';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import { APPLICATION_STEPS } from '../../data/stepsConfig';
 import HelperSidebar from '../../components/HelperSidebar';
@@ -14,6 +16,15 @@ import DocumentUpload from './steps/DocumentUpload';
 import LegalConsents from './steps/LegalConsents';
 import PlaceholderStep from './steps/PlaceholderStep';
 import ReviewSubmit from './steps/ReviewSubmit';
+import { submitFranchiseApplication } from '../../api';
+import PageMeta from '../../components/PageMeta';
+import {
+  clearApplicationDraft,
+  loadApplicationDraft,
+  loadDraftDocuments,
+  saveApplicationDraft,
+  saveDraftDocuments,
+} from '../../utils/applicationDraft';
 import './Application.css';
 
 /* ─── Sub-navigation tab config ─── */
@@ -25,6 +36,34 @@ const SUB_NAV_TABS = [
 
 /* ─── Required documents list (must match DocumentUpload.jsx) ─── */
 const REQUIRED_DOC_KEYS = ['govIdFront', 'govIdBack', 'proofOfBilling', 'proofOfFunds', 'idPhoto'];
+const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
+
+const isValidPhone = (value) => {
+  const digits = value.replace(/\D/g, '');
+  return digits.length >= 7 && digits.length <= 15;
+};
+
+const isAtLeastAge = (dateOfBirth, minimumAge) => {
+  const birthDate = new Date(`${dateOfBirth}T00:00:00`);
+  if (Number.isNaN(birthDate.getTime())) return false;
+
+  const today = new Date();
+  const age = today.getFullYear() - birthDate.getFullYear();
+  const hasHadBirthday = today.getMonth() > birthDate.getMonth()
+    || (today.getMonth() === birthDate.getMonth() && today.getDate() >= birthDate.getDate());
+
+  return age > minimumAge || (age === minimumAge && hasHadBirthday);
+};
+
+const hasMinimumWords = (value, minimum) => {
+  const words = value?.trim().split(/\s+/).filter(Boolean) || [];
+  return words.length >= minimum;
+};
+
+const isPositiveCurrency = (value) => {
+  const numericValue = Number(String(value).replace(/[^\d.]/g, ''));
+  return Number.isFinite(numericValue) && numericValue > 0;
+};
 
 /* ─── H2: Per-step validation ─── */
 const validateStep = (stepIndex, formData) => {
@@ -36,37 +75,66 @@ const validateStep = (stepIndex, formData) => {
       if (!formData.franchiseType) errors.push('Franchise Type');
       if (!formData.territory) errors.push('Preferred Territory');
       if (!formData.ownershipIntention) errors.push('Ownership Intention');
+      if (!formData.openingTimeline) errors.push('Target Opening Timeline');
       break;
     case 1: // Personal Info
       if (!formData.firstName?.trim()) errors.push('First Name');
       if (!formData.lastName?.trim()) errors.push('Last Name');
       if (!formData.dateOfBirth) errors.push('Date of Birth');
+      if (formData.dateOfBirth && !isAtLeastAge(formData.dateOfBirth, 18)) errors.push('Applicant must be at least 18 years old');
       if (!formData.citizenship) errors.push('Citizenship');
       if (!formData.address?.trim()) errors.push('Residential Address');
       if (!formData.primaryPhone?.trim()) errors.push('Primary Phone');
+      if (formData.primaryPhone && !isValidPhone(formData.primaryPhone)) errors.push('Valid Primary Phone');
       if (!formData.email?.trim()) errors.push('Email Address');
       if (!formData.confirmEmail?.trim()) errors.push('Confirm Email');
-      if (formData.email && formData.confirmEmail && formData.email !== formData.confirmEmail) errors.push('Email addresses must match');
+      if (formData.email && !EMAIL_PATTERN.test(formData.email)) errors.push('Valid Email Address');
+      if (formData.email && formData.confirmEmail && formData.email.trim().toLowerCase() !== formData.confirmEmail.trim().toLowerCase()) errors.push('Email addresses must match');
       if (!formData.govIdType) errors.push('Government ID Type');
       if (!formData.govIdNumber?.trim()) errors.push('Government ID Number');
       if (!formData.maritalStatus) errors.push('Marital Status');
+      if (formData.hasCoApplicant === 'yes') {
+        const coApplicant = formData.coApplicant || {};
+        if (!coApplicant.firstName?.trim()) errors.push('Co-applicant First Name');
+        if (!coApplicant.lastName?.trim()) errors.push('Co-applicant Last Name');
+        if (!coApplicant.email?.trim() || !EMAIL_PATTERN.test(coApplicant.email)) errors.push('Valid Co-applicant Email');
+        if (!coApplicant.phone?.trim() || !isValidPhone(coApplicant.phone)) errors.push('Valid Co-applicant Phone');
+      }
       break;
     case 2: // Business Background — minimal required
       if (!formData.jobTitle?.trim()) errors.push('Job Title');
       if (!formData.company?.trim()) errors.push('Company Name');
+      if (formData.jobStartDate && formData.jobEndDate && formData.jobStartDate > formData.jobEndDate) errors.push('Employment end date must be after start date');
+      (formData.additionalPositions || []).forEach((position, index) => {
+        if (!position.jobTitle?.trim() || !position.company?.trim()) {
+          errors.push(`Job Title and Company Name for additional position ${index + 1}`);
+        }
+        if (position.startDate && position.endDate && position.startDate > position.endDate) {
+          errors.push(`Valid dates for additional position ${index + 1}`);
+        }
+      });
       break;
     case 3: // Financial Capability
       if (!formData.totalLiquidCapital?.trim()) errors.push('Total Liquid Capital');
+      if (formData.totalLiquidCapital && !isPositiveCurrency(formData.totalLiquidCapital)) errors.push('Valid Total Liquid Capital');
       if (!formData.investmentSources?.length) errors.push('Source of Investment Funds');
       break;
     case 4: // Brand Alignment
       if (!formData.whyInterested?.trim()) errors.push('Why interested in this franchise');
       if (!formData.personalValues?.trim()) errors.push('Personal values');
+      if (!hasMinimumWords(formData.whyInterested, 100)) errors.push('At least 100 words for why you are interested');
+      if (!hasMinimumWords(formData.personalValues, 50)) errors.push('At least 50 words about your personal values');
+      if (formData.brandValues?.length !== 3) errors.push('Exactly 3 brand values');
+      if (!hasMinimumWords(formData.brandValuesExplanation, 100)) errors.push('At least 100 words explaining your brand values');
+      if (!formData.discoveryDayInterest) errors.push('Discovery Day preference');
       break;
     case 5: // Franchise Plan
       if (!formData.selectedPackage) errors.push('Franchise Package');
       if (!formData.targetRegion) errors.push('Target Region');
       if (!formData.targetCity?.trim()) errors.push('Target City');
+      if (!formData.siteTypes?.length) errors.push('Proposed Site Type');
+      if (!formData.hasSpecificLocation) errors.push('Specific Location preference');
+      if (!formData.openToAlternative) errors.push('Alternative Location preference');
       if (!formData.planOpeningTimeline) errors.push('Opening Timeline');
       break;
     case 6: { // Document Upload
@@ -94,13 +162,51 @@ const validateStep = (stepIndex, formData) => {
 };
 
 const ApplicationPage = () => {
-  const [currentStep, setCurrentStep] = useState(0);
-  const [formData, setFormData] = useState({});
+  const [savedDraft] = useState(() => loadApplicationDraft());
+  const [currentStep, setCurrentStep] = useState(() => Math.min(Math.max(savedDraft.currentStep, 0), APPLICATION_STEPS.length - 1));
+  const [formData, setFormData] = useState(() => savedDraft.formData);
   const [submitted, setSubmitted] = useState(false);
   const [stepErrors, setStepErrors] = useState([]);
+  const [submissionError, setSubmissionError] = useState('');
+  const [submissionResult, setSubmissionResult] = useState(null);
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const [draftRestored, setDraftRestored] = useState(false);
   const stepperTrackRef = useRef(null);
 
   useScrollReveal();
+
+  useEffect(() => {
+    let isActive = true;
+
+    loadDraftDocuments()
+      .then((documents) => {
+        if (isActive && Object.keys(documents).length > 0) {
+          setFormData((previous) => ({ ...previous, documents }));
+        }
+      })
+      .catch(() => {
+        // Text answers remain available if document storage is unavailable.
+      })
+      .finally(() => {
+        if (isActive) setDraftRestored(true);
+      });
+
+    return () => {
+      isActive = false;
+    };
+  }, []);
+
+  useEffect(() => {
+    if (!draftRestored || submitted) return;
+    saveApplicationDraft(currentStep, formData);
+  }, [currentStep, draftRestored, formData, submitted]);
+
+  useEffect(() => {
+    if (!draftRestored || submitted) return;
+    saveDraftDocuments(formData.documents).catch(() => {
+      // Form data remains saved even if the browser cannot persist documents.
+    });
+  }, [draftRestored, formData.documents, submitted]);
 
   /* ─── H5 FIX: Progress starts at 0%, not 11% ─── */
   const progress = Math.round((currentStep / APPLICATION_STEPS.length) * 100);
@@ -125,7 +231,8 @@ const ApplicationPage = () => {
   };
 
   /* ─── H2: Validate before advancing ─── */
-  const handleNext = () => {
+  const handleNext = async () => {
+    setSubmissionError('');
     const errors = validateStep(currentStep, formData);
     if (errors.length > 0) {
       setStepErrors(errors);
@@ -134,8 +241,23 @@ const ApplicationPage = () => {
     }
 
     if (currentStep === APPLICATION_STEPS.length - 1) {
-      setSubmitted(true);
-      window.scrollTo({ top: 0, behavior: 'smooth' });
+      setIsSubmitting(true);
+
+      try {
+        const result = await submitFranchiseApplication({
+          formData,
+          turnstileToken: formData.turnstileToken,
+        });
+        setSubmissionResult(result);
+        setSubmitted(true);
+        await clearApplicationDraft().catch(() => {});
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } catch (error) {
+        setSubmissionError(error.message || 'Unable to submit your application. Please try again.');
+        window.scrollTo({ top: 0, behavior: 'smooth' });
+      } finally {
+        setIsSubmitting(false);
+      }
       return;
     }
     goToStep(currentStep + 1);
@@ -217,6 +339,11 @@ const ApplicationPage = () => {
   if (submitted) {
     return (
       <main className="application-page">
+        <PageMeta
+          title="Application Submitted"
+          path="/application"
+          description="Your Siomai Street franchise application has been submitted successfully."
+        />
         <div
           className="container"
           style={{
@@ -226,34 +353,21 @@ const ApplicationPage = () => {
         >
           <div className="app-form-card">
             <div className="submit-success">
-              <div className="success-icon" style={{ background: 'rgba(245, 166, 35, 0.1)', color: '#f5a623' }}>
-                <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                  <circle cx="12" cy="12" r="10" />
-                  <line x1="12" y1="8" x2="12" y2="12" />
-                  <line x1="12" y1="16" x2="12.01" y2="16" />
-                </svg>
+              <div className="success-glow" />
+              <div className="success-icon-ring">
+                <BiCheckCircle />
               </div>
-              <h2>Submission Not Yet Available</h2>
+              <h2>Application Submitted</h2>
               <p>
-                Online submission is not yet connected. Your answers have
-                been captured in this session but have <strong>not</strong> been
-                sent or stored anywhere.
+                Thank you for your interest in becoming a Siomai Street franchise partner.
+                Our team will review your application and contact you using the details you provided.
               </p>
-              <p style={{ marginTop: '12px', fontSize: '14px', color: 'var(--color-gray-500)' }}>
-                To submit your franchise application, please contact us directly
-                at <strong>franchise@siomaistreet.ph</strong> or call <strong>+63 912 345 6789</strong>.
-              </p>
-              <button
-                type="button"
-                className="step-nav-continue"
-                style={{ marginTop: '24px' }}
-                onClick={() => {
-                  setSubmitted(false);
-                  setCurrentStep(APPLICATION_STEPS.length - 1);
-                }}
-              >
-                Return to Application
-              </button>
+              {submissionResult?.referenceNumber && (
+                <div className="submission-reference-badge">
+                  <span className="ref-label">Reference No.</span>
+                  <span className="ref-value">{submissionResult.referenceNumber}</span>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -263,6 +377,11 @@ const ApplicationPage = () => {
 
   return (
     <main className="application-page">
+      <PageMeta
+        title="Franchise Application"
+        path="/application"
+        description="Apply for a Siomai Street franchise. Complete the 9-step application to become an official franchise partner."
+      />
       {/* ── Sub Navigation ── */}
       <nav className="app-subnav" id="app-subnav">
         <div className="app-subnav-inner">
@@ -337,15 +456,75 @@ const ApplicationPage = () => {
       {/* ── Content Area ── */}
       <div className="app-content-wrapper">
         <div className="app-form-card">
+          {/* ── Draft Notice Banner ── */}
+          <div className="app-draft-notice" role="status">
+            <div className="draft-notice-accent" />
+            <div className="draft-notice-icon">
+              <BiDevices />
+            </div>
+            <div className="draft-notice-content">
+              <span className="draft-notice-saved">Draft auto-saved to this device</span>
+              <span className="draft-notice-warning">
+                <HiOutlineShieldExclamation className="draft-warning-icon" />
+                Avoid shared or public computers for this application
+              </span>
+            </div>
+          </div>
+
           {/* ── H2: Validation error display ── */}
           {stepErrors.length > 0 && (
-            <div className="step-errors" role="alert">
-              <strong>Please complete the following before continuing:</strong>
-              <ul>
-                {stepErrors.map((err) => (
-                  <li key={err}>{err}</li>
+            <div className="step-errors-card" role="alert">
+              <div className="step-errors-accent" />
+              <div className="step-errors-header">
+                <div className="step-errors-icon-wrapper">
+                  <BiError />
+                </div>
+                <div className="step-errors-title-group">
+                  <span className="step-errors-title">Action required</span>
+                  <span className="step-errors-subtitle">
+                    Complete these {stepErrors.length} field{stepErrors.length > 1 ? 's' : ''} to continue
+                  </span>
+                </div>
+                <button
+                  type="button"
+                  className="step-errors-dismiss"
+                  onClick={() => setStepErrors([])}
+                  aria-label="Dismiss errors"
+                >
+                  <BiXCircle />
+                </button>
+              </div>
+              <ul className="step-errors-list">
+                {stepErrors.map((err, i) => (
+                  <li key={err}>
+                    <span className="step-error-num">{String(i + 1).padStart(2, '0')}</span>
+                    <span className="step-error-text">{err}</span>
+                  </li>
                 ))}
               </ul>
+            </div>
+          )}
+
+          {submissionError && (
+            <div className="submission-error-card" role="alert">
+              <div className="submission-error-accent" />
+              <div className="submission-error-body">
+                <div className="submission-error-icon-wrapper">
+                  <BiXCircle />
+                </div>
+                <div className="submission-error-content">
+                  <strong>Submission unsuccessful</strong>
+                  <p>{submissionError}</p>
+                </div>
+                <button
+                  type="button"
+                  className="step-errors-dismiss"
+                  onClick={() => setSubmissionError('')}
+                  aria-label="Dismiss error"
+                >
+                  <BiXCircle />
+                </button>
+              </div>
             </div>
           )}
 

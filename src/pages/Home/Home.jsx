@@ -1,3 +1,4 @@
+import PageMeta from '../../components/PageMeta';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import Hero from './components/Hero';
 import AboutUs from './components/AboutUs';
@@ -17,6 +18,10 @@ const Home = () => {
 
   return (
     <main>
+      <PageMeta
+        path="/"
+        description="The Philippines' favorite siomai franchise. Start your own food business with low investment and high returns. Apply now!"
+      />
       <Hero />
       <AboutUs />
       <Marquee />

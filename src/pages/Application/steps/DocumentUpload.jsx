@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useState } from 'react';
 import {
   BiFile,
   BiUpload,
@@ -28,8 +28,12 @@ const OPTIONAL_DOCUMENTS = [
 
 const FileUploadCard = ({ docKey, label, file, onFileSelect, onFileRemove }) => {
   const inputRef = useRef(null);
+  const [fileError, setFileError] = useState('');
+
+  const clearError = () => setFileError('');
 
   const handleClick = () => {
+    clearError();
     inputRef.current?.click();
   };
 
@@ -39,18 +43,21 @@ const FileUploadCard = ({ docKey, label, file, onFileSelect, onFileRemove }) => 
 
     // Client-side type validation
     if (!ALLOWED_TYPES.includes(selected.type)) {
-      alert(`"${selected.name}" is not an allowed file type. Please upload PDF, JPG, or PNG files only.`);
+      setFileError(`"${selected.name}" is not an allowed file type. Please upload PDF, JPG, or PNG files only.`);
       e.target.value = '';
+      setTimeout(clearError, 5000);
       return;
     }
 
     // Client-side size validation
     if (selected.size > MAX_FILE_SIZE) {
-      alert(`"${selected.name}" exceeds the 10MB size limit. Please choose a smaller file.`);
+      setFileError(`"${selected.name}" exceeds the 10MB size limit. Please choose a smaller file.`);
       e.target.value = '';
+      setTimeout(clearError, 5000);
       return;
     }
 
+    clearError();
     onFileSelect(docKey, selected);
     e.target.value = ''; // Reset so re-selecting the same file triggers onChange
   };
@@ -84,26 +91,34 @@ const FileUploadCard = ({ docKey, label, file, onFileSelect, onFileRemove }) => 
   }
 
   return (
-    <div
-      className="file-upload-card"
-      onClick={handleClick}
-      onKeyDown={handleKeyDown}
-      role="button"
-      tabIndex={0}
-      aria-label={`Upload ${label}`}
-    >
-      <BiUpload className="file-upload-icon" />
-      <span className="file-upload-label">{label}</span>
-      <span className="file-upload-hint">Click to upload</span>
-      <input
-        ref={inputRef}
-        type="file"
-        accept={ALLOWED_EXTENSIONS}
-        onChange={handleChange}
-        style={{ display: 'none' }}
-        aria-hidden="true"
-      />
-    </div>
+    <>
+      <div
+        className={`file-upload-card${fileError ? ' file-upload-error' : ''}`}
+        onClick={handleClick}
+        onKeyDown={handleKeyDown}
+        role="button"
+        tabIndex={0}
+        aria-label={`Upload ${label}`}
+      >
+        <BiUpload className="file-upload-icon" />
+        <span className="file-upload-label">{label}</span>
+        <span className="file-upload-hint">Click to upload</span>
+        <input
+          ref={inputRef}
+          type="file"
+          accept={ALLOWED_EXTENSIONS}
+          onChange={handleChange}
+          style={{ display: 'none' }}
+          aria-hidden="true"
+        />
+      </div>
+      {fileError && (
+        <div className="file-error-inline" role="alert">
+          <BiX className="file-error-dismiss" onClick={clearError} aria-label="Dismiss error" />
+          <span>{fileError}</span>
+        </div>
+      )}
+    </>
   );
 };
 

@@ -1,7 +1,8 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BiLike, BiCamera, BiChevronDown } from 'react-icons/bi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
+import PageMeta from '../../components/PageMeta';
 import './Reviews.css';
 
 const initialReviews = [
@@ -99,6 +100,19 @@ const ReviewsPage = () => {
   const [form, setForm] = useState({ name: '', text: '', photo: null });
   const [submitted, setSubmitted] = useState(false);
 
+  // Track object URLs so they can be revoked to prevent memory leaks
+  const objectUrlsRef = useRef([]);
+
+  useEffect(() => {
+    return () => {
+      // Revoke all object URLs created during this component's lifetime
+      objectUrlsRef.current.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* already revoked */ }
+      });
+      objectUrlsRef.current = [];
+    };
+  }, []);
+
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sort === 'Highest Rated') return b.rating - a.rating;
     if (sort === 'Lowest Rated') return a.rating - b.rating;
@@ -117,6 +131,13 @@ const ReviewsPage = () => {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!selectedRating || !form.name.trim() || !form.text.trim()) return;
+
+    let imageUrl = null;
+    if (form.photo) {
+      imageUrl = URL.createObjectURL(form.photo);
+      objectUrlsRef.current.push(imageUrl);
+    }
+
     const newReview = {
       id: Date.now(),
       name: form.name,
@@ -127,7 +148,7 @@ const ReviewsPage = () => {
       rating: selectedRating,
       tags: [],
       text: form.text,
-      image: form.photo ? URL.createObjectURL(form.photo) : null,
+      image: imageUrl,
       helpful: 0,
     };
     setReviews((prev) => [newReview, ...prev]);
@@ -141,6 +162,11 @@ const ReviewsPage = () => {
 
   return (
     <main className="cfb-page">
+      <PageMeta
+        title="Reviews"
+        path="/reviews"
+        description="Read real customer reviews of Siomai Street. See ratings, photos, and feedback from our community of siomai lovers."
+      />
       {/* Page Header */}
       <div className="cfb-page-header">
         <h1 className="cfb-page-title">

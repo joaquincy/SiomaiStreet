@@ -1,5 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import ErrorBoundary from './components/ErrorBoundary';
+import CookieConsent from './components/CookieConsent';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home/Home';
@@ -7,6 +9,9 @@ import Home from './pages/Home/Home';
 const MenuPage = lazy(() => import('./pages/Menu/Menu'));
 const ReviewsPage = lazy(() => import('./pages/Reviews/Reviews'));
 const ApplicationPage = lazy(() => import('./pages/Application/Application'));
+const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy'));
+const TermsOfService = lazy(() => import('./pages/Legal/TermsOfService'));
+const CookiePolicy = lazy(() => import('./pages/Legal/CookiePolicy'));
 
 /* ─── H7: Loading fallback ─── */
 const PageLoader = () => (
@@ -70,17 +75,23 @@ const NotFound = () => (
 function App() {
   return (
     <Router>
-      <Navbar />
-      <Suspense fallback={<PageLoader />}>
-        <Routes>
-          <Route path="/" element={<Home />} />
-          <Route path="/menu" element={<MenuPage />} />
-          <Route path="/reviews" element={<ReviewsPage />} />
-          <Route path="/application" element={<ApplicationPage />} />
-          <Route path="*" element={<NotFound />} />
-        </Routes>
-      </Suspense>
-      <Footer />
+      <ErrorBoundary>
+        <Navbar />
+        <Suspense fallback={<PageLoader />}>
+          <Routes>
+            <Route path="/" element={<Home />} />
+            <Route path="/menu" element={<MenuPage />} />
+            <Route path="/reviews" element={<ReviewsPage />} />
+            <Route path="/application" element={<ApplicationPage />} />
+            <Route path="/privacy" element={<PrivacyPolicy />} />
+            <Route path="/terms" element={<TermsOfService />} />
+            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route path="*" element={<NotFound />} />
+          </Routes>
+        </Suspense>
+        <Footer />
+        <CookieConsent />
+      </ErrorBoundary>
     </Router>
   );
 }

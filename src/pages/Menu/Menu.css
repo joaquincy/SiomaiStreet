@@ -50,6 +50,7 @@
 /* ─── Full Menu Section ─── */
 .menu-full {
   background: var(--color-white);
+  padding-bottom: clamp(12rem, 28vh, 22rem);
 }
 
 /* ─── Menu Grid & Cards (mirrored from FeaturedMenu.css) ─── */

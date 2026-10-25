@@ -3,6 +3,17 @@ import { Link } from 'react-router-dom';
 import { BiPhone, BiEnvelope, BiMap, BiTime, BiLogoFacebook, BiLogoInstagram, BiLogoTiktok } from 'react-icons/bi';
 import './Footer.css';
 
+const siomaiVariants = {
+  original: {
+    src: '/images/siomai 1.png',
+    alt: 'Original siomai',
+  },
+  japanese: {
+    src: '/images/japanese siomai.png',
+    alt: 'Japanese siomai',
+  },
+};
+
 const Footer = () => {
   const sectionRef = useRef(null);
   const currentYear = new Date().getFullYear();
@@ -26,22 +37,22 @@ const Footer = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Pre-defined food pieces to form the pile
+  // Mix siomai varieties here as new product images are added.
   const foodPieces = [
-    { src: '/images/siomai 1.png', left: '-5%', bottom: '-5%', width: 'clamp(150px, 15vw, 250px)', rot: '-12deg', delay: '0s', z: 3 },
-    { src: '/images/siomai front.png', left: '8%', bottom: '2%', width: 'clamp(180px, 18vw, 280px)', rot: '5deg', delay: '0.1s', z: 4 },
-    { src: '/images/siomai 1.png', left: '20%', bottom: '-8%', width: 'clamp(160px, 16vw, 260px)', rot: '22deg', delay: '0.05s', z: 2 },
-    { src: '/images/siomai front.png', left: '35%', bottom: '5%', width: 'clamp(140px, 14vw, 220px)', rot: '-18deg', delay: '0.2s', z: 5 },
-    { src: '/images/siomai 1.png', left: '48%', bottom: '-2%', width: 'clamp(200px, 20vw, 300px)', rot: '8deg', delay: '0.15s', z: 3 },
-    { src: '/images/siomai front.png', left: '60%', bottom: '10%', width: 'clamp(160px, 15vw, 240px)', rot: '-5deg', delay: '0.25s', z: 4 },
-    { src: '/images/siomai 1.png', left: '72%', bottom: '-5%', width: 'clamp(180px, 18vw, 280px)', rot: '15deg', delay: '0.1s', z: 2 },
-    { src: '/images/siomai front.png', left: '85%', bottom: '5%', width: 'clamp(170px, 17vw, 270px)', rot: '-25deg', delay: '0.3s', z: 5 },
-    { src: '/images/siomai 1.png', left: '95%', bottom: '-10%', width: 'clamp(200px, 20vw, 320px)', rot: '35deg', delay: '0.05s', z: 3 },
+    { variety: 'original', left: '-5%', bottom: '-5%', width: 'clamp(150px, 15vw, 250px)', rot: '-12deg', delay: '0s', z: 3 },
+    { variety: 'japanese', left: '8%', bottom: '2%', width: 'clamp(180px, 18vw, 280px)', rot: '5deg', delay: '0.1s', z: 4 },
+    { variety: 'original', left: '20%', bottom: '-8%', width: 'clamp(160px, 16vw, 260px)', rot: '22deg', delay: '0.05s', z: 2 },
+    { variety: 'japanese', left: '35%', bottom: '5%', width: 'clamp(140px, 14vw, 220px)', rot: '-18deg', delay: '0.2s', z: 5 },
+    { variety: 'original', left: '48%', bottom: '-2%', width: 'clamp(200px, 20vw, 300px)', rot: '8deg', delay: '0.15s', z: 3 },
+    { variety: 'japanese', left: '60%', bottom: '10%', width: 'clamp(160px, 15vw, 240px)', rot: '-5deg', delay: '0.25s', z: 4 },
+    { variety: 'original', left: '72%', bottom: '-5%', width: 'clamp(180px, 18vw, 280px)', rot: '15deg', delay: '0.1s', z: 2 },
+    { variety: 'japanese', left: '85%', bottom: '5%', width: 'clamp(170px, 17vw, 270px)', rot: '-25deg', delay: '0.3s', z: 5 },
+    { variety: 'original', left: '95%', bottom: '-10%', width: 'clamp(200px, 20vw, 320px)', rot: '35deg', delay: '0.05s', z: 3 },
     
     // Additional smaller background scatter
-    { src: '/images/siomai 1.png', left: '15%', bottom: '15%', width: 'clamp(100px, 10vw, 150px)', rot: '45deg', delay: '0.4s', z: 1 },
-    { src: '/images/siomai front.png', left: '55%', bottom: '25%', width: 'clamp(120px, 12vw, 180px)', rot: '-40deg', delay: '0.35s', z: 1 },
-    { src: '/images/siomai 1.png', left: '80%', bottom: '18%', width: 'clamp(110px, 11vw, 160px)', rot: '60deg', delay: '0.45s', z: 1 },
+    { variety: 'original', left: '15%', bottom: '15%', width: 'clamp(100px, 10vw, 150px)', rot: '45deg', delay: '0.4s', z: 1 },
+    { variety: 'japanese', left: '55%', bottom: '25%', width: 'clamp(120px, 12vw, 180px)', rot: '-40deg', delay: '0.35s', z: 1 },
+    { variety: 'original', left: '80%', bottom: '18%', width: 'clamp(110px, 11vw, 160px)', rot: '60deg', delay: '0.45s', z: 1 },
   ];
 
   return (
@@ -50,31 +61,39 @@ const Footer = () => {
       {/* ─── Giant Typography ─── */}
       <div className="footer-poster__giant-text-container" aria-hidden="true">
         <div className="footer-poster__word-row">
-          <span className="footer-poster__word footer-poster__word--siomai">SIOMAI</span>
-          <img src="/images/siomai street logo.png" alt="" className="footer-poster__word-logo" />
-          <span className="footer-poster__word footer-poster__word--street">STREET</span>
+          <div className="footer-sign-col footer-sign-col--left">
+            <span className="footer-sign-word footer-sign-word--left" data-text="Siomai">Siomai</span>
+          </div>
+          <img src="/images/siomai street logo.png" alt="Siomai Street" className="footer-sign-logo" />
+          <div className="footer-sign-col footer-sign-col--right">
+            <span className="footer-sign-word footer-sign-word--right" data-text="Street">Street</span>
+          </div>
         </div>
       </div>
 
       {/* ─── Falling Food Pile ─── */}
       <div className="footer-poster__food-pile" aria-hidden="true">
-        {foodPieces.map((piece, index) => (
-          <img
-            key={index}
-            src={piece.src}
-            alt="Siomai"
-            className="footer-poster__food-piece"
-            style={{
-              '--left': piece.left,
-              '--bottom': piece.bottom,
-              '--width': piece.width,
-              '--rot': piece.rot,
-              '--delay': piece.delay,
-              '--z': piece.z
-            }}
-            loading="lazy"
-          />
-        ))}
+        {foodPieces.map((piece, index) => {
+          const siomai = siomaiVariants[piece.variety];
+
+          return (
+            <img
+              key={index}
+              src={siomai.src}
+              alt={siomai.alt}
+              className="footer-poster__food-piece"
+              style={{
+                '--left': piece.left,
+                '--bottom': piece.bottom,
+                '--width': piece.width,
+                '--rot': piece.rot,
+                '--delay': piece.delay,
+                '--z': piece.z
+              }}
+              loading="lazy"
+            />
+          );
+        })}
       </div>
 
       {/* ─── Editorial Content Area ─── */}
@@ -150,9 +169,9 @@ const Footer = () => {
         <div className="footer-poster__bottom-bar">
           <p>© {currentYear} SIOMAI STREET. ALL RIGHTS RESERVED.</p>
           <div className="footer-poster__legal">
-            <a href="#">PRIVACY</a>
-            <a href="#">TERMS</a>
-            <a href="#">COOKIES</a>
+            <Link to="/privacy">PRIVACY</Link>
+            <Link to="/terms">TERMS</Link>
+            <Link to="/cookies">COOKIES</Link>
           </div>
         </div>
       </div>

@@ -1,0 +1,11 @@
+# https://www.robotstxt.org/robotstxt.html
+User-agent: *
+Allow: /
+
+# Sitemap location
+Sitemap: https://siomaistreet.ph/sitemap.xml
+
+# Block access to dev/build artifacts if accidentally exposed
+Disallow: /src/
+Disallow: /node_modules/
+Disallow: /.git/

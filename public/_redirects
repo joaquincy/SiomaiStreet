@@ -1,0 +1,3 @@
+# SPA catch-all redirect for Cloudflare Pages / Netlify
+# All routes serve index.html so React Router handles routing client-side
+/*    /index.html   200

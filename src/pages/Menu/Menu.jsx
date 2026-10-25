@@ -1,6 +1,7 @@
 import { useState } from 'react';
 import { BiStar } from 'react-icons/bi';
 import { Link } from 'react-router-dom';
+import PageMeta from '../../components/PageMeta';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import './Menu.css';
 
@@ -127,6 +128,11 @@ const MenuPage = () => {
 
   return (
     <main className="menu-page">
+      <PageMeta
+        title="Menu"
+        path="/menu"
+        description="Browse the full Siomai Street menu — classic pork, shrimp, Japanese siomai, rice meals, drinks, and family packs. Freshly made, always affordable."
+      />
       {/* Page Hero */}
       <section className="menu-page-hero">
         <div className="menu-page-hero-overlay"></div>

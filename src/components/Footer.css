@@ -42,47 +42,123 @@
   align-items: center;
   pointer-events: none;
   z-index: 1;
-  margin-bottom: clamp(2rem, 4vh, 3rem);
-  padding: 0;
-  overflow: hidden;
+  margin-bottom: clamp(1.5rem, 3vh, 3rem);
+  padding: clamp(0.5rem, 1.5vh, 2rem) 0 clamp(1.5rem, 2.5vh, 3rem) 0;
+  overflow: visible;
 }
 
-/* Container for the single-line layout */
+/* Container for the single-line layout — Wide Horizontal Presentation */
 .footer-poster__word-row {
   display: flex;
   justify-content: center;
   align-items: center;
   width: 100%;
-  gap: 1vw;
+  max-width: 100%;
+  padding: 0 clamp(0.5rem, 2vw, 2.5rem);
+  box-sizing: border-box;
+  position: relative;
+  overflow: visible;
 }
 
-/* Base styles for the words */
-.footer-poster__word {
-  font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  line-height: 0.85;
-  letter-spacing: -0.05em;
-  font-size: 13vw;
+/* Two equal-width columns so the logo is pinned at the exact 50% screen center */
+.footer-sign-col {
+  flex: 1 1 0px;
+  min-width: 0;
+  display: flex;
+  align-items: center;
+  overflow: visible;
 }
 
-/* SIOMAI — Solid cream */
-.footer-poster__word--siomai {
-  color: #FFFDF5;
+.footer-sign-col--left {
+  justify-content: flex-end;
 }
 
-/* STREET — Outlined for contrast */
-.footer-poster__word--street {
-  color: transparent;
-  -webkit-text-stroke: 2px #FFFDF5;
+.footer-sign-col--right {
+  justify-content: flex-start;
 }
 
-/* Logo sitting between the two words */
-.footer-poster__word-logo {
-  height: 8vw;
+/* ══════════════════════════════════════════════════════════════════
+   3D CHANNEL LETTER SIGNBOARD — Siomai Street
+   Crisp illuminated acrylic face, vivid neon magenta trim contour,
+   solid 3D channel depth, and bold dark structural casing.
+   ══════════════════════════════════════════════════════════════════ */
+.footer-sign-word {
+  position: relative;
+  display: inline-block;
+  font-family: var(--font-brush, 'Brush Script Opti', cursive);
+  font-weight: normal;
+  font-size: clamp(3.2rem, 13vw, 18rem);
+  line-height: 0.95;
+  letter-spacing: 0.015em;
+  white-space: nowrap;
+  user-select: none;
+  transform: scaleX(1.12);
+
+  /* Layer 1 (Base): Dark structural casing + 3D side return + drop depth */
+  color: #120206;
+  -webkit-text-stroke: clamp(5.5px, 0.75vw, 10px) #120206;
+  paint-order: stroke fill;
+  text-shadow:
+    /* Acrylic side return (stepped light bevel) */
+    1px 2px 0 #FFFFFF,
+    2px 3px 0 #F5ECEB,
+    2px 4px 0 #E8DBD9,
+    /* 3D solid depth */
+    3px 6px 0 #2A040B,
+    4px 8px 0 #180206,
+    5px 10px 1px #0A0103,
+    /* Crisp dark drop shadows */
+    0 10px 20px rgba(0, 0, 0, 0.8),
+    0 18px 36px rgba(0, 0, 0, 0.55);
+  filter: drop-shadow(0 0 25px rgba(255, 20, 90, 0.35));
+}
+
+.footer-sign-word--left {
+  transform-origin: right center;
+}
+
+.footer-sign-word--right {
+  transform-origin: left center;
+}
+
+/* Layer 2: Vivid Neon Pink/Magenta Trim Contour (framed cleanly by the base casing) */
+.footer-sign-word::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: #FF1867;
+  -webkit-text-stroke: clamp(3px, 0.42vw, 6px) #FF1867;
+  paint-order: stroke fill;
+  text-shadow: 0 0 10px rgba(255, 24, 103, 0.65);
+  z-index: 2;
+  pointer-events: none;
+}
+
+/* Layer 3: Brilliant Illuminated Pure White Face (crystal clear & highly readable) */
+.footer-sign-word::after {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  color: #FFFFFF;
+  -webkit-text-stroke: 0;
+  text-shadow: none;
+  z-index: 3;
+  pointer-events: none;
+}
+
+/* Logo sitting between the two words — optically aligned with the text midline */
+.footer-sign-logo {
+  height: clamp(3.8rem, 10.5vw, 14rem);
   width: auto;
   object-fit: contain;
   flex-shrink: 0;
-  filter: drop-shadow(0 4px 12px rgba(0, 0, 0, 0.3));
+  margin-left: 3.5rem;
+  margin-right: 1rem;
+  transform: translateY(clamp(-0.4rem, -1.1vw, -1.5rem));
+  filter:
+    drop-shadow(0 8px 24px rgba(0, 0, 0, 0.75)) drop-shadow(0 0 16px rgba(255, 24, 103, 0.35));
+  z-index: 4;
+  position: relative;
 }
 
 /* ─── FALLING FOOD PILE (The Main Event) ─── */

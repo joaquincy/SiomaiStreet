@@ -12,6 +12,17 @@ dist
 dist-ssr
 *.local
 
+# Environment files (contain secrets)
+.env
+.env.local
+.env.*.local
+
+# Design assets (large binaries)
+wireframe.*
+*.psd
+*.sketch
+*.fig
+
 # Editor directories and files
 .vscode/*
 !.vscode/extensions.json
@@ -22,3 +33,4 @@ dist-ssr
 *.njsproj
 *.sln
 *.sw?
+Thumbs.db

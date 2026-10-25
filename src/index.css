@@ -7,6 +7,14 @@
   font-display: swap;
 }
 
+@font-face {
+  font-family: 'Brush Script Opti';
+  src: url('/fonts/BrushScriptOpti-Regular.otf') format('opentype');
+  font-weight: normal;
+  font-style: normal;
+  font-display: swap;
+}
+
 /* CSS Reset */
 *,
 *::before,
@@ -19,6 +27,7 @@
 :root {
   /* ─── Fonts ─── */
   --font-shuriken: 'The Last Shuriken', sans-serif;
+  --font-brush: 'Brush Script Opti', cursive;
 
   /* ─── Colors ─── */
   --color-saffron: #F5A623;
