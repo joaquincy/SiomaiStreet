@@ -26,6 +26,15 @@ const ReviewsPage = () => {
   const [hoverRating, setHoverRating] = useState(0);
   const [form, setForm] = useState({ name: '', text: '', photo: null });
   const [submitted, setSubmitted] = useState(false);
+  const [submitting, setSubmitting] = useState(false);
+  const [submitError, setSubmitError] = useState('');
+  const [loadError, setLoadError] = useState('');
+
+  const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => {
+    const count = reviews.filter((r) => Math.round(r.rating) === stars).length;
+    const percent = reviews.length ? Math.round((count / reviews.length) * 100) : 0;
+    return { stars, percent };
+  });
 
   const sortedReviews = [...reviews].sort((a, b) => {
     if (sort === 'Highest Rated') return b.rating - a.rating;
@@ -55,24 +64,32 @@ const ReviewsPage = () => {
   const handleSubmit = async (e) => {
     e.preventDefault();
     if (!selectedRating || !form.name.trim() || !form.text.trim()) return;
-    const newReview = {
-      id: Date.now(),
-      name: form.name,
-      initials: form.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
-      color: '#E63946',
-      verified: false,
-      date: 'Just now',
-      rating: selectedRating,
-      tags: [],
-      text: form.text,
-      image: form.photo ? URL.createObjectURL(form.photo) : null,
-      helpful: 0,
-    };
-    setReviews((prev) => [newReview, ...prev]);
-    setForm({ name: '', text: '', photo: null });
-    setSelectedRating(0);
-    setSubmitted(true);
-    setTimeout(() => setSubmitted(false), 3000);
+    setSubmitting(true);
+    setSubmitError('');
+    try {
+      const newReview = {
+        id: Date.now(),
+        name: form.name,
+        initials: form.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
+        color: '#E63946',
+        verified: false,
+        date: 'Just now',
+        rating: selectedRating,
+        tags: [],
+        text: form.text,
+        image: form.photo ? URL.createObjectURL(form.photo) : null,
+        helpful: 0,
+      };
+      setReviews((prev) => [newReview, ...prev]);
+      setForm({ name: '', text: '', photo: null });
+      setSelectedRating(0);
+      setSubmitted(true);
+      setTimeout(() => setSubmitted(false), 3000);
+    } catch {
+      setSubmitError('Failed to submit review. Please try again.');
+    } finally {
+      setSubmitting(false);
+    }
   };
 
   const avgRating = reviews.length

@@ -1,7 +1,7 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import ErrorBoundary from './components/ErrorBoundary';
-import CookieConsent from './components/CookieConsent';
+import SiteNotice from './components/SiteNotice';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home/Home';
@@ -90,7 +90,7 @@ function App() {
           </Routes>
         </Suspense>
         <Footer />
-        <CookieConsent />
+        <SiteNotice />
       </ErrorBoundary>
     </Router>
   );

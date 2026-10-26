@@ -1,17 +1,17 @@
 import { useState, useEffect } from 'react';
 import { Link } from 'react-router-dom';
-import './CookieConsent.css';
+import './SiteNotice.css';
 
 const CONSENT_KEY = 'cookie_consent';
 
 /**
- * CookieConsent — shows a banner on first visit asking the user
+ * SiteNotice — shows a banner on first visit asking the user
  * to accept or decline non-essential cookies.
  *
  * Choice is stored in localStorage. Only shows once until cleared.
  * Essential cookies (draft storage, CSRF) are always active.
  */
-const CookieConsent = () => {
+const SiteNotice = () => {
   const [visible, setVisible] = useState(false);
 
   useEffect(() => {
@@ -86,4 +86,4 @@ const CookieConsent = () => {
   );
 };
 
-export default CookieConsent;
+export default SiteNotice;
