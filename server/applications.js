@@ -1,6 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto';
 import { MAX_APPLICATION_BYTES } from './applicationSecurity.js';
 import { normalizeDocumentImage } from './documentImages.js';
+import { isAcceptedScan } from './documentScanner.js';
 import { CONTRACT_VERSION, DOCUMENT_KEYS, UUID_PATTERN, sanitizeApplication, validateApplication } from '../shared/application.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
@@ -9,7 +10,8 @@ const canonical = value => Array.isArray(value) ? value.map(canonical) : value &
 const receipt = row => ({ version: CONTRACT_VERSION, id: row.id, status: 'submitted', submittedAt: row.submitted_at });
 
 // Inject storage and database access so tests use this handler without live credentials.
-export function createApplicationHandler({ readMultipart, repository, uploadFile, deleteStorageObjects, rateLimit, json, admit, scanDocument, verifyStorage, reportCleanupFailure = () => {}, receiptDetails = () => ({}) }) {
+// allowUnscannedDocuments is only true when DOCUMENT_SCAN=off is set explicitly.
+export function createApplicationHandler({ readMultipart, repository, uploadFile, deleteStorageObjects, rateLimit, json, admit, scanDocument, verifyStorage, reportCleanupFailure = () => {}, receiptDetails = () => ({}), allowUnscannedDocuments = false }) {
   if (![admit, scanDocument, verifyStorage].every(fn => typeof fn === 'function')) throw new Error('Application security dependencies are required.');
   return async (req, res) => {
     const release = await admit(req, res);
@@ -84,7 +86,7 @@ export function createApplicationHandler({ readMultipart, repository, uploadFile
         await uploadFile('franchise-quarantine', path, file, file.type);
         const scan = await scanDocument(file);
         if (scan?.status === 'rejected') throw fail('A document failed security checks. Replace it and retry.', 422, { validationErrors: [{ step: 6, message: `Replace ${key}: document failed security checks.` }] });
-        if (scan?.status !== 'clean' || scan.engine !== 'ClamAV' || !Number.isFinite(Date.parse(scan.scannedAt))) throw fail('Document scanning is unavailable. Keep your draft and retry.', 503);
+        if (!isAcceptedScan(scan, allowUnscannedDocuments)) throw fail('Document scanning is unavailable. Keep your draft and retry.', 503);
         scans[key] = scan;
       }
       for (const [key, file] of Object.entries(documents)) {

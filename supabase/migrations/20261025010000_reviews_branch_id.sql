@@ -8,3 +8,4 @@ create index if not exists reviews_branch_published_created_at_idx
 
 -- Make the new column and relationship visible to PostgREST immediately.
 notify pgrst, 'reload schema';
+

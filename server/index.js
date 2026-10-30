@@ -2,7 +2,7 @@ import { readMultipart } from './multipart.js';
 import { portalAccess, createPortalHandler } from './applicationPortal.js';
 import { createApplicationHandler } from './applications.js';
 import { createApplicationAdmission, createSharedApplicationRateLimit, clientIP } from './applicationSecurity.js';
-import { createDocumentScanner } from './documentScanner.js';
+import { isDocumentScanDisabled, createSkippedScanner, createDocumentScanner } from './documentScanner.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
@@ -189,6 +189,11 @@ const applicationRate = createSharedApplicationRateLimit({
   rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
 });
 const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
+const scanDisabled = isDocumentScanDisabled(process.env);
+if (scanDisabled) console.warn('⚠ DOCUMENT SCANNING IS DISABLED. Documents will NOT be virus-checked.');
+const scanDocument = scanDisabled
+  ? createSkippedScanner()
+  : createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) });
 const applicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies });
 const verifyApplicationStorage = async () => {
   // Check portal configuration before accepting a new submission.
@@ -203,7 +208,8 @@ const handlePortal = createPortalHandler({
   rate: req => applicationRate(clientIP(req, trustedProxies), 'portal', 60),
   admit: applicationAdmission,
   verifyStorage: verifyApplicationStorage,
-  scanDocument: createDocumentScanner({host:process.env.CLAMD_HOST,port:Number(process.env.CLAMD_PORT || 3310)}),
+  scanDocument,
+  allowUnscannedDocuments: scanDisabled,
   reportCleanupFailure: event => console.error('Correction reconciliation required:', JSON.stringify(event)),
   repository: {
     find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,status,submitted_at,updated_at,portal_access_revoked&id=eq.'+id+'&limit=1'))?.[0],
@@ -216,7 +222,8 @@ const handleApplicationPost = createApplicationHandler({
   readMultipart, uploadFile, deleteStorageObjects, json,
   admit: applicationAdmission,
   rateLimit: req => applicationRate(clientIP(req, trustedProxies), 'new-application', 4),
-  scanDocument: createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) }),
+  scanDocument,
+  allowUnscannedDocuments: scanDisabled,
   verifyStorage: verifyApplicationStorage,
   reportCleanupFailure: event => console.error('Application orphan cleanup required:', JSON.stringify(event)),
   repository: {

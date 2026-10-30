@@ -1,6 +1,21 @@
 import { createConnection } from 'node:net';
 import { once } from 'node:events';
 
+// Scanning is required unless DOCUMENT_SCAN=off is set explicitly (local demos only).
+export const isDocumentScanDisabled = env => String(env?.DOCUMENT_SCAN || '').trim().toLowerCase() === 'off';
+
+// Records that a file was NOT virus-checked so reviewers can see it in the stored metadata.
+export function createSkippedScanner() {
+  return async () => ({ status: 'skipped', engine: 'none', scannedAt: new Date().toISOString() });
+}
+
+// A scan result is accepted only if ClamAV marked it clean, or scanning was explicitly disabled.
+export function isAcceptedScan(scan, allowSkipped = false) {
+  if (!scan || !Number.isFinite(Date.parse(scan.scannedAt))) return false;
+  if (scan.status === 'clean' && scan.engine === 'ClamAV') return true;
+  return allowSkipped && scan.status === 'skipped' && scan.engine === 'none';
+}
+
 // ClamD INSTREAM. Only use a loopback/private socket: the protocol is not authenticated.
 export function createDocumentScanner({ host, port = 3310, timeoutMs = 30000 }) {
   return async file => {

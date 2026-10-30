@@ -138,3 +138,4 @@ comment on table public.reviews is 'Customer reviews. New public submissions sta
 comment on table public.franchise_applications is 'Private franchise applications; public clients can insert only.';
 comment on column public.franchise_applications.application_data is 'Complete application form values keyed by the frontend camelCase field names.';
 comment on column public.franchise_applications.document_paths is 'Private Storage object paths keyed by document field (e.g. govIdFront).';
+

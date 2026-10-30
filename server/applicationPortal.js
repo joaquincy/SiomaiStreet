@@ -1,6 +1,7 @@
 import { createHmac, timingSafeEqual, createHash, randomUUID } from 'node:crypto';
 import { UUID_PATTERN, DOCUMENT_KEYS, documentTypes } from '../shared/application.js';
 import { normalizeDocumentImage } from './documentImages.js';
+import { isAcceptedScan } from './documentScanner.js';
 
 const fail = (message, status) => Object.assign(new Error(message), { status });
 export function portalAccess(secret) {
@@ -17,7 +18,7 @@ export function portalAccess(secret) {
   };
 }
 
-export function createPortalHandler({ access, rate, admit, repository, readMultipart, scanDocument, uploadFile, deleteStorageObjects, verifyStorage, json, reportCleanupFailure = () => {} }) {
+export function createPortalHandler({ access, rate, admit, repository, readMultipart, scanDocument, uploadFile, deleteStorageObjects, verifyStorage, json, reportCleanupFailure = () => {}, allowUnscannedDocuments = false }) {
   return async (req, res, id, correctionId) => {
     if (correctionId) res.setHeader?.('Connection', 'close');
     // Rate and ownership checks run before multipart parsing and expensive file work.
@@ -55,7 +56,7 @@ export function createPortalHandler({ access, rate, admit, repository, readMulti
       await uploadFile('franchise-quarantine', path, file, file.type);
       const scan = await scanDocument(file);
       if (scan?.status === 'rejected') throw fail('The replacement failed security checks. Choose a different file.', 422);
-      if (scan?.status !== 'clean' || scan.engine !== 'ClamAV' || !Number.isFinite(Date.parse(scan.scannedAt))) throw fail('Document scanning is unavailable. Keep your file and retry.', 503);
+      if (!isAcceptedScan(scan, allowUnscannedDocuments)) throw fail('Document scanning is unavailable. Keep your file and retry.', 503);
       await uploadFile('franchise-documents', path, file, file.type);
       commitAttempted = true;
       const result = await repository.replace({ application_id:id, correction_id:correctionId, retry_id:retryId, file_hash:hash, metadata:{ path, name:file.name, contentType:file.type, size:file.size, scan } });
