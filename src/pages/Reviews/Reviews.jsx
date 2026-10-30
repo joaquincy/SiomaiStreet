@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { BiLike, BiCamera, BiChevronDown } from 'react-icons/bi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
@@ -29,6 +29,39 @@ const ReviewsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
+
+  // Track object URLs so they can be revoked to prevent memory leaks
+  const objectUrlsRef = useRef([]);
+
+  // Fetch reviews and branches from the backend API on mount
+  useEffect(() => {
+    let active = true;
+    Promise.all([
+      fetch('/api/reviews').then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not load reviews.');
+        if (active && Array.isArray(result)) setReviews(result);
+      }),
+      fetch('/api/branches').then(async (response) => {
+        const result = await response.json();
+        if (!response.ok) throw new Error(result.error || 'Could not load branches.');
+        if (active && result.branches) setBranches(result.branches);
+      }),
+    ]).catch(() => {
+      if (active) setLoadError('Live reviews or branch locations are temporarily unavailable.');
+    });
+    return () => { active = false; };
+  }, []);
+
+  // Revoke all object URLs created during this component's lifetime
+  useEffect(() => {
+    return () => {
+      objectUrlsRef.current.forEach((url) => {
+        try { URL.revokeObjectURL(url); } catch { /* already revoked */ }
+      });
+      objectUrlsRef.current = [];
+    };
+  }, []);
 
   const ratingBreakdown = [5, 4, 3, 2, 1].map((stars) => {
     const count = reviews.filter((r) => Math.round(r.rating) === stars).length;
@@ -63,30 +96,25 @@ const ReviewsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!selectedRating || !form.name.trim() || !form.text.trim()) return;
+    if (!selectedRating || !selectedBranchId || !form.name.trim() || !form.text.trim()) return;
     setSubmitting(true);
     setSubmitError('');
     try {
-      const newReview = {
-        id: Date.now(),
-        name: form.name,
-        initials: form.name.split(' ').map((w) => w[0]).join('').slice(0, 2).toUpperCase(),
-        color: '#E63946',
-        verified: false,
-        date: 'Just now',
-        rating: selectedRating,
-        tags: [],
-        text: form.text,
-        image: form.photo ? URL.createObjectURL(form.photo) : null,
-        helpful: 0,
-      };
-      setReviews((prev) => [newReview, ...prev]);
+      const body = new FormData();
+      body.append('displayName', form.name.trim());
+      body.append('text', form.text.trim());
+      body.append('rating', String(selectedRating));
+      body.append('branchId', selectedBranchId);
+      if (form.photo) body.append('photo', form.photo, form.photo.name);
+      const response = await fetch('/api/reviews', { method: 'POST', body });
+      const result = await response.json().catch(() => ({}));
+      if (!response.ok) throw new Error(result.error || 'Your review could not be submitted.');
       setForm({ name: '', text: '', photo: null });
       setSelectedRating(0);
       setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 3000);
-    } catch {
-      setSubmitError('Failed to submit review. Please try again.');
+      setTimeout(() => setSubmitted(false), 5000);
+    } catch (error) {
+      setSubmitError(error.message || 'Your review could not be submitted.');
     } finally {
       setSubmitting(false);
     }

@@ -1,16 +1,20 @@
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BiPhone, BiEnvelope, BiMap, BiTime, BiLogoFacebook, BiLogoInstagram, BiLogoTiktok } from 'react-icons/bi';
+import { SOCIALS } from '../data/siteData';
+import { getSrcSet } from '../utils/responsiveImage';
 import './Footer.css';
 
 const siomaiVariants = {
   original: {
     src: '/images/siomai 1.png',
     alt: 'Original siomai',
+    widths: [200, 400],
   },
   japanese: {
     src: '/images/japanese siomai.png',
     alt: 'Japanese siomai',
+    widths: [400, 800],
   },
 };
 
@@ -64,7 +68,12 @@ const Footer = () => {
           <div className="footer-sign-col footer-sign-col--left">
             <span className="footer-sign-word footer-sign-word--left" data-text="Siomai">Siomai</span>
           </div>
-          <img src="/images/siomai street logo.png" alt="Siomai Street" className="footer-sign-logo" />
+          <img
+            src="/images/siomai street logo.png"
+            srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w, /images/responsive/siomai street logo-400w.png 400w"
+            sizes="120px"
+            alt="Siomai Street" className="footer-sign-logo"
+          />
           <div className="footer-sign-col footer-sign-col--right">
             <span className="footer-sign-word footer-sign-word--right" data-text="Street">Street</span>
           </div>
@@ -80,6 +89,8 @@ const Footer = () => {
             <img
               key={index}
               src={siomai.src}
+              srcSet={getSrcSet(siomai.src, siomai.widths)}
+              sizes="(max-width: 768px) 150px, 280px"
               alt={siomai.alt}
               className="footer-poster__food-piece"
               style={{
@@ -144,9 +155,9 @@ const Footer = () => {
             </div>
 
             <div className="footer-poster__socials">
-              <a href="#" aria-label="Facebook"><BiLogoFacebook /></a>
-              <a href="#" aria-label="Instagram"><BiLogoInstagram /></a>
-              <a href="#" aria-label="TikTok"><BiLogoTiktok /></a>
+              <a href={SOCIALS.facebook} target="_blank" rel="noopener noreferrer" aria-label="Facebook"><BiLogoFacebook /></a>
+              <a href={SOCIALS.instagram} target="_blank" rel="noopener noreferrer" aria-label="Instagram"><BiLogoInstagram /></a>
+              <a href={SOCIALS.tiktok} target="_blank" rel="noopener noreferrer" aria-label="TikTok"><BiLogoTiktok /></a>
             </div>
           </div>
           

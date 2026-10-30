@@ -37,3 +37,4 @@ wireframe.*
 *.sln
 *.sw?
 Thumbs.db
+.phase1-local-test/

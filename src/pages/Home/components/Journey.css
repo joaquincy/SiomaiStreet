@@ -1,12 +1,18 @@
 /* ═══════════════════════════════════════════════════════════
    JOURNEY SECTION — Editorial Scroll Storytelling
-   Warm poster aesthetic with grain texture & pill labels
+   Warm golden-amber poster aesthetic with grain texture & high-contrast ink
    ═══════════════════════════════════════════════════════════ */
 
 .journey-section {
+  --journey-bg: #E29B24;
+  --journey-ink: #17100C;
+  --journey-ink-soft: #2B1C14;
+  --journey-crimson: #C4161C;
+  --journey-cream: #FFF6E6;
+
   position: relative;
-  height: 350vh;
-  background: #E8A229;
+  height: 420vh;
+  background: var(--journey-bg);
   z-index: 2;
   /* clip-path instead of overflow:hidden — sticky breaks inside overflow:hidden */
   clip-path: inset(0);
@@ -17,19 +23,20 @@
   content: '';
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.06'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.75' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.075'/%3E%3C/svg%3E");
   pointer-events: none;
   z-index: 1;
 }
 
-/* Subtle warm gradient beneath content */
+/* Subtle warm vignette & depth beneath content (prevents washed-out brightness) */
 .journey-section::after {
   content: '';
   position: absolute;
   inset: 0;
   background:
-    radial-gradient(ellipse at 20% 30%, rgba(217, 38, 84, 0.06) 0%, transparent 50%),
-    radial-gradient(ellipse at 80% 70%, rgba(58, 35, 24, 0.05) 0%, transparent 50%);
+    radial-gradient(ellipse at 22% 28%, rgba(196, 22, 28, 0.08) 0%, transparent 52%),
+    radial-gradient(ellipse at 78% 72%, rgba(23, 16, 12, 0.08) 0%, transparent 55%),
+    radial-gradient(circle at 50% 50%, transparent 55%, rgba(62, 34, 12, 0.16) 100%);
   pointer-events: none;
   z-index: 0;
 }
@@ -38,23 +45,23 @@
 .journey-deco {
   position: absolute;
   border-radius: 50%;
-  border: 2px solid rgba(58, 35, 24, 0.06);
+  border: 2px dashed rgba(23, 16, 12, 0.12);
   pointer-events: none;
   z-index: 0;
 }
 
 .journey-deco--circle-1 {
-  width: 600px;
-  height: 600px;
-  top: 10%;
-  right: -200px;
+  width: 560px;
+  height: 560px;
+  top: 8%;
+  right: -180px;
 }
 
 .journey-deco--circle-2 {
-  width: 400px;
-  height: 400px;
-  bottom: 20%;
-  left: -150px;
+  width: 380px;
+  height: 380px;
+  bottom: 16%;
+  left: -130px;
 }
 
 /* ─── Sticky Container ─── */
@@ -79,6 +86,7 @@
   align-items: center;
   justify-content: center;
   text-align: center;
+  padding: 72px 24px 24px;
   z-index: 10;
   will-change: transform, opacity;
   pointer-events: none;
@@ -87,60 +95,64 @@
 .journey-main-title h2 {
   position: relative;
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(3.5rem, 9vw, 9rem);
+  font-size: clamp(3.2rem, 8.2vw, 8.2rem);
   line-height: 0.9;
   font-weight: 900;
   text-transform: uppercase;
-  color: #3A2318;
+  color: var(--journey-ink);
   letter-spacing: -0.03em;
-  margin-bottom: 2rem;
-  /* Subtle text shadow for depth */
-  text-shadow: 0 2px 0 rgba(0, 0, 0, 0.05);
+  margin-bottom: 1.75rem;
+  max-width: 92vw;
+  text-shadow: 0 3px 0 rgba(23, 16, 12, 0.12);
 }
 
 /* ─── Pills overlapping text ─── */
 .journey-pill {
   position: absolute;
-  background: #D92654;
-  color: #F8CC5B;
+  background: var(--journey-crimson);
+  color: var(--journey-cream);
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(0.65rem, 1.4vw, 1rem);
+  font-size: clamp(0.62rem, 1.15vw, 0.92rem);
   font-weight: 800;
-  padding: 0.45em 1.2em;
+  padding: 0.42em 1.15em;
   border-radius: 50px;
+  border: 2px solid var(--journey-ink);
   letter-spacing: 1.5px;
   white-space: nowrap;
-  box-shadow: 0 4px 16px rgba(217, 38, 84, 0.3);
+  box-shadow: 3px 3px 0 var(--journey-ink);
   pointer-events: none;
   z-index: 20;
   text-transform: uppercase;
 }
 
 .journey-pill--1 {
-  top: 8%;
-  left: -2%;
+  top: 6%;
+  left: 2%;
   transform: rotate(-6deg);
 }
 
 .journey-pill--2 {
-  bottom: 38%;
-  left: 32%;
+  bottom: 40%;
+  left: 34%;
+  background: var(--journey-ink);
+  color: #F6B93B;
+  box-shadow: 3px 3px 0 var(--journey-crimson);
   transform: rotate(4deg);
 }
 
 .journey-pill--3 {
-  bottom: 8%;
-  right: -3%;
-  transform: rotate(-10deg);
+  bottom: 6%;
+  right: 2%;
+  transform: rotate(-8deg);
 }
 
 .journey-main-title p {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(0.95rem, 1.1vw, 1.15rem);
-  font-weight: 500;
-  color: #5A3A20;
-  max-width: 400px;
-  letter-spacing: 0.3px;
+  font-size: clamp(0.95rem, 1.1vw, 1.12rem);
+  font-weight: 600;
+  color: var(--journey-ink-soft);
+  max-width: 420px;
+  letter-spacing: 0.2px;
 }
 
 /* ─── Scroll Hint ─── */
@@ -149,25 +161,25 @@
   flex-direction: column;
   align-items: center;
   gap: 8px;
-  margin-top: 2.5rem;
+  margin-top: 2rem;
   animation: journeyBounce 2s ease-in-out infinite;
 }
 
 .journey-scroll-hint__line {
   display: block;
-  width: 1px;
+  width: 2px;
   height: 28px;
-  background: #3A2318;
-  opacity: 0.4;
+  background: var(--journey-ink);
+  opacity: 0.65;
 }
 
 .journey-scroll-hint__text {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.65rem;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: #3A2318;
-  opacity: 0.5;
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 2.8px;
+  color: var(--journey-ink);
+  opacity: 0.78;
 }
 
 @keyframes journeyBounce {
@@ -187,12 +199,13 @@
    ═══════════════════════════════════════════════════ */
 .journey-progress-line {
   position: absolute;
-  left: clamp(20px, 5vw, 60px);
-  top: 15vh;
-  bottom: 15vh;
-  width: 2px;
-  background: rgba(58, 35, 24, 0.12);
-  z-index: 20;
+  left: clamp(18px, 4.2vw, 56px);
+  top: 18vh;
+  bottom: 16vh;
+  width: 3px;
+  background: rgba(23, 16, 12, 0.22);
+  border-radius: 3px;
+  z-index: 25;
 }
 
 .journey-progress-fill {
@@ -201,7 +214,8 @@
   left: 0;
   width: 100%;
   height: 100%;
-  background: #D92654;
+  background: var(--journey-crimson);
+  border-radius: 3px;
   transform-origin: top;
   will-change: transform;
 }
@@ -210,21 +224,29 @@
   position: absolute;
   left: 50%;
   transform: translate(-50%, -50%);
-  width: 14px;
-  height: 14px;
-  background: #E8A229;
-  border: 2px solid rgba(58, 35, 24, 0.18);
+  width: 18px;
+  height: 18px;
+  padding: 0;
+  background: var(--journey-cream);
+  border: 2.5px solid var(--journey-ink);
   border-radius: 50%;
+  cursor: pointer;
   z-index: 2;
+  transition: transform 0.25s ease, box-shadow 0.25s ease;
+}
+
+.journey-progress-dot:hover {
+  transform: translate(-50%, -50%) scale(1.2);
+  box-shadow: 0 0 0 4px rgba(196, 22, 28, 0.22);
 }
 
 .journey-progress-dot-inner {
   position: absolute;
   inset: 2px;
-  background: #D92654;
+  background: var(--journey-crimson);
   border-radius: 50%;
   transform: scale(0);
-  transition: transform 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -236,6 +258,7 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  padding: 76px clamp(24px, 4vw, 56px) 28px;
   pointer-events: none;
   will-change: transform, opacity;
   opacity: 0;
@@ -244,46 +267,50 @@
 /* Huge background number */
 .journey-step__bg-number {
   position: absolute;
-  top: 50%;
-  left: 50%;
+  top: 52%;
+  left: 52%;
   transform: translate(-50%, -50%);
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(16rem, 38vw, 42rem);
+  font-size: clamp(14rem, 32vw, 34rem);
   font-weight: 900;
-  color: transparent;
-  -webkit-text-stroke: 2px rgba(58, 35, 24, 0.05);
+  line-height: 0.85;
+  color: rgba(23, 16, 12, 0.045);
+  -webkit-text-stroke: 2px rgba(23, 16, 12, 0.11);
   z-index: -1;
   letter-spacing: -0.05em;
   user-select: none;
+  pointer-events: none;
 }
 
 .journey-step__inner {
-  width: 85vw;
-  max-width: 1200px;
-  height: 80vh;
+  width: min(86vw, 1140px);
+  max-height: calc(100vh - 110px);
   display: flex;
   align-items: center;
-  gap: 6vw;
+  justify-content: space-between;
+  gap: clamp(2rem, 5vw, 4.5rem);
   position: relative;
   z-index: 2;
-  padding-left: clamp(40px, 8vw, 100px);
+  padding-left: clamp(36px, 6vw, 84px);
 }
 
 /* ─── Step Content ─── */
 .journey-step__content {
-  flex: 1;
+  flex: 1 1 52%;
+  min-width: 0;
   position: relative;
 }
 
-/* Red accent bar on the left of step content */
+/* High-contrast accent bar on the left of step content */
 .journey-step__accent {
   position: absolute;
   left: -20px;
-  top: 0;
-  width: 4px;
+  top: 2px;
+  width: 5px;
   height: 100%;
-  background: linear-gradient(180deg, #D92654 0%, rgba(217, 38, 84, 0) 100%);
+  background: var(--journey-crimson);
   border-radius: 4px;
+  box-shadow: 2px 2px 0 var(--journey-ink);
 }
 
 .journey-step__eyebrow {
@@ -291,12 +318,17 @@
   align-items: center;
   gap: 10px;
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(0.72rem, 0.9vw, 0.85rem);
+  font-size: clamp(0.72rem, 0.88vw, 0.84rem);
   font-weight: 800;
-  color: #D92654;
+  color: var(--journey-ink);
+  background: var(--journey-cream);
+  padding: 5px 14px 5px 6px;
+  border-radius: 50px;
+  border: 2px solid var(--journey-ink);
+  box-shadow: 3px 3px 0 var(--journey-ink);
   text-transform: uppercase;
-  letter-spacing: 0.15em;
-  margin-bottom: 1.25rem;
+  letter-spacing: 0.14em;
+  margin-bottom: 1.1rem;
 }
 
 /* Step number circle in eyebrow */
@@ -304,48 +336,51 @@
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  width: 28px;
-  height: 28px;
-  background: #D92654;
-  color: #F8CC5B;
+  width: 26px;
+  height: 26px;
+  background: var(--journey-crimson);
+  color: var(--journey-cream);
   border-radius: 50%;
-  font-size: 0.7rem;
-  font-weight: 800;
+  font-size: 0.72rem;
+  font-weight: 900;
   letter-spacing: 0;
 }
 
 .journey-step__title {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(2.5rem, 5vw, 5.5rem);
+  font-size: clamp(2.35rem, 4.6vw, 4.8rem);
   font-weight: 900;
-  color: #3A2318;
-  line-height: 1;
-  margin-bottom: 1.25rem;
-  letter-spacing: -0.02em;
-  text-shadow: 0 1px 0 rgba(0, 0, 0, 0.04);
+  color: var(--journey-ink);
+  line-height: 0.96;
+  margin-bottom: 1rem;
+  letter-spacing: -0.025em;
+  text-shadow: 0 2px 0 rgba(23, 16, 12, 0.1);
 }
 
-/* Red divider line between title and description */
+/* Divider line between title and description */
 .journey-step__rule {
-  width: 48px;
-  height: 3px;
-  background: #D92654;
+  width: 56px;
+  height: 4px;
+  background: var(--journey-crimson);
   border-radius: 3px;
-  margin-bottom: 1.25rem;
+  box-shadow: 2px 2px 0 var(--journey-ink);
+  margin-bottom: 1rem;
 }
 
 .journey-step__desc {
   font-family: 'Inter', sans-serif;
-  font-size: clamp(1rem, 1.15vw, 1.15rem);
-  color: #5A3A20;
-  line-height: 1.65;
-  max-width: 460px;
-  font-weight: 450;
+  font-size: clamp(0.96rem, 1.1vw, 1.12rem);
+  color: var(--journey-ink-soft);
+  line-height: 1.62;
+  max-width: 470px;
+  font-weight: 500;
 }
 
 /* ─── Step Visuals ─── */
 .journey-step__visual {
-  flex: 1;
+  flex: 0 1 42%;
+  max-width: min(410px, 36vw);
+  width: 100%;
   will-change: transform;
   position: relative;
 }
@@ -353,13 +388,15 @@
 .journey-step__img-wrapper {
   position: relative;
   width: 100%;
-  padding-top: 125%;
+  aspect-ratio: 4 / 4.4;
+  max-height: min(54vh, 440px);
   border-radius: 14px;
   overflow: hidden;
+  background: var(--journey-ink);
+  border: 3px solid var(--journey-ink);
   box-shadow:
-    0 8px 24px rgba(58, 35, 24, 0.12),
-    0 24px 48px rgba(58, 35, 24, 0.08);
-  border: 3px solid rgba(58, 35, 24, 0.08);
+    8px 8px 0 var(--journey-ink),
+    0 20px 40px rgba(23, 16, 12, 0.2);
 }
 
 .journey-step__img-wrapper img {
@@ -368,22 +405,23 @@
   width: 100%;
   height: 100%;
   object-fit: cover;
-  filter: contrast(1.05) saturate(1.1);
+  filter: contrast(1.06) saturate(1.1);
 }
 
 /* Small branding label below image */
 .journey-step__img-label {
   font-family: 'Outfit', sans-serif;
-  font-size: 0.6rem;
-  font-weight: 700;
-  letter-spacing: 3px;
-  color: rgba(58, 35, 24, 0.35);
+  font-size: 0.64rem;
+  font-weight: 800;
+  letter-spacing: 2.8px;
+  color: var(--journey-ink);
+  opacity: 0.75;
   text-align: center;
   margin-top: 12px;
 }
 
 /* ═══════════════════════════════════════════════════
-   ALIGNMENTS (Asymmetry)
+   ALIGNMENTS (Asymmetry — all strictly bounded in 100vh)
    ═══════════════════════════════════════════════════ */
 
 /* Left: Text left, Image right */
@@ -392,7 +430,7 @@
 }
 
 .journey-step--left .journey-step__content {
-  padding-right: 5%;
+  padding-right: 2%;
 }
 
 /* Right: Text right, Image left */
@@ -401,21 +439,40 @@
 }
 
 .journey-step--right .journey-step__content {
-  padding-left: 5%;
+  padding-left: 2%;
 }
 
-/* Center: Text bottom, Image top */
+/* Center: Compact circular visual above centered text (never overflows vertically) */
 .journey-step--center .journey-step__inner {
   flex-direction: column-reverse;
   justify-content: center;
-  gap: 3rem;
+  align-items: center;
+  gap: clamp(1rem, 2.2vh, 1.75rem);
 }
 
 .journey-step--center .journey-step__content {
+  flex: 0 1 auto;
   text-align: center;
   display: flex;
   flex-direction: column;
   align-items: center;
+}
+
+.journey-step--center .journey-step__eyebrow {
+  margin-bottom: 0.75rem;
+}
+
+.journey-step--center .journey-step__title {
+  font-size: clamp(2.2rem, 4.2vw, 4.1rem);
+  margin-bottom: 0.7rem;
+}
+
+.journey-step--center .journey-step__rule {
+  margin-bottom: 0.75rem;
+}
+
+.journey-step--center .journey-step__desc {
+  max-width: 540px;
 }
 
 .journey-step--center .journey-step__accent {
@@ -423,26 +480,34 @@
 }
 
 .journey-step--center .journey-step__visual {
-  width: 45%;
-  max-width: 400px;
-  flex: none;
+  width: clamp(165px, 25vh, 245px);
+  max-width: 245px;
+  flex: 0 0 auto;
 }
 
 .journey-step--center .journey-step__img-wrapper {
-  padding-top: 100%;
+  aspect-ratio: 1 / 1;
+  max-height: none;
   border-radius: 50%;
+  box-shadow:
+    6px 6px 0 var(--journey-ink),
+    0 16px 34px rgba(23, 16, 12, 0.22);
 }
 
-/* Final: Big celebratory text */
+/* Final: Big celebratory text — properly centered and bounded */
 .journey-step--final .journey-step__inner {
   justify-content: center;
+  align-items: center;
   text-align: center;
+  padding-left: clamp(36px, 5vw, 64px);
+  padding-right: clamp(16px, 3vw, 40px);
 }
 
 .journey-step--final .journey-step__content {
   display: flex;
   flex-direction: column;
   align-items: center;
+  max-width: 100%;
 }
 
 .journey-step--final .journey-step__accent {
@@ -450,27 +515,27 @@
 }
 
 .journey-step--final .journey-step__title {
-  font-size: clamp(5rem, 18vw, 22rem);
-  margin-bottom: 2rem;
-  line-height: 0.85;
+  font-size: clamp(3.6rem, 12.5vw, 11.5rem);
+  margin-bottom: 1.35rem;
+  line-height: 0.9;
+  max-width: 100%;
 
-  /* Brand Red with Stronger Grain Texture */
+  /* Deep Brand Crimson with Grain Texture & Crisp Ink Shadow */
   background:
-    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.35'/%3E%3C/svg%3E"),
-    #D61B22;
+    url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='4' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.28'/%3E%3C/svg%3E"),
+    var(--journey-crimson);
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
   color: transparent;
-  /* Fallback */
-
-  /* Hard shadow for extra pop */
-  filter: drop-shadow(0 8px 0 rgba(58, 35, 24, 0.12));
+  -webkit-text-stroke: 2px var(--journey-ink);
+  filter: drop-shadow(0 6px 0 var(--journey-ink));
 }
 
 .journey-step--final .journey-step__rule {
-  width: 64px;
-  background: #3A2318;
+  width: 68px;
+  background: var(--journey-ink);
+  box-shadow: 2px 2px 0 var(--journey-crimson);
 }
 
 /* ═══════════════════════════════════════════════════
@@ -478,8 +543,8 @@
    ═══════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .journey-step__inner {
-    padding-left: 60px;
-    gap: 4vw;
+    padding-left: 52px;
+    gap: 3.5vw;
   }
 
   .journey-deco--circle-1 {
@@ -495,26 +560,49 @@
 
 @media (max-width: 768px) {
   .journey-progress-line {
-    left: 20px;
+    left: 16px;
+    top: 16vh;
+    bottom: 12vh;
   }
 
   .journey-deco {
     display: none;
   }
 
+  .journey-step {
+    padding: 72px 18px 20px;
+  }
+
   .journey-step__inner {
+    width: 100%;
     flex-direction: column !important;
     justify-content: center;
-    padding-left: 40px;
+    padding-left: 34px;
+    padding-right: 6px;
     text-align: left !important;
-    gap: 2rem !important;
+    gap: 1.25rem !important;
     align-items: flex-start !important;
   }
 
   .journey-step__content {
+    flex: 0 1 auto;
     padding: 0 !important;
     text-align: left !important;
     align-items: flex-start !important;
+  }
+
+  .journey-step__title {
+    font-size: clamp(2rem, 8.5vw, 3rem) !important;
+    margin-bottom: 0.65rem;
+  }
+
+  .journey-step__rule {
+    margin-bottom: 0.65rem;
+  }
+
+  .journey-step__desc {
+    font-size: 0.94rem;
+    line-height: 1.52;
   }
 
   .journey-step__accent {
@@ -522,28 +610,53 @@
   }
 
   .journey-step__visual {
-    width: 80% !important;
-    max-width: 300px;
+    width: min(78%, 260px) !important;
+    max-width: 260px !important;
+    flex: 0 0 auto;
   }
 
   .journey-step__img-wrapper {
-    padding-top: 100% !important;
+    aspect-ratio: 4 / 3.4 !important;
+    max-height: 28vh !important;
     border-radius: 12px !important;
+    box-shadow: 5px 5px 0 var(--journey-ink) !important;
+  }
+
+  .journey-step__img-label {
+    margin-top: 8px;
+    font-size: 0.56rem;
   }
 
   .journey-step--final .journey-step__inner {
     align-items: center !important;
     text-align: center !important;
-    padding-left: 0;
+    padding-left: 28px;
   }
 
-  .journey-step--final .journey-progress-line {
-    opacity: 0.2;
+  .journey-step--final .journey-step__content {
+    align-items: center !important;
+    text-align: center !important;
+  }
+
+  .journey-step--final .journey-step__title {
+    font-size: clamp(3rem, 15vw, 5.2rem) !important;
   }
 
   .journey-pill {
-    font-size: 0.6rem;
-    padding: 0.3em 0.9em;
+    font-size: 0.58rem;
+    padding: 0.32em 0.85em;
+  }
+
+  .journey-pill--1 {
+    left: 0;
+  }
+
+  .journey-pill--2 {
+    left: 22%;
+  }
+
+  .journey-pill--3 {
+    right: 0;
   }
 }
 
@@ -564,7 +677,7 @@
     position: static;
     opacity: 1 !important;
     transform: none !important;
-    margin: 4rem 0;
+    padding: 3rem 1.5rem;
     pointer-events: auto;
   }
 

@@ -8,7 +8,6 @@ import Journey from './components/Journey';
 import Requirements from './components/Requirements';
 import Packages from './components/Packages';
 import FeaturedMenu from './components/FeaturedMenu';
-import SuccessStories from './components/SuccessStories';
 import FAQ from './components/FAQ';
 import Testimonials from './components/Testimonials';
 import CTA from './components/CTA';
@@ -20,7 +19,7 @@ const Home = () => {
     <main>
       <PageMeta
         path="/"
-        description="The Philippines' favorite siomai franchise. Start your own food business with low investment and high returns. Apply now!"
+        description="Explore Siomai Street franchise formats, request current pricing and prepare your franchise application."
       />
       <Hero />
       <AboutUs />
@@ -30,7 +29,7 @@ const Home = () => {
       <Requirements />
       <Packages />
       <FeaturedMenu />
-      <SuccessStories />
+      {/* Publish franchise performance stories only after verifying claims and permission. */}
       <FAQ />
       <Testimonials />
       <CTA />

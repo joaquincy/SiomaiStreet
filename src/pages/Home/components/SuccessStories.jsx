@@ -110,6 +110,12 @@ const SuccessStories = () => {
       <div className="ss__bg">
         <img
           src="/images/franchise-store.png"
+          srcSet="
+            /images/responsive/franchise-store-400w.png 400w,
+            /images/responsive/franchise-store-640w.png 640w,
+            /images/responsive/franchise-store-876w.png 876w
+          "
+          sizes="100vw"
           alt=""
           className="ss__bg-img"
           loading="lazy"

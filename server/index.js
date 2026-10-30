@@ -1,3 +1,8 @@
+import { readMultipart } from './multipart.js';
+import { portalAccess, createPortalHandler } from './applicationPortal.js';
+import { createApplicationHandler } from './applications.js';
+import { createApplicationAdmission, createSharedApplicationRateLimit, clientIP } from './applicationSecurity.js';
+import { createDocumentScanner } from './documentScanner.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
@@ -26,12 +31,7 @@ for (const file of envFiles) {
 const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
-const maxBodyBytes = 110 * 1024 * 1024;
-const allowedDocumentKeys = new Set([
-  'govIdFront', 'govIdBack', 'proofOfBilling', 'proofOfFunds', 'idPhoto',
-  'dtiSecCert', 'businessPermit', 'resumeCv', 'characterRef', 'siteProposal',
-]);
-const allowedDocumentTypes = new Set(['application/pdf', 'image/jpeg', 'image/png']);
+
 const allowedReviewTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
 const requestCounts = new Map();
 
@@ -57,6 +57,7 @@ const rateLimit = (req, limit, windowMs) => {
 const supabaseRequest = async (path, options = {}) => {
   if (!supabaseUrl || !serviceKey) throw new Error('Server Supabase credentials are not configured.');
   const response = await fetch(`${supabaseUrl}${path}`, {
+    signal: AbortSignal.timeout(15000),
     ...options,
     headers: {
       apikey: serviceKey,
@@ -75,31 +76,6 @@ const supabaseRequest = async (path, options = {}) => {
   return responseText ? JSON.parse(responseText) : null;
 };
 
-const readRequestBody = async (req) => {
-  const chunks = [];
-  let size = 0;
-  for await (const chunk of req) {
-    size += chunk.length;
-    if (size > maxBodyBytes) throw Object.assign(new Error('Request is too large.'), { status: 413 });
-    chunks.push(chunk);
-  }
-  return Buffer.concat(chunks);
-};
-
-const readMultipart = async (req) => {
-  const contentType = req.headers['content-type'];
-  if (!contentType?.toLowerCase().startsWith('multipart/form-data;')) {
-    throw Object.assign(new Error('Expected a multipart form submission.'), { status: 400 });
-  }
-  const body = await readRequestBody(req);
-  const form = await new Request('http://localhost', {
-    method: 'POST',
-    headers: { 'content-type': contentType },
-    body,
-  }).formData();
-  return form;
-};
-
 const safeFileName = (name) => name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-100) || 'upload';
 const storagePath = (bucket, path) => `${supabaseUrl}/storage/v1/object/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
@@ -115,6 +91,7 @@ const uploadFile = async (bucket, path, file, contentType) => {
         : contentType === 'image/webp' ? isWebp : false;
   if (!signatureMatches) throw Object.assign(new Error(`The file ${file.name} does not match its file type.`), { status: 400 });
   const response = await fetch(storagePath(bucket, path), {
+    signal: AbortSignal.timeout(30000),
     method: 'POST',
     headers: {
       apikey: serviceKey,
@@ -134,7 +111,8 @@ const uploadFile = async (bucket, path, file, contentType) => {
 
 const deleteStorageObjects = async (bucket, paths) => {
   if (!paths.length) return;
-  await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
+  const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
+    signal: AbortSignal.timeout(15000),
     method: 'DELETE',
     headers: {
       apikey: serviceKey,
@@ -143,6 +121,7 @@ const deleteStorageObjects = async (bucket, paths) => {
     },
     body: JSON.stringify({ prefixes: paths }),
   });
+  if (!response.ok) throw new Error('Storage cleanup failed.');
 };
 
 const handleReviewsGet = async (url, res) => {
@@ -204,69 +183,49 @@ const handleReviewPost = async (req, res) => {
   }
 };
 
-const handleApplicationPost = async (req, res) => {
-  if (!rateLimit(req, 4, 60 * 60 * 1000)) return json(res, 429, { error: 'Too many applications from this connection. Please contact us for help.' });
-  const form = await readMultipart(req);
-  let data;
-  try {
-    data = JSON.parse(String(form.get('applicationData') || ''));
-  } catch {
-    throw Object.assign(new Error('Application data is missing or invalid.'), { status: 400 });
-  }
-  if (!data || typeof data !== 'object' || Array.isArray(data)) throw Object.assign(new Error('Application data is invalid.'), { status: 400 });
-  const firstName = String(data.firstName || '').trim();
-  const lastName = String(data.lastName || '').trim();
-  const email = String(data.email || '').trim().toLowerCase();
-  if (!firstName || !lastName || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) throw Object.assign(new Error('Applicant name and a valid email address are required.'), { status: 400 });
-  if (data.email !== data.confirmEmail) throw Object.assign(new Error('Email addresses do not match.'), { status: 400 });
-  if (!data.consent_nda || !data.consent_backgroundCheck || !data.consent_accuracy || !data.consent_privacy) throw Object.assign(new Error('All required consents must be accepted.'), { status: 400 });
-  const files = [];
-  for (const [key, value] of form.entries()) {
-    if (!(value instanceof File) || value.size === 0) continue;
-    if (!allowedDocumentKeys.has(key)) throw Object.assign(new Error('An unsupported document was included.'), { status: 400 });
-    if (value.size > 10 * 1024 * 1024 || !allowedDocumentTypes.has(value.type)) throw Object.assign(new Error('Documents must be PDF, JPG, or PNG files under 10 MB each.'), { status: 400 });
-    files.push({ key, file: value });
-  }
-  if (files.length > 10) throw Object.assign(new Error('No more than 10 documents can be submitted.'), { status: 400 });
-  const requiredDocuments = ['govIdFront', 'govIdBack', 'proofOfBilling', 'proofOfFunds', 'idPhoto'];
-  const uploadedKeys = new Set(files.map(({ key }) => key));
-  if (requiredDocuments.some((key) => !uploadedKeys.has(key))) throw Object.assign(new Error('Please include all required documents.'), { status: 400 });
-
-  const id = randomUUID();
-  const uploadedPaths = [];
-  const documentPaths = {};
-  try {
-    for (const { key, file } of files) {
-      const path = `${id}/${key}-${safeFileName(file.name)}`;
-      await uploadFile('franchise-documents', path, file, file.type);
-      uploadedPaths.push(path);
-      documentPaths[key] = { path, name: file.name, contentType: file.type, size: file.size };
-    }
-    const applicationData = { ...data };
-    delete applicationData.documents;
-    delete applicationData.confirmEmail;
-    const rows = await supabaseRequest('/rest/v1/franchise_applications', {
-      method: 'POST',
-      headers: { prefer: 'return=representation' },
-      body: JSON.stringify({
-        id,
-        applicant_name: `${firstName} ${lastName}`.slice(0, 200),
-        applicant_email: email,
-        applicant_phone: String(data.primaryPhone || '').slice(0, 100) || null,
-        target_region: String(data.targetRegion || '').slice(0, 120) || null,
-        target_city: String(data.targetCity || '').slice(0, 160) || null,
-        selected_package: ['food-cart', 'kiosk', 'casual-dining'].includes(data.selectedPackage) ? data.selectedPackage : null,
-        application_data: applicationData,
-        document_paths: documentPaths,
-        status: 'submitted',
-      }),
-    });
-    json(res, 201, { id: rows[0]?.id || id, status: 'submitted' });
-  } catch (error) {
-    await deleteStorageObjects('franchise-documents', uploadedPaths);
-    throw error;
-  }
+const trustedProxies = (process.env.TRUSTED_PROXY_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean);
+const applicationRate = createSharedApplicationRateLimit({
+  secret: process.env.APPLICATION_RATE_SECRET,
+  rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
+});
+const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
+const applicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies });
+const verifyApplicationStorage = async () => {
+  // Check portal configuration before accepting a new submission.
+  access.receipt({id:'00000000-0000-4000-8000-000000000000',submitted_at:new Date().toISOString()});
+  if (await supabaseRequest('/rest/v1/rpc/franchise_security_ready', { method:'POST', body:'{}' }) !== true) throw Object.assign(new Error('Private storage is not ready.'), {status:503});
+  // Fail before accepting files if the tracking migration is absent.
+  await supabaseRequest('/rest/v1/franchise_corrections?select=id&limit=0');
+  await supabaseRequest('/rest/v1/franchise_applications?select=portal_access_revoked&limit=0');
 };
+const handlePortal = createPortalHandler({
+  access, json, readMultipart, uploadFile, deleteStorageObjects,
+  rate: req => applicationRate(clientIP(req, trustedProxies), 'portal', 60),
+  admit: applicationAdmission,
+  verifyStorage: verifyApplicationStorage,
+  scanDocument: createDocumentScanner({host:process.env.CLAMD_HOST,port:Number(process.env.CLAMD_PORT || 3310)}),
+  reportCleanupFailure: event => console.error('Correction reconciliation required:', JSON.stringify(event)),
+  repository: {
+    find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,status,submitted_at,updated_at,portal_access_revoked&id=eq.'+id+'&limit=1'))?.[0],
+    requests: id => supabaseRequest('/rest/v1/franchise_corrections?select=*&application_id=eq.'+id+'&order=created_at.asc&limit=100'),
+    replace: body => supabaseRequest('/rest/v1/rpc/receive_franchise_document',{method:'POST',body:JSON.stringify(body)}),
+  },
+});
+const handleApplicationPost = createApplicationHandler({
+  receiptDetails: access.receipt,
+  readMultipart, uploadFile, deleteStorageObjects, json,
+  admit: applicationAdmission,
+  rateLimit: req => applicationRate(clientIP(req, trustedProxies), 'new-application', 4),
+  scanDocument: createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) }),
+  verifyStorage: verifyApplicationStorage,
+  reportCleanupFailure: event => console.error('Application orphan cleanup required:', JSON.stringify(event)),
+  repository: {
+    find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,request_hash,submitted_at,document_paths&id=eq.' + id + '&limit=1'))?.[0] || null,
+    insert: async row => (await supabaseRequest('/rest/v1/franchise_applications', {
+      method: 'POST', headers: { prefer: 'return=representation' }, body: JSON.stringify(row),
+    }))?.[0],
+  },
+});
 
 const apiServer = createServer(async (req, res) => {
   res.setHeader('x-content-type-options', 'nosniff');
@@ -276,7 +235,7 @@ const apiServer = createServer(async (req, res) => {
   if (origin && ['http://localhost:5173', 'http://127.0.0.1:5173'].includes(origin)) {
     res.setHeader('access-control-allow-origin', origin);
     res.setHeader('vary', 'Origin');
-    res.setHeader('access-control-allow-headers', 'content-type');
+    res.setHeader('access-control-allow-headers', 'content-type, authorization');
     res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
   }
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
@@ -298,6 +257,8 @@ const apiServer = createServer(async (req, res) => {
       if (result === null) return json(res, 404, { error: 'Review not found.' });
       return json(res, 200, { helpful: result });
     }
+    const portalMatch = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})(?:\/corrections\/([0-9a-f-]{36}))?$/i);
+    if (portalMatch && ((!portalMatch[2] && req.method === 'GET') || (portalMatch[2] && req.method === 'POST'))) return await handlePortal(req,res,portalMatch[1],portalMatch[2]);
     if (url.pathname === '/api/franchise-applications' && req.method === 'POST') return await handleApplicationPost(req, res);
     if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'API route not found.' });
 
@@ -326,8 +287,11 @@ const apiServer = createServer(async (req, res) => {
   } catch (error) {
     const status = Number.isInteger(error.status) ? error.status : 500;
     if (status >= 500) console.error('API request failed:', error.message, error.detail || '');
-    return json(res, status, { error: status >= 500 ? 'The request could not be completed. Please try again later.' : error.message });
+    return json(res, status, { error: status >= 500 ? 'The request could not be completed. Retry with the same application.' : error.message, ...(error.validationErrors ? { validationErrors: error.validationErrors } : {}) });
   }
 });
 
+apiServer.requestTimeout = 120000;
+apiServer.headersTimeout = 15000;
+apiServer.setTimeout(30000, socket => socket.destroy());
 apiServer.listen(port, () => console.log(`Siomai Street API listening on port ${port}`));

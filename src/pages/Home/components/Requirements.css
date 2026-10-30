@@ -8,39 +8,51 @@
 /* ─── SECTION CANVAS ─── */
 .req-max {
   position: relative;
-  width: 100vw;
+  width: 100%;
   max-width: 100%;
-  overflow-x: hidden;
+  overflow: hidden;
+  overflow: clip;
   background: #110F0D;
   /* Deep warm black canvas */
-  padding: clamp(6rem, 12vh, 10rem) 0 clamp(15rem, 30vh, 25rem);
-  /* Massive bottom padding to prevent cards getting cut off */
+  padding: clamp(5.5rem, 10vh, 8.5rem) 0 0;
+  /* Seamless transition directly into Franchise Packages */
   display: flex;
   flex-direction: column;
   z-index: 1;
+  scrollbar-width: none;
+  -ms-overflow-style: none;
 }
 
-/* ─── BACKGROUND NOISE & TEXTURE ─── */
+.req-max::-webkit-scrollbar {
+  display: none;
+  width: 0;
+  height: 0;
+}
+
+/* ─── BACKGROUND NOISE & TEXTURE (Noticeable, organic dark film grain) ─── */
 .req-max__bg-noise {
   position: absolute;
   inset: 0;
-  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 256 256' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)' opacity='0.04'/%3E%3C/svg%3E");
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilter'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilter)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
 }
 
-/* Giant faint background typography */
+/* Giant faint background typography — The Last Shuriken Street Echo */
 .req-max__bg-text {
   position: absolute;
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
   font-size: clamp(15rem, 35vw, 40rem);
-  font-weight: 900;
+  font-weight: normal;
   color: transparent;
-  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.03);
-  letter-spacing: -0.05em;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.025);
+  letter-spacing: 0.05em;
   pointer-events: none;
   z-index: 0;
   white-space: nowrap;
@@ -51,19 +63,20 @@
   position: relative;
   z-index: 10;
   padding: 0 clamp(2rem, 5vw, 6rem);
-  margin-bottom: clamp(4rem, 8vh, 6rem);
+  margin-bottom: clamp(3rem, 6vh, 4.75rem);
   display: flex;
-  align-items: flex-start;
+  align-items: center;
+  justify-content: space-between;
   gap: 2rem;
 }
 
-/* Rotating Interactive Badge */
+/* Rotating Interactive Badge (Left Anchor) */
 .req-max__header-badge {
   position: relative;
-  width: clamp(80px, 8vw, 120px);
-  height: clamp(80px, 8vw, 120px);
+  width: clamp(80px, 8vw, 110px);
+  height: clamp(80px, 8vw, 110px);
   flex-shrink: 0;
-  margin-top: 10px;
+  margin-top: 0;
 }
 
 .req-max__spin-text {
@@ -73,7 +86,7 @@
 }
 
 .req-max__spin-text text {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 14px;
   font-weight: 700;
   fill: #FFFDF5;
@@ -85,8 +98,10 @@
   top: 50%;
   left: 50%;
   transform: translate(-50%, -50%);
-  font-size: clamp(1.5rem, 2vw, 2.5rem);
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(1.8rem, 2.5vw, 2.8rem);
   color: #D61B22;
+  line-height: 1;
 }
 
 @keyframes reqSpin {
@@ -99,29 +114,108 @@
   }
 }
 
-/* Typography Art */
+/* ─── RIGHT-ALIGNED EDITORIAL TITLE LOCKUP ─── */
+.req-max__heading-wrap {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  text-align: right;
+  margin-left: auto;
+  position: relative;
+  z-index: 2;
+}
+
+/* Complementing Category Badge */
+.req-max__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.35rem 0.85rem;
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.22);
+  border-radius: 9999px;
+  margin-bottom: 0.75rem;
+}
+
+.req-max__badge-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #F5A623;
+  box-shadow: 0 0 8px #F5A623;
+}
+
+.req-max__badge-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #F5A623;
+  text-transform: uppercase;
+}
+
+.req-max__badge-divider {
+  color: rgba(255, 255, 255, 0.2);
+  font-size: 0.7rem;
+}
+
+.req-max__badge-notice {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.65rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: rgba(255, 253, 245, 0.6);
+  text-transform: uppercase;
+}
+
 .req-max__heading {
   display: flex;
   flex-direction: column;
-  font-family: 'Outfit', sans-serif;
-  font-weight: 900;
-  line-height: 0.85;
-  letter-spacing: -0.04em;
-  text-transform: uppercase;
+  align-items: flex-end;
+  text-align: right;
   margin: 0;
+  position: relative;
+  z-index: 2;
 }
 
+/* Line 1: WHAT YOU NEED — The Last Shuriken (Right-aligned, refined size, illuminated warm gold) */
 .req-max__heading-outline {
-  font-size: clamp(3.5rem, 8vw, 8rem);
-  color: transparent;
-  -webkit-text-stroke: 1.5px #FFFDF5;
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(1.95rem, 3.8vw, 3.35rem);
+  font-weight: normal;
+  line-height: 1.05;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #F5A623;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5E0 45%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px rgba(245, 166, 35, 0.22));
+  -webkit-text-stroke: 0;
+  text-align: right;
+  display: block;
 }
 
+/* Line 2: TO GET STARTED — Outfit 900 (Right-aligned, refined size, crimson glow) */
 .req-max__heading-solid {
-  font-size: clamp(3.5rem, 8vw, 8rem);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.05rem, 4.1vw, 3.65rem);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
   color: #D61B22;
-  margin-left: clamp(1rem, 4vw, 5rem);
-  text-shadow: 0 10px 30px rgba(214, 27, 34, 0.4);
+  background: linear-gradient(135deg, #FF5C6C 0%, #D61B22 55%, #B3131A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-left: 0;
+  margin-top: 0.15rem;
+  filter: drop-shadow(0 4px 14px rgba(214, 27, 34, 0.32));
+  text-shadow: none;
+  text-align: right;
+  display: block;
 }
 
 /* ─── FLOATING CARDS CONTAINER ─── */
@@ -415,15 +509,25 @@
   }
 
   .req-max__header {
-    flex-direction: column;
-    gap: 1rem;
-    align-items: center;
-    text-align: center;
-    padding: 0 1rem;
+    padding: 0 1.5rem;
+    margin-bottom: 3rem;
+    gap: 1.5rem;
+  }
+
+  .req-max__header-badge {
+    width: 80px;
+    height: 80px;
+  }
+
+  .req-max__heading-outline {
+    font-size: clamp(1.75rem, 4.8vw, 2.4rem);
+    text-align: right;
   }
 
   .req-max__heading-solid {
+    font-size: clamp(1.85rem, 5.2vw, 2.5rem);
     margin-left: 0;
+    text-align: right;
   }
 
   .req-max__cards-container {
@@ -446,6 +550,159 @@
 
   .req-max__card:hover {
     transform: translateY(-10px) !important;
+  }
+}
+
+@media (max-width: 560px) {
+  .req-max__header {
+    flex-direction: column;
+    align-items: flex-end;
+    gap: 1.25rem;
+  }
+
+  .req-max__header-badge {
+    align-self: flex-start;
+    width: 68px;
+    height: 68px;
+  }
+
+  .req-max__heading-wrap {
+    align-items: flex-end;
+    width: 100%;
+  }
+
+  .req-max__heading-outline {
+    font-size: clamp(1.65rem, 7.5vw, 2.1rem);
+  }
+
+  .req-max__heading-solid {
+    font-size: clamp(1.75rem, 8vw, 2.25rem);
+  }
+}
+
+/* ═══════════════════════════════════════════════════
+   ARCHITECTURAL STOREFRONT OUTLINE & TRANSITION LINE
+   "From your plan to your place on Siomai Street"
+   ═══════════════════════════════════════════════════ */
+
+/* Faint architectural line art cropped into the outer margin, away from body text */
+.req-max__storefront-outline {
+  position: absolute;
+  top: 15%;
+  right: -5%;
+  width: clamp(280px, 32vw, 460px);
+  height: auto;
+  color: rgba(255, 255, 255, 0.028);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.req-max__storefront-svg {
+  width: 100%;
+  height: auto;
+}
+
+/* Architectural Transition into Franchise Packages */
+.req-transition {
+  position: relative;
+  z-index: 10;
+  width: 100%;
+  margin-top: clamp(4.5rem, 8vh, 7rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  pointer-events: auto;
+}
+
+.req-transition__connector {
+  width: 100%;
+  max-width: 1200px;
+  display: flex;
+  align-items: center;
+  padding: 0 2rem;
+  margin-bottom: 0.5rem;
+}
+
+.req-transition__rule {
+  height: 1px;
+}
+
+.req-transition__rule--cream {
+  flex: 1;
+  background: linear-gradient(90deg, transparent 0%, rgba(248, 246, 241, 0.22) 50%, rgba(248, 246, 241, 0.4) 100%);
+}
+
+.req-transition__rule--red {
+  width: 60px;
+  background: #D61B22;
+  box-shadow: 0 0 8px rgba(214, 27, 34, 0.6);
+}
+
+.req-transition__canopy {
+  position: relative;
+  width: 100%;
+  max-width: 1200px;
+  padding: 0 1rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.req-transition__svg {
+  width: 100%;
+  height: 38px;
+  display: block;
+}
+
+.req-transition__message {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  margin-top: -8px;
+  padding: 0.45rem 1.15rem;
+  background: #110F0D;
+  border: 1px solid rgba(248, 246, 241, 0.24);
+  border-radius: 9999px;
+  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  position: relative;
+  z-index: 2;
+}
+
+.req-transition__dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #D61B22;
+  box-shadow: 0 0 6px #D61B22;
+}
+
+.req-transition__text {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  color: #FFFDF5;
+  text-transform: uppercase;
+}
+
+.req-transition__tag {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: #F5A623;
+  padding-left: 8px;
+  border-left: 1px solid rgba(255, 255, 255, 0.15);
+}
+
+@media (max-width: 768px) {
+  .req-transition__text {
+    font-size: 0.7rem;
+    letter-spacing: 0.04em;
+  }
+
+  .req-transition__tag {
+    display: none;
   }
 }
 

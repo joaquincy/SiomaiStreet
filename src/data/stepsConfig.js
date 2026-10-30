@@ -16,7 +16,7 @@ export const APPLICATION_STEPS = [
     icon: BiUser,
     helperTitle: 'Your privacy matters',
     helperText:
-      'Your personal information is kept strictly confidential and is only used to process your franchise application.',
+      'Provide only the information requested. Draft answers and selected files may remain on this device. Review the data notice before submitting.',
   },
   {
     id: 'business-background',
@@ -56,7 +56,7 @@ export const APPLICATION_STEPS = [
     icon: BiUpload,
     helperTitle: 'Required documents',
     helperText:
-      'Uploading your documents now speeds up the verification process. Files are selected locally and will be transmitted when online submission is activated.',
+      'Check the named missing files before continuing. Selected files may be saved in this browser and are sent to the server when you submit.',
   },
   {
     id: 'legal-consents',

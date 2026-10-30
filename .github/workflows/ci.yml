@@ -32,3 +32,5 @@ jobs:
         env:
           VITE_API_BASE_URL: https://api.siomaistreet.ph
           VITE_TURNSTILE_SITE_KEY: placeholder-for-ci
+      - name: Application contract tests
+        run: npm test

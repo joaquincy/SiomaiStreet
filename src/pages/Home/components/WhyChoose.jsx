@@ -1,4 +1,5 @@
 import { useEffect, useRef, useCallback } from 'react';
+import { getSrcSet } from '../../../utils/responsiveImage';
 import './WhyChoose.css';
 
 function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
@@ -401,7 +402,13 @@ const WhyChoose = () => {
             <div className="wc-images__track" ref={trackRef}>
               {CAROUSEL_IMAGES.map((img, i) => (
                 <div key={i} className="wc-img-panel">
-                  <img src={img.src} alt={img.alt} loading="lazy" />
+                  <img
+                    src={img.src}
+                    srcSet={getSrcSet(img.src, [300, 500, 800])}
+                    sizes="(max-width: 768px) 260px, (max-width: 1440px) 24vw, 420px"
+                    alt={img.alt}
+                    loading="lazy"
+                  />
                   <div className="wc-img-panel__overlay">
                     <span className="wc-img-panel__label">{img.alt}</span>
                   </div>

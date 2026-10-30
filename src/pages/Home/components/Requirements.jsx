@@ -1,27 +1,31 @@
 import { useEffect, useRef } from 'react';
+import { getSrcSet } from '../../../utils/responsiveImage';
 import './Requirements.css';
 
 const REQUIREMENTS = [
   {
     number: '01',
-    titleMain: 'LOW',
-    titleSub: 'INVESTMENT',
-    description: 'Accessible startup costs from ₱39K. High margin returns.',
+    titleMain: 'PLAN YOUR',
+    titleSub: 'BUDGET',
+    description: 'Request a written quotation and budget for setup and ongoing operating costs.',
     image: '/images/siomai 1.png',
+    widths: [200, 400],
   },
   {
     number: '02',
-    titleMain: 'PROVEN',
-    titleSub: 'BRAND',
-    description: 'Recognized nationwide. Built-in loyal customer base.',
+    titleMain: 'CHOOSE A',
+    titleSub: 'LOCATION',
+    description: 'Provide a preferred city and region. A specific site is not needed to begin.',
     image: '/images/franchise-store.png',
+    widths: [400, 640, 876],
   },
   {
     number: '03',
-    titleMain: 'FULL',
-    titleSub: 'SUPPORT',
-    description: 'End-to-end training and aggressive marketing support.',
+    titleMain: 'PREPARE TO',
+    titleSub: 'OPERATE',
+    description: 'Consider who will run the branch and discuss training and support in your offer.',
     image: '/images/menu-classic.png',
+    widths: [300, 600],
   },
 ];
 
@@ -60,13 +64,22 @@ const Requirements = () => {
             <path id="curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
             <text><textPath href="#curve" startOffset="0%">SIOMAI STREET FRANCHISE • SIOMAI STREET FRANCHISE • </textPath></text>
           </svg>
-          <div className="req-max__spin-icon">⚡</div>
+          <div className="req-max__spin-icon" aria-hidden="true">S</div>
         </div>
 
-        <h2 className="req-max__heading">
-          <span className="req-max__heading-outline">WHAT YOU NEED</span>
-          <span className="req-max__heading-solid">TO GET STARTED</span>
-        </h2>
+        <div className="req-max__heading-wrap">
+          <div className="req-max__badge">
+            <span className="req-max__badge-dot" aria-hidden="true" />
+            <span className="req-max__badge-title">FRANCHISE ROADMAP</span>
+            <span className="req-max__badge-divider" aria-hidden="true">/</span>
+            <span className="req-max__badge-notice">3 SIMPLE PHASES</span>
+          </div>
+
+          <h2 className="req-max__heading">
+            <span className="req-max__heading-outline">WHAT YOU NEED</span>
+            <span className="req-max__heading-solid">TO GET STARTED</span>
+          </h2>
+        </div>
       </header>
 
       {/* ─── Floating Cards ─── */}
@@ -94,7 +107,14 @@ const Requirements = () => {
             {/* Centered Visual */}
             <div className="req-max__card-visual">
               <div className="req-max__card-backdrop"></div>
-              <img src={item.image} alt={item.titleSub} className="req-max__card-img" loading="lazy" />
+              <img
+                src={item.image}
+                srcSet={getSrcSet(item.image, item.widths)}
+                sizes="(max-width: 768px) 90vw, (max-width: 1024px) 40vw, 380px"
+                alt={item.titleSub}
+                className="req-max__card-img"
+                loading="lazy"
+              />
             </div>
 
             {/* Formal Footer */}

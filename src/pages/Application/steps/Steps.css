@@ -916,10 +916,7 @@
 }
 
 .legal-checkbox:checked::after {
-  content: '✓';
-  color: white;
-  font-size: 14px;
-  font-weight: bold;
+  content: none;
 }
 
 .legal-checkbox-text {

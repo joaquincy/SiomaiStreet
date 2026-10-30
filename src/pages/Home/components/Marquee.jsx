@@ -31,11 +31,21 @@ const Marquee = () => {
           {[...Array(4)].map((_, i) => (
             <div className="street-marquee__content" key={i}>
               <span className="street-marquee__text">SIOMAI STREET</span>
-              <img src="/images/siomai 1.png" alt="" className="street-marquee__img" loading="lazy" />
+              <img
+                src="/images/siomai 1.png"
+                srcSet="/images/responsive/siomai 1-200w.png 200w, /images/responsive/siomai 1-400w.png 400w"
+                sizes="80px"
+                alt="" className="street-marquee__img" loading="lazy"
+              />
               <span className="street-marquee__text street-marquee__text--outline">EST. 2015</span>
               <span className="street-marquee__star">✦</span>
               <span className="street-marquee__text">HOT &amp; FRESH</span>
-              <img src="/images/menu-pork.png" alt="" className="street-marquee__img" loading="lazy" />
+              <img
+                src="/images/menu-pork.png"
+                srcSet="/images/responsive/menu-pork-200w.png 200w, /images/responsive/menu-pork-400w.png 400w"
+                sizes="80px"
+                alt="" className="street-marquee__img" loading="lazy"
+              />
               <span className="street-marquee__text street-marquee__text--outline">STREET FOOD</span>
               <span className="street-marquee__star">✦</span>
             </div>

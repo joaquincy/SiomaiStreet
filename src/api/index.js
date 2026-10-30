@@ -1,43 +1,33 @@
-const apiBaseUrl = (import.meta.env.VITE_API_BASE_URL || '').replace(/\/$/, '');
+import { APPLICATION_ENDPOINT, CONTRACT_VERSION, isValidReceipt } from '../../shared/application.js';
+import { uploadWithProgress } from './uploadTransport.js';
 
-const getErrorMessage = async (response) => {
-  try {
-    const payload = await response.json();
-    return payload.message || payload.error || 'Unable to submit your application. Please try again.';
-  } catch {
-    return 'Unable to submit your application. Please try again.';
-  }
-};
-
-export const submitFranchiseApplication = async ({ formData, turnstileToken }) => {
-  const { documents = {}, ...application } = formData;
+export const submitFranchiseApplication = async ({ formData, requestId, fetcher = fetch, onProgress }) => {
+  const { documents = {}, ...applicationData } = formData;
   const submission = new FormData();
-
-  submission.append('application', JSON.stringify(application));
-
-  Object.entries(documents).forEach(([documentType, file]) => {
-    submission.append(`documents[${documentType}]`, file, file.name);
-  });
-
-  if (turnstileToken) {
-    submission.append('turnstileToken', turnstileToken);
+  submission.append('version', String(CONTRACT_VERSION));
+  submission.append('requestId', requestId);
+  submission.append('applicationData', JSON.stringify(applicationData));
+  for (const [key, file] of Object.entries(documents)) {
+    if (file instanceof File) submission.append(key, file, file.name);
   }
-
   let response;
 
   try {
-    response = await fetch(`${apiBaseUrl}/api/applications`, {
+    response = onProgress && typeof XMLHttpRequest !== 'undefined' ? await uploadWithProgress(APPLICATION_ENDPOINT, submission, onProgress) : await fetcher(APPLICATION_ENDPOINT, {
       method: 'POST',
       body: submission,
       headers: { Accept: 'application/json' },
     });
   } catch {
-    throw new Error('We could not reach the application service. Your saved draft remains on this device.');
+    throw new Error('We could not confirm receipt. Keep this application and retry; the same request will not create a duplicate.');
   }
 
+  const result = await response.json().catch(() => null);
   if (!response.ok) {
-    throw new Error(await getErrorMessage(response));
+    const error = new Error(result?.error || 'Your application could not be submitted. Please retry.');
+    error.validationErrors = result?.validationErrors;
+    throw error;
   }
-
-  return response.json();
+  if (!isValidReceipt(result, requestId)) throw new Error('The service did not return a valid receipt. Your draft has been kept. Please retry.');
+  return result;
 };

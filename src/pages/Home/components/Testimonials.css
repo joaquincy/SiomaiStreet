@@ -1,443 +1,924 @@
-/* ═══════════════════════════════════════════════════
-   REVIEWS — "Words from the Street"
-   Siomai Street Customer Testimonials
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   SIOMAI STREET — TESTIMONIALS & STREET CREDIBILITY
+   Harmonized with Requirements (#110F0D + Film Grain + The Last Shuriken)
+   Awwwards & Editorial Graphic Design Standards
+   ═══════════════════════════════════════════════════════════════════════════ */
 
+/* ─── SECTION CANVAS ─── */
 .reviews {
   position: relative;
-  padding: clamp(5rem, 10vw, 8rem) 0;
-  background: var(--color-charcoal, #1D1D1D);
-  color: var(--color-white, #fff);
+  width: 100%;
+  max-width: 100%;
   overflow: hidden;
+  overflow: clip;
+  background-color: #110F0D; /* Exact Night Market Obsidian */
+  color: #FFFDF5;
+  padding: clamp(5.5rem, 9vh, 8.5rem) 0;
+  z-index: 1;
 }
 
-/* Very subtle warm noise-grain overlay */
+/* ─── FILM GRAIN OVERLAY (Identical to Requirements, Packages & CTA) ─── */
 .reviews::before {
   content: '';
   position: absolute;
   inset: 0;
-  background:
-    radial-gradient(ellipse at 20% 80%, rgba(245, 166, 35, 0.06) 0%, transparent 60%),
-    radial-gradient(ellipse at 80% 20%, rgba(230, 57, 70, 0.04) 0%, transparent 50%);
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilterReviews'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilterReviews)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.08;
   pointer-events: none;
   z-index: 0;
 }
 
-/* ─── Storefront Watermark ─── */
-.reviews__watermark {
+/* ─── GIANT FAINT BACKGROUND TYPOGRAPHY (Harmonized with START & FORMATS) ─── */
+.reviews__bg-type {
   position: absolute;
-  right: -8%;
   top: 50%;
-  transform: translateY(-50%);
-  width: clamp(400px, 50vw, 700px);
-  opacity: 0.025;
+  left: 50%;
+  transform: translate(-50%, -50%);
   pointer-events: none;
   z-index: 0;
-  mix-blend-mode: lighten;
-}
-
-.reviews__watermark-img {
+  display: flex;
+  justify-content: center;
+  align-items: center;
   width: 100%;
-  height: auto;
-  filter: brightness(2.5) contrast(0.5);
 }
 
-/* ─── Container ─── */
+.reviews__bg-word {
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(14rem, 34vw, 38rem);
+  font-weight: normal;
+  color: transparent;
+  -webkit-text-stroke: 2px rgba(255, 255, 255, 0.025);
+  letter-spacing: 0.05em;
+  white-space: nowrap;
+}
+
+/* ─── CONTAINER ─── */
 .reviews__container {
   position: relative;
   z-index: 1;
-  max-width: 1200px;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 0 var(--space-xl, 2rem);
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
 }
 
-/* ═══════════════════════════════════════════════════
-   HEADER
-   ═══════════════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════════════
+   EDITORIAL HEADER (Exact Match with Requirements & Packages)
+   ═══════════════════════════════════════════════════════════════════════════ */
 .reviews__header {
-  margin-bottom: clamp(3rem, 5vw, 4rem);
+  position: relative;
+  z-index: 2;
+  margin-bottom: clamp(3.25rem, 6vw, 4.75rem);
+  opacity: 0;
+  transform: translateY(20px);
+  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reviews__label {
-  display: inline-block;
+.reviews.reviews--visible .reviews__header {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+.reviews__header-top {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.reviews__badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  background: rgba(255, 255, 255, 0.04);
+  border: 1px solid rgba(255, 255, 255, 0.1);
+  padding: 0.35rem 0.85rem;
+  border-radius: 9999px;
+  backdrop-filter: blur(8px);
+}
+
+.reviews__badge-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #D61B22;
+  box-shadow: 0 0 10px rgba(214, 27, 34, 0.8);
+}
+
+.reviews__badge-title {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.75rem;
-  font-weight: 600;
-  letter-spacing: 2px;
+  font-size: 0.76rem;
+  font-weight: 700;
+  letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: rgba(255, 255, 255, 0.4);
-  margin-bottom: 1rem;
+  color: #FFFDF5;
 }
 
-.reviews__title {
+.reviews__badge-divider {
+  color: rgba(255, 255, 255, 0.25);
+  font-size: 0.75rem;
+}
+
+.reviews__badge-notice {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: clamp(2.4rem, 4.5vw, 3.8rem);
-  font-weight: 800;
-  line-height: 1.08;
-  letter-spacing: -1px;
-  color: var(--color-white, #fff);
-  margin-bottom: 1rem;
+  font-size: 0.72rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #F5A623;
 }
 
-.reviews__title-accent {
-  color: var(--color-red, #E63946);
+.reviews__stamp-tag {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: rgba(255, 253, 245, 0.45);
+  border: 1px dashed rgba(255, 255, 255, 0.15);
+  padding: 0.35rem 0.75rem;
+  border-radius: 4px;
+}
+
+.reviews__heading-wrap {
+  margin-bottom: 0.85rem;
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+}
+
+.reviews__heading {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  text-align: left;
+  margin: 0;
+}
+
+/* Line 1: VOICES FROM — The Last Shuriken (Illuminated Warm Gold) */
+.reviews__heading-outline {
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(2rem, 3.8vw, 3.35rem);
+  font-weight: normal;
+  line-height: 1.05;
+  color: #F5A623;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5E0 45%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px rgba(245, 166, 35, 0.22));
+  letter-spacing: 0.04em;
+  text-align: left;
+  display: block;
+}
+
+/* Line 2: THE STREET — Outfit 900 (Crimson Glow) */
+.reviews__heading-solid {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.05rem, 4vw, 3.5rem);
+  font-weight: 900;
+  line-height: 0.96;
+  letter-spacing: -0.025em;
+  text-transform: uppercase;
+  color: #D61B22;
+  background: linear-gradient(135deg, #FF5C6C 0%, #D61B22 55%, #B3131A 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  margin-top: 0.15rem;
+  filter: drop-shadow(0 4px 14px rgba(214, 27, 34, 0.32));
+  text-align: left;
+  display: block;
 }
 
 .reviews__subtitle {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(0.95rem, 1.1vw, 1.05rem);
-  line-height: 1.6;
-  color: rgba(255, 255, 255, 0.45);
-  max-width: 440px;
+  font-size: clamp(0.95rem, 1.15vw, 1.05rem);
+  line-height: 1.65;
+  color: rgba(255, 253, 245, 0.72);
+  max-width: 620px;
+  margin: 0;
 }
 
-/* ═══════════════════════════════════════════════════
-   MAIN GRID — Image Left, Quote Right
-   ═══════════════════════════════════════════════════ */
-.reviews__grid {
+/* ═══════════════════════════════════════════════════════════════════════════
+   HORIZONTALLY ALIGNED TWO-COLUMN SHOWCASE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reviews__showcase {
   display: grid;
-  grid-template-columns: 0.45fr 0.55fr;
+  grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.85fr);
   gap: clamp(2.5rem, 5vw, 5rem);
   align-items: center;
-}
-
-/* ─── Image Column ─── */
-.reviews__image-col {
   position: relative;
+  z-index: 2;
 }
 
-.reviews__image-frame {
-  position: relative;
+/* ═══════════════════════════════════════════════════════════════════════════
+   LEFT SIDE: 3D STAGGERED REVIEW CARD DECK ("Nakapatong-patong")
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reviews__deck-col {
+  display: flex;
+  flex-direction: column;
   width: 100%;
-  aspect-ratio: 4 / 5;
-  border-radius: 20px;
-  overflow: hidden;
-  background: rgba(255, 255, 255, 0.03);
-  box-shadow: 0 24px 64px rgba(0, 0, 0, 0.4);
+  max-width: 530px;
 }
 
-.reviews__image {
-  position: absolute;
-  inset: 0;
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  opacity: 0;
-  transform: scale(1.04);
-  transition: opacity 0.55s ease, transform 0.55s ease;
-  will-change: opacity, transform;
+/* Minimalist Top Control Bar (High-Contrast & Tactile) */
+.reviews__deck-topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 1.25rem;
+  padding: 0 0.35rem;
 }
 
-.reviews__image--active {
-  opacity: 1;
-  transform: scale(1);
+.reviews__deck-title-lockup {
+  display: flex;
+  align-items: center;
+  gap: 8px;
 }
 
-/* ─── EST. 2015 Sticker ─── */
-.reviews__sticker {
-  position: absolute;
-  bottom: 20px;
-  left: 20px;
-  z-index: 5;
-  background: var(--color-red, #E63946);
-  color: #fff;
-  padding: 6px 14px;
-  border-radius: 6px;
-  transform: rotate(-3deg);
-  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.35);
+.reviews__deck-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #D61B22;
+  box-shadow: 0 0 8px rgba(214, 27, 34, 0.7);
 }
 
-.reviews__sticker-text {
+.reviews__deck-label {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.7rem;
-  font-weight: 800;
-  letter-spacing: 2.5px;
+  font-size: clamp(1.2rem, 1.5vw, 1.45rem);
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  color: #FFFDF5;
+}
+
+.reviews__deck-sublabel {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.08em;
+  color: #F5A623;
   text-transform: uppercase;
 }
 
-/* ─── Quote Column ─── */
-.reviews__quote-col {
-  position: relative;
-  padding-left: clamp(1rem, 2vw, 2rem);
-}
-
-/* ─── Oversized Quotation Mark ─── */
-.reviews__quote-mark {
-  position: absolute;
-  top: -45px;
-  left: -10px;
-  font-family: Georgia, 'Times New Roman', serif;
-  font-size: clamp(7rem, 12vw, 10rem);
-  font-weight: 700;
-  line-height: 1;
-  color: var(--color-red, #E63946);
-  opacity: 0.12;
-  pointer-events: none;
-  user-select: none;
-  z-index: 0;
-}
-
-/* ─── Quote Body (animated content) ─── */
-.reviews__quote-body {
-  position: relative;
-  z-index: 1;
-  transition: opacity 0.3s ease, transform 0.3s ease;
-}
-
-.reviews__quote-body--enter {
-  opacity: 1;
-  transform: translateY(0);
-}
-
-.reviews__quote-body--exit {
-  opacity: 0;
-  transform: translateY(8px);
-}
-
-.reviews__quote-text {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: clamp(1.35rem, 2.2vw, 1.85rem);
-  font-weight: 600;
-  line-height: 1.5;
-  color: rgba(255, 255, 255, 0.92);
-  letter-spacing: -0.3px;
-  margin-bottom: 1.5rem;
-  max-width: 520px;
-}
-
-/* ─── Stars ─── */
-.reviews__stars {
-  display: flex;
-  gap: 3px;
-  margin-bottom: 1.5rem;
-  color: var(--color-saffron, #F5A623);
-  font-size: 1rem;
-}
-
-/* ─── Author ─── */
-.reviews__author {
+.reviews__deck-arrows {
   display: flex;
   align-items: center;
-  gap: 14px;
+  gap: 0.65rem;
+}
+
+.reviews__chevron-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.22);
+  background: rgba(255, 255, 255, 0.06);
+  color: #FFFDF5;
+  font-size: 1.35rem;
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.reviews__chevron-btn:hover {
+  background: #F5A623;
+  color: #110F0D;
+  border-color: #F5A623;
+  transform: scale(1.08);
+  box-shadow: 0 6px 18px rgba(245, 166, 35, 0.38);
+}
+
+.reviews__chevron-btn:active {
+  transform: scale(0.95);
+}
+
+/* ─── The Staggered Card Deck Stage ─── */
+.reviews__deck {
+  position: relative;
+  width: 100%;
+  min-height: 335px;
+  touch-action: pan-y;
+  cursor: grab;
+  user-select: none;
+  -webkit-user-select: none;
+  outline: none;
+  perspective: 1200px;
+}
+
+.reviews__deck--dragging {
+  cursor: grabbing;
+}
+
+/* ─── Individual Card Shell ─── */
+.reviews__card {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  min-height: 315px;
+  border-radius: 22px;
+  padding: clamp(1.85rem, 3.2vw, 2.45rem);
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  will-change: transform, opacity;
+  transform-style: preserve-3d;
+  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+}
+
+/* ─── Masking Tape Clip Element (Harmonized with Requirements & Packages) ─── */
+.reviews__card-clip {
+  position: absolute;
+  top: -13px;
+  left: 50%;
+  transform: translateX(-50%) rotate(-2.5deg);
+  width: 76px;
+  height: 26px;
+  background: rgba(255, 255, 255, 0.38);
+  backdrop-filter: blur(4px);
+  -webkit-backdrop-filter: blur(4px);
+  border-radius: 2px;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  z-index: 15;
+  pointer-events: none;
+}
+
+/* Card 3: Back Right Layer (Clockwise Tilt) */
+.reviews__card--back-right {
+  background-color: #ECE5D6;
+  border: 1px solid #C5BC9F;
+  color: #1A1614;
+  z-index: 1;
+  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.38);
+  pointer-events: none;
+}
+
+/* Card 2: Back Left Layer (Counter-Clockwise Tilt — Left Peek like Reference) */
+.reviews__card--back-left {
+  background-color: #F6F1E7;
+  border: 1px solid #D5CCB8;
+  color: #1A1614;
+  z-index: 2;
+  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.48);
+  pointer-events: none;
+}
+
+/* Card 1: Front Active Layer */
+.reviews__card--front {
+  background-color: #FFFFFF;
+  border: 1px solid rgba(0, 0, 0, 0.08);
+  color: #181512;
+  z-index: 3;
+  box-shadow:
+    0 24px 55px -14px rgba(0, 0, 0, 0.65),
+    0 2px 8px rgba(0, 0, 0, 0.12),
+    0 0 0 1px rgba(0, 0, 0, 0.04);
+}
+
+.reviews__card--front:hover {
+  box-shadow:
+    0 32px 70px -16px rgba(0, 0, 0, 0.75),
+    0 4px 12px rgba(0, 0, 0, 0.16);
+}
+
+/* ─── Card Interior Typography & Layout ─── */
+.reviews__card-text {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(1.05rem, 1.25vw, 1.2rem);
+  line-height: 1.62;
+  font-weight: 500;
+  color: #181512;
+  margin: 0 0 1.85rem;
+  letter-spacing: -0.01em;
+}
+
+.reviews__card-author {
+  display: flex;
+  align-items: center;
+  gap: 1.15rem;
+  margin-top: auto;
+  padding-top: 1.25rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.07);
 }
 
 .reviews__avatar {
-  width: 44px;
-  height: 44px;
+  width: 54px;
+  height: 54px;
   border-radius: 50%;
-  background: linear-gradient(135deg, rgba(230, 57, 70, 0.5), rgba(245, 166, 35, 0.4));
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.8rem;
-  font-weight: 700;
-  color: #fff;
-  letter-spacing: 0.5px;
+  object-fit: cover;
   flex-shrink: 0;
+  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  background-color: #ECE7DC;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
 }
 
-.reviews__author-info {
+.reviews__author-meta {
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  align-items: flex-start;
+  gap: 4px;
+}
+
+.reviews__author-name-row {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
 }
 
 .reviews__author-name {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.95rem;
+  font-size: 1.02rem;
   font-weight: 700;
-  color: var(--color-white, #fff);
-  text-transform: uppercase;
-  letter-spacing: 1px;
+  color: #181512;
+  line-height: 1.2;
 }
 
-.reviews__author-meta {
+.reviews__card-stars {
+  display: inline-flex;
+  gap: 1px;
+  color: #E29B24;
+  font-size: 0.92rem;
+}
+
+.reviews__author-location {
   font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.78rem;
-  color: rgba(255, 255, 255, 0.35);
-  letter-spacing: 0.5px;
+  font-weight: 500;
+  color: rgba(24, 21, 18, 0.62);
+  line-height: 1.2;
 }
 
-/* ═══════════════════════════════════════════════════
-   NAVIGATION
-   ═══════════════════════════════════════════════════ */
-.reviews__nav {
-  display: flex;
+/* High-Contrast Pill (Anti-Generic Rule 2: Visible Border) */
+.reviews__card-pill {
+  display: inline-flex;
   align-items: center;
-  gap: 1.2rem;
-  margin-top: clamp(2.5rem, 4vw, 3.5rem);
-  padding-top: 1.5rem;
-  border-top: 1px solid rgba(255, 255, 255, 0.07);
-}
-
-.reviews__nav-arrow {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 42px;
-  height: 42px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.15);
-  background: transparent;
-  color: rgba(255, 255, 255, 0.6);
-  font-size: 1.1rem;
-  cursor: pointer;
-  transition: border-color 0.2s ease, color 0.2s ease, transform 0.2s ease;
-}
-
-.reviews__nav-arrow:hover {
-  border-color: rgba(255, 255, 255, 0.35);
-  color: #fff;
-  transform: scale(1.06);
-}
-
-.reviews__nav-arrow:active {
-  transform: scale(0.97);
-}
-
-.reviews__nav-counter {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.8rem;
+  margin-top: 4px;
+  padding: 3px 12px;
+  border-radius: 9999px;
+  border: 1px solid #9CA3AF;
+  background-color: #FAF9F5;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.76rem;
   font-weight: 600;
-  color: rgba(255, 255, 255, 0.3);
-  letter-spacing: 2px;
-  min-width: 52px;
-  text-align: center;
+  color: #374151;
+  line-height: 1.3;
+  transition: background-color 0.2s ease, border-color 0.2s ease;
 }
 
-.reviews__nav-dots {
+.reviews__card--front:hover .reviews__card-pill {
+  background-color: #F3F4F6;
+  border-color: #6B7280;
+}
+
+/* ─── Deck Footer (Counter, Dots, Action Link) ─── */
+.reviews__deck-footer {
   display: flex;
-  gap: 8px;
-  margin-left: auto;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 1rem;
+  margin-top: 1.75rem;
+  padding: 0 0.35rem;
 }
 
-.reviews__nav-dot {
+.reviews__deck-count {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 700;
+  letter-spacing: 0.14em;
+  color: rgba(255, 253, 245, 0.5);
+  min-width: 50px;
+}
+
+.reviews__deck-dots {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.reviews__deck-dot {
   width: 8px;
   height: 8px;
   border-radius: 50%;
   border: none;
-  background: rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.2);
   cursor: pointer;
   padding: 0;
-  transition: background 0.25s ease, transform 0.25s ease;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
-.reviews__nav-dot:hover {
-  background: rgba(255, 255, 255, 0.35);
+.reviews__deck-dot:hover {
+  background: rgba(255, 255, 255, 0.45);
 }
 
-.reviews__nav-dot--active {
-  background: var(--color-red, #E63946);
-  transform: scale(1.3);
+.reviews__deck-dot--active {
+  width: 22px;
+  border-radius: 9999px;
+  background: #D61B22;
+  box-shadow: 0 0 10px rgba(214, 27, 34, 0.65);
 }
 
-/* ═══════════════════════════════════════════════════
-   ENTRANCE ANIMATION
-   ═══════════════════════════════════════════════════ */
-.reviews__header,
-.reviews__image-col,
-.reviews__quote-col {
-  opacity: 0;
-  transform: translateY(18px);
-  transition: opacity 0.7s ease, transform 0.7s ease;
+.reviews__leave-link {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: #F5A623;
+  transition: color 0.2s ease, transform 0.2s ease;
 }
 
-.reviews__image-col {
-  transition-delay: 0.12s;
+.reviews__leave-link:hover {
+  color: #FFFDF5;
+  transform: translateX(3px);
 }
 
-.reviews__quote-col {
-  transition-delay: 0.24s;
+/* ═══════════════════════════════════════════════════════════════════════════
+   RIGHT SIDE: NATURAL EDITORIAL MASCOT LOCKUP & PROVENANCE PLAQUE
+   ═══════════════════════════════════════════════════════════════════════════ */
+.reviews__mascot-col {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  position: relative;
 }
 
-.reviews.reviews--visible .reviews__header,
-.reviews.reviews--visible .reviews__image-col,
-.reviews.reviews--visible .reviews__quote-col {
-  opacity: 1;
-  transform: translateY(0);
+.reviews__mascot-poster {
+  position: relative;
+  width: 100%;
+  max-width: 440px;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
 }
 
-/* ═══════════════════════════════════════════════════
+/* ─── Radiant Warm Streetlamp Stage Disk Behind Mascot ─── */
+.reviews__mascot-disc {
+  position: absolute;
+  top: 12%;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 350px;
+  height: 350px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.14) 0%, rgba(214, 27, 34, 0.05) 55%, transparent 72%);
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(15px);
+}
+
+.reviews__mascot-ring-outer {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  border: 1px dashed rgba(245, 166, 35, 0.22);
+}
+
+.reviews__mascot-ring-inner {
+  position: absolute;
+  inset: 22px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.06);
+}
+
+/* ─── Circular Print-Shop Ink Stamp (Rotates slowly around shoulder) ─── */
+.reviews__ink-stamp {
+  position: absolute;
+  top: -8px;
+  left: 8px;
+  width: 135px;
+  height: 135px;
+  color: rgba(245, 166, 35, 0.45);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.reviews__ink-stamp-svg {
+  width: 100%;
+  height: 100%;
+  animation: stampRotate 26s linear infinite;
+}
+
+.reviews__ink-stamp-text {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 2.2px;
+  fill: currentColor;
+  text-transform: uppercase;
+}
+
+.reviews__ink-stamp-center {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 13px;
+  font-weight: 800;
+  letter-spacing: 1.2px;
+  fill: currentColor;
+}
+
+@keyframes stampRotate {
+  from {
+    transform: rotate(0deg);
+  }
+  to {
+    transform: rotate(360deg);
+  }
+}
+
+/* ─── Mascot Figure ─── */
+.reviews__mascot-figure {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  max-width: 340px;
+  margin: 0;
+  display: flex;
+  justify-content: center;
+}
+
+.reviews__mascot-img {
+  width: 100%;
+  height: auto;
+  max-height: 380px;
+  object-fit: contain;
+  filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.75));
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reviews__mascot-poster:hover .reviews__mascot-img {
+  transform: translateY(-6px) scale(1.02);
+}
+
+/* ─── Asian Dim Sum Signboard Banner (Inspired by Lunar & Traditional Street Plaque) ─── */
+.reviews__mascot-banner {
+  position: relative;
+  z-index: 2;
+  width: 100%;
+  margin-top: 1.5rem;
+  padding: 1.4rem 1.6rem 1.25rem;
+  background: linear-gradient(145deg, #2A090D 0%, #1A0507 55%, #100204 100%);
+  border: 1px solid rgba(245, 166, 35, 0.45);
+  border-radius: 8px;
+  outline: 1px solid rgba(245, 166, 35, 0.16);
+  outline-offset: -5px;
+  backdrop-filter: blur(12px);
+  box-shadow:
+    0 16px 36px rgba(0, 0, 0, 0.65),
+    0 0 25px rgba(214, 27, 34, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.08);
+}
+
+/* Traditional Asian Meander / Fret Corner Ornaments */
+.reviews__banner-fret {
+  position: absolute;
+  color: #F5A623;
+  pointer-events: none;
+  z-index: 3;
+  opacity: 0.85;
+}
+
+.reviews__banner-fret--tl {
+  top: 7px;
+  left: 7px;
+}
+
+.reviews__banner-fret--br {
+  bottom: 7px;
+  right: 7px;
+}
+
+.reviews__banner-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+  margin-bottom: 0.65rem;
+  flex-wrap: wrap;
+}
+
+.reviews__banner-stamp-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+/* Traditional Chinese Vermilion Seal Stamp (印章) */
+.reviews__banner-seal {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  background: #C41820;
+  border: 1px solid #F5A623;
+  border-radius: 3px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 11px;
+  font-weight: 900;
+  color: #FFFDF5;
+  line-height: 1;
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.35);
+  user-select: none;
+}
+
+.reviews__banner-eyebrow {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.14em;
+  color: #F5A623;
+  text-transform: uppercase;
+}
+
+.reviews__banner-year {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  color: rgba(255, 253, 245, 0.5);
+  text-transform: uppercase;
+}
+
+.reviews__banner-headline-wrap {
+  margin-bottom: 0.35rem;
+}
+
+.reviews__banner-headline {
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(1.45rem, 2.2vw, 1.9rem);
+  font-weight: normal;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  margin: 0;
+  line-height: 1.1;
+  color: #F5A623;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5E0 45%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 2px 10px rgba(245, 166, 35, 0.35));
+}
+
+/* Gold Divider Line with Center Diamond Motif */
+.reviews__banner-divider {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  margin: 0.6rem 0 0.8rem;
+  color: #F5A623;
+}
+
+.reviews__divider-line {
+  flex: 1;
+  height: 1px;
+  background: linear-gradient(90deg, transparent, rgba(245, 166, 35, 0.35), transparent);
+}
+
+.reviews__divider-diamond {
+  font-size: 7px;
+  line-height: 1;
+  opacity: 0.85;
+}
+
+.reviews__banner-copy {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  line-height: 1.55;
+  color: rgba(255, 253, 245, 0.78);
+  margin: 0 0 0.95rem;
+  text-align: left;
+}
+
+/* Clean Editorial Provenance Strip (No generic software pills) */
+.reviews__banner-specs {
+  display: flex;
+  align-items: center;
+  justify-content: flex-start;
+  gap: 8px;
+  flex-wrap: wrap;
+  padding-top: 0.75rem;
+  border-top: 1px solid rgba(245, 166, 35, 0.16);
+}
+
+.reviews__banner-spec-item {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.7rem;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  color: #FFFDF5;
+  text-transform: uppercase;
+}
+
+.reviews__spec-dot {
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: #D61B22;
+  box-shadow: 0 0 6px #D61B22;
+}
+
+.reviews__banner-spec-sep {
+  color: rgba(245, 166, 35, 0.45);
+  font-size: 0.65rem;
+}
+
+/* ═══════════════════════════════════════════════════════════════════════════
    RESPONSIVE
-   ═══════════════════════════════════════════════════ */
-@media (max-width: 900px) {
-  .reviews__grid {
+   ═══════════════════════════════════════════════════════════════════════════ */
+@media (max-width: 991px) {
+  .reviews__showcase {
     grid-template-columns: 1fr;
-    gap: 2.5rem;
+    gap: 3.5rem;
   }
 
-  .reviews__image-frame {
-    max-width: 420px;
-    aspect-ratio: 3 / 3.5;
+  .reviews__deck-col {
+    margin: 0 auto;
   }
 
-  .reviews__quote-col {
-    padding-left: 0;
-  }
-
-  .reviews__quote-mark {
-    top: -35px;
-    left: -5px;
-    font-size: 6rem;
-  }
-
-  .reviews__watermark {
-    right: -30%;
-    opacity: 0.015;
+  .reviews__mascot-poster {
+    margin: 0 auto;
   }
 }
 
-@media (max-width: 560px) {
+@media (max-width: 640px) {
   .reviews {
-    padding: 3.5rem 0 4rem;
+    padding: clamp(4rem, 7vh, 5.5rem) 0;
   }
 
   .reviews__container {
     padding: 0 1.25rem;
   }
 
-  .reviews__title {
-    font-size: 2rem;
+  .reviews__header {
+    margin-bottom: 2.5rem;
   }
 
-  .reviews__image-frame {
-    max-width: 100%;
-    aspect-ratio: 1 / 1;
-    border-radius: 14px;
+  .reviews__deck {
+    min-height: 350px;
   }
 
-  .reviews__sticker {
-    bottom: 12px;
-    left: 12px;
-    padding: 5px 10px;
+  .reviews__card {
+    min-height: 330px;
+    padding: 1.5rem;
+    border-radius: 18px;
   }
 
-  .reviews__sticker-text {
-    font-size: 0.6rem;
+  .reviews__card-text {
+    font-size: 0.98rem;
+    line-height: 1.55;
+    margin-bottom: 1.4rem;
   }
 
-  .reviews__quote-text {
-    font-size: 1.15rem;
+  .reviews__card-author {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
 
-  .reviews__nav {
-    gap: 0.8rem;
-    margin-top: 2rem;
+  .reviews__card-pill {
+    align-self: flex-start;
   }
 
-  .reviews__nav-arrow {
-    width: 36px;
-    height: 36px;
-    font-size: 0.95rem;
+  .reviews__deck-footer {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 0.85rem;
   }
 
-  .reviews__nav-dots {
-    gap: 6px;
+  .reviews__mascot-figure {
+    max-width: 270px;
   }
 
-  .reviews__nav-dot {
-    width: 7px;
-    height: 7px;
+  .reviews__ink-stamp {
+    width: 105px;
+    height: 105px;
+    left: 0;
+  }
+
+  .reviews__mascot-banner {
+    padding: 1.15rem 1.25rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reviews__ink-stamp-svg {
+    animation: none;
+  }
+
+  .reviews__card,
+  .reviews__mascot-img {
+    transition: none;
   }
 }

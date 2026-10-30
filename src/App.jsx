@@ -9,6 +9,7 @@ import Home from './pages/Home/Home';
 const MenuPage = lazy(() => import('./pages/Menu/Menu'));
 const ReviewsPage = lazy(() => import('./pages/Reviews/Reviews'));
 const ApplicationPage = lazy(() => import('./pages/Application/Application'));
+const ApplicationStatus = lazy(() => import('./pages/Application/ApplicationStatus'));
 const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy'));
 const TermsOfService = lazy(() => import('./pages/Legal/TermsOfService'));
 const CookiePolicy = lazy(() => import('./pages/Legal/CookiePolicy'));
@@ -83,6 +84,7 @@ function App() {
             <Route path="/menu" element={<MenuPage />} />
             <Route path="/reviews" element={<ReviewsPage />} />
             <Route path="/application" element={<ApplicationPage />} />
+            <Route path="/application/status" element={<ApplicationStatus />} />
             <Route path="/privacy" element={<PrivacyPolicy />} />
             <Route path="/terms" element={<TermsOfService />} />
             <Route path="/cookies" element={<CookiePolicy />} />

@@ -6,13 +6,13 @@
 .application-page {
   padding-top: var(--nav-height);
   min-height: 100vh;
-  background: var(--color-off-white);
+  background-color: var(--color-canvas);
   padding-bottom: clamp(12rem, 25vh, 20rem);
 }
 
 /* ─── Sub Navigation ─── */
 .app-subnav {
-  background: var(--color-white);
+  background: var(--color-canvas);
   border-bottom: 1px solid var(--color-gray-200);
   position: sticky;
   top: var(--nav-height);
@@ -20,6 +20,7 @@
 }
 
 .app-subnav-inner {
+  overflow-x: auto;
   display: flex;
   align-items: center;
   gap: var(--space-2xl);
@@ -143,7 +144,7 @@
 
 /* ─── Progress Stepper ─── */
 .app-stepper {
-  background: var(--color-white);
+  background: var(--color-canvas);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-xl);
   padding: var(--space-xl) var(--space-2xl);
@@ -260,7 +261,7 @@
 .app-form-card {
   flex: 1;
   min-width: 0;
-  background: var(--color-white);
+  background: var(--color-canvas);
   border: 1px solid var(--color-gray-200);
   border-radius: var(--radius-xl);
   box-shadow: var(--shadow-md);
@@ -550,6 +551,7 @@
     opacity: 0;
     transform: translateY(-8px);
   }
+
   to {
     opacity: 1;
     transform: translateY(0);
@@ -624,6 +626,7 @@
     opacity: 0;
     transform: translateY(-12px) scale(0.98);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -726,24 +729,60 @@
   opacity: 0;
 }
 
-.step-errors-list li:nth-child(1) { animation-delay: 0.05s; }
-.step-errors-list li:nth-child(2) { animation-delay: 0.1s; }
-.step-errors-list li:nth-child(3) { animation-delay: 0.15s; }
-.step-errors-list li:nth-child(4) { animation-delay: 0.2s; }
-.step-errors-list li:nth-child(5) { animation-delay: 0.25s; }
-.step-errors-list li:nth-child(6) { animation-delay: 0.3s; }
-.step-errors-list li:nth-child(7) { animation-delay: 0.35s; }
-.step-errors-list li:nth-child(8) { animation-delay: 0.4s; }
-.step-errors-list li:nth-child(9) { animation-delay: 0.45s; }
-.step-errors-list li:nth-child(10) { animation-delay: 0.5s; }
-.step-errors-list li:nth-child(11) { animation-delay: 0.55s; }
-.step-errors-list li:nth-child(12) { animation-delay: 0.6s; }
+.step-errors-list li:nth-child(1) {
+  animation-delay: 0.05s;
+}
+
+.step-errors-list li:nth-child(2) {
+  animation-delay: 0.1s;
+}
+
+.step-errors-list li:nth-child(3) {
+  animation-delay: 0.15s;
+}
+
+.step-errors-list li:nth-child(4) {
+  animation-delay: 0.2s;
+}
+
+.step-errors-list li:nth-child(5) {
+  animation-delay: 0.25s;
+}
+
+.step-errors-list li:nth-child(6) {
+  animation-delay: 0.3s;
+}
+
+.step-errors-list li:nth-child(7) {
+  animation-delay: 0.35s;
+}
+
+.step-errors-list li:nth-child(8) {
+  animation-delay: 0.4s;
+}
+
+.step-errors-list li:nth-child(9) {
+  animation-delay: 0.45s;
+}
+
+.step-errors-list li:nth-child(10) {
+  animation-delay: 0.5s;
+}
+
+.step-errors-list li:nth-child(11) {
+  animation-delay: 0.55s;
+}
+
+.step-errors-list li:nth-child(12) {
+  animation-delay: 0.6s;
+}
 
 @keyframes errorItemSlideIn {
   from {
     opacity: 0;
     transform: translateX(-6px);
   }
+
   to {
     opacity: 1;
     transform: translateX(0);
@@ -864,8 +903,17 @@
 }
 
 @keyframes successGlowPulse {
-  0%, 100% { opacity: 0.6; transform: translateX(-50%) scale(1); }
-  50% { opacity: 1; transform: translateX(-50%) scale(1.15); }
+
+  0%,
+  100% {
+    opacity: 0.6;
+    transform: translateX(-50%) scale(1);
+  }
+
+  50% {
+    opacity: 1;
+    transform: translateX(-50%) scale(1.15);
+  }
 }
 
 .success-icon-ring {
@@ -890,6 +938,7 @@
     opacity: 0;
     transform: scale(0.5) rotate(-10deg);
   }
+
   to {
     opacity: 1;
     transform: scale(1) rotate(0deg);
@@ -1020,4 +1069,44 @@
     height: 64px;
     font-size: 32px;
   }
+}
+
+.application-fields {
+  border: 0;
+  padding: 0;
+  margin: 0;
+  min-width: 0;
+}
+
+.application-requirements {
+  padding: var(--space-md);
+  margin-bottom: var(--space-lg);
+  border: var(--border-width-thin, 0.0625rem) solid var(--color-gray-300);
+  border-radius: var(--radius-md);
+  color: var(--color-gray-700);
+}
+
+.application-requirements summary {
+  cursor: pointer;
+  font-weight: var(--font-weight-semibold, 600);
+  padding-block: var(--space-sm);
+}
+
+.application-requirements ul {
+  padding-inline-start: var(--space-lg);
+  margin-block: var(--space-md);
+}
+
+.application-requirements summary:focus-visible {
+  outline: var(--border-width-focus, 0.125rem) solid var(--color-charcoal);
+  outline-offset: var(--space-xs);
+}
+
+.package-card>span {
+  display: block;
+}
+
+.review-item-value {
+  overflow-wrap: anywhere;
+  white-space: pre-wrap;
 }

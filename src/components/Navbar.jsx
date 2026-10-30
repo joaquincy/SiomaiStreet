@@ -45,6 +45,8 @@ const Navbar = () => {
           <Link to="/" className="navbar-logo" onClick={closeMenu}>
             <img
               src="/images/siomai street logo.png"
+              srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w"
+              sizes="48px"
               alt="Siomai Street"
               className="logo-image"
             />

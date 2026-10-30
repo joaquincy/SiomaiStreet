@@ -1,143 +1,726 @@
-/* ─── Featured Menu Section ─── */
+/* ══════════════════════════════════════════════════════════
+   FEATURED MENU — Editorial Alternating Food Showcase
+   Background: Steamed Wrapper Cream (#FAF6F0)
+   Only 2 items: text-left/food-right, then food-left/text-right
+   ══════════════════════════════════════════════════════════ */
+
 .featured-menu {
-  padding: var(--space-5xl) 0;
-  background: var(--color-white);
   position: relative;
-}
-
-.menu-categories {
-  display: flex;
-  justify-content: center;
-  gap: var(--space-sm);
-  margin-bottom: var(--space-2xl);
-  flex-wrap: wrap;
-}
-
-.menu-category-btn {
-  padding: var(--space-xs) var(--space-lg);
-  background: transparent;
-  color: var(--color-gray-500);
-  border: 2px solid var(--color-gray-200);
-  border-radius: var(--radius-full);
-  font-size: var(--fs-small);
-  font-weight: 600;
-  transition: all var(--transition-base);
-  cursor: pointer;
-}
-
-.menu-category-btn:hover {
-  border-color: var(--color-saffron);
-  color: var(--color-saffron);
-}
-
-.menu-category-btn.active {
-  background: var(--gradient-warm);
-  color: var(--color-white);
-  border-color: transparent;
-}
-
-.menu-grid {
-  display: grid;
-  grid-template-columns: repeat(4, 1fr);
-  gap: var(--space-xl);
-}
-
-.menu-card {
-  background: var(--color-off-white);
-  border-radius: var(--radius-lg);
+  background: #FAF6F0;
   overflow: hidden;
-  transition: all var(--transition-base);
-  border: 1px solid transparent;
+  overflow: clip;
+  padding: clamp(4rem, 8vw, 8rem) 0;
 }
 
-.menu-card:hover {
-  transform: translateY(-8px);
-  box-shadow: var(--shadow-lg);
-  border-color: rgba(245, 166, 35, 0.2);
-}
-
-.menu-card-image {
-  position: relative;
-  height: 200px;
-  overflow: hidden;
-}
-
-.menu-card-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  transition: transform var(--transition-slow);
-}
-
-.menu-card:hover .menu-card-image img {
-  transform: scale(1.1);
-}
-
-.menu-card-badge {
+/* ─── Warm Paper Grain Overlay ─── */
+.featured-menu::before {
+  content: '';
   position: absolute;
-  top: var(--space-sm);
-  left: var(--space-sm);
-  padding: 3px var(--space-sm);
-  background: var(--color-red);
-  color: var(--color-white);
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='creamNoiseMenu'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23creamNoiseMenu)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.featured-menu > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ══════════════════════════════════════════
+   Section Intro
+   ══════════════════════════════════════════ */
+
+.fm-intro {
+  text-align: center;
+  max-width: 600px;
+  margin: 0 auto clamp(3rem, 6vw, 6rem);
+  padding: 0 var(--space-xl);
+}
+
+.fm-kicker {
+  display: inline-block;
+  font-family: var(--font-heading);
   font-size: var(--fs-tiny);
-  font-weight: 700;
-  border-radius: var(--radius-full);
+  font-weight: 600;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
-}
-
-.menu-card-info {
-  padding: var(--space-lg);
-}
-
-.menu-card-name {
-  font-size: var(--fs-h4);
-  font-weight: 700;
-  color: var(--color-charcoal);
-  margin-bottom: var(--space-xs);
-}
-
-.menu-card-description {
-  font-size: var(--fs-small);
-  color: var(--color-gray-500);
-  line-height: 1.6;
+  letter-spacing: 2.5px;
+  color: var(--color-red);
   margin-bottom: var(--space-md);
 }
 
-.menu-card-footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-}
-
-.menu-card-price {
+.fm-section-title {
   font-family: var(--font-heading);
-  font-size: var(--fs-h4);
+  font-size: var(--fs-h1);
   font-weight: 800;
-  color: var(--color-saffron-dark);
+  color: var(--color-charcoal);
+  line-height: 1.1;
+  margin-bottom: var(--space-lg);
 }
 
-.menu-card-rating {
+.fm-section-lead {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-gray-600);
+  line-height: 1.7;
+  max-width: 460px;
+  margin: 0 auto;
+}
+
+/* ══════════════════════════════════════════
+   Stories Container
+   ══════════════════════════════════════════ */
+
+.fm-stories {
   display: flex;
+  flex-direction: column;
+  gap: clamp(4rem, 8vw, 7rem);
+}
+
+/* ══════════════════════════════════════════
+   Individual Food Story — Full-Width Grid
+   The imagery column takes ~60% and bleeds
+   to the viewport edge. Text takes ~40%.
+   ══════════════════════════════════════════ */
+
+.fm-story {
+  display: grid;
   align-items: center;
-  gap: 4px;
+  min-height: 520px;
+  width: 100%;
+}
+
+/* Text-left (story 1): text ~38%, imagery ~62% */
+.fm-story--text-left {
+  grid-template-columns: 38% 62%;
+  grid-template-areas: "text imagery";
+}
+
+/* Text-right (story 2): imagery ~62%, text ~38% */
+.fm-story--text-right {
+  grid-template-columns: 62% 38%;
+  grid-template-areas: "imagery text";
+}
+
+/* ══════════════════════════════════════════
+   Text Column
+   ══════════════════════════════════════════ */
+
+.fm-story-text {
+  grid-area: text;
+  max-width: 420px;
+  padding: var(--space-2xl) clamp(var(--space-xl), 4vw, 3.5rem);
+}
+
+.fm-story--text-left .fm-story-text {
+  justify-self: end;
+  padding-right: clamp(2rem, 4vw, 4rem);
+}
+
+.fm-story--text-right .fm-story-text {
+  justify-self: start;
+  padding-left: clamp(2rem, 4vw, 4rem);
+}
+
+/* ══════════════════════════════════════════
+   Accent Marks (saffron droplets near title)
+   ══════════════════════════════════════════ */
+
+.fm-accent-marks {
+  width: 20px;
+  height: 24px;
+  margin-bottom: var(--space-sm);
+  display: block;
+}
+
+/* ══════════════════════════════════════════
+   Typography
+   ══════════════════════════════════════════ */
+
+.fm-story-title {
+  font-family: var(--font-heading);
+  font-size: clamp(1.8rem, 3.2vw, 2.8rem);
+  font-weight: 800;
+  color: var(--color-charcoal);
+  line-height: 1.12;
+  margin-bottom: var(--space-md);
+}
+
+.fm-story-price {
+  display: inline-flex;
+  align-items: baseline;
+  gap: 6px;
+  font-family: var(--font-heading);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  font-weight: 700;
+  color: var(--color-red);
+  margin-bottom: var(--space-xl);
+}
+
+.fm-price-symbol {
+  font-size: 0.75em;
+  opacity: 0.7;
+}
+
+.fm-price-serving {
+  font-family: var(--font-body);
+  font-size: var(--fs-small);
+  font-weight: 500;
+  color: var(--color-gray-500);
+  margin-left: 4px;
+}
+
+/* ══════════════════════════════════════════
+   Spec Rows (structured culinary breakdown)
+   ══════════════════════════════════════════ */
+
+.fm-story-specs {
+  margin-bottom: var(--space-xl);
+}
+
+.fm-spec-row {
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-md) 0;
+  border-bottom: 1px solid rgba(28, 22, 19, 0.10);
+}
+
+.fm-spec-row:first-child {
+  border-top: 1px solid rgba(28, 22, 19, 0.10);
+}
+
+.fm-spec-heading {
+  font-family: var(--font-heading);
+  font-size: var(--fs-body);
+  font-weight: 700;
+  color: var(--color-charcoal);
+  line-height: 1.3;
+}
+
+.fm-spec-detail {
+  font-family: var(--font-body);
   font-size: var(--fs-small);
   color: var(--color-gray-500);
+  font-style: italic;
+  line-height: 1.5;
+  margin-top: 2px;
 }
 
-.menu-card-rating .star {
-  color: var(--color-saffron);
+/* ══════════════════════════════════════════
+   Action Buttons
+   ══════════════════════════════════════════ */
+
+.fm-story-actions {
+  display: flex;
+  gap: var(--space-sm);
+  flex-wrap: wrap;
 }
 
-@media (max-width: 1024px) {
-  .menu-grid {
-    grid-template-columns: repeat(2, 1fr);
+.fm-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  font-family: var(--font-heading);
+  font-size: var(--fs-small);
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-decoration: none;
+  padding: 10px 20px;
+  border-radius: var(--radius-xs);
+  transition: background 0.25s ease, color 0.25s ease, transform 0.2s ease;
+  cursor: pointer;
+  border: none;
+}
+
+.fm-btn--primary {
+  background: var(--color-charcoal);
+  color: #FAF6F0;
+}
+
+.fm-btn--primary:hover {
+  background: var(--color-red);
+  transform: translateY(-1px);
+}
+
+.fm-btn--secondary {
+  background: transparent;
+  color: var(--color-charcoal);
+  border: 1.5px solid var(--color-charcoal);
+}
+
+.fm-btn--secondary:hover {
+  background: var(--color-charcoal);
+  color: #FAF6F0;
+}
+
+.fm-btn--ghost {
+  background: transparent;
+  color: var(--color-charcoal);
+  border: 1.5px solid rgba(28, 22, 19, 0.25);
+}
+
+.fm-btn--ghost:hover {
+  border-color: var(--color-charcoal);
+  background: var(--color-charcoal);
+  color: #FAF6F0;
+}
+
+.fm-btn--lg {
+  padding: 14px 28px;
+  font-size: var(--fs-body);
+}
+
+/* ══════════════════════════════════════════
+   Image Composition Column
+   ══════════════════════════════════════════ */
+
+.fm-story-imagery {
+  grid-area: imagery;
+  position: relative;
+  min-height: 520px;
+  height: 100%;
+}
+
+/* ══════════════════════════════════════════
+   Main Plate — BIG, dominating, pushed to edge
+   On large screens ~540px diameter, reaching
+   almost to center and bleeding off the edge
+   ══════════════════════════════════════════ */
+
+.fm-main-plate {
+  position: absolute;
+  width: clamp(340px, 42vw, 600px);
+  height: clamp(340px, 42vw, 600px);
+  border-radius: 50%;
+  overflow: hidden;
+  box-shadow:
+    0 12px 50px rgba(28, 22, 19, 0.14),
+    0 4px 12px rgba(28, 22, 19, 0.06);
+  z-index: 3;
+}
+
+.fm-main-plate img {
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  display: block;
+}
+
+/* Right-side imagery: push plate to the right viewport edge, overlap center */
+.fm-imagery--right .fm-main-plate {
+  right: clamp(-8rem, -7vw, -3rem);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* Left-side imagery: push plate to the left viewport edge, overlap center */
+.fm-imagery--left .fm-main-plate {
+  left: clamp(-8rem, -7vw, -3rem);
+  top: 50%;
+  transform: translateY(-50%);
+}
+
+/* ══════════════════════════════════════════
+   Postage-Stamp Photos — layered behind main
+   ══════════════════════════════════════════ */
+
+.fm-stamp-photo {
+  position: absolute;
+  width: clamp(160px, 18vw, 260px);
+  background: #FFFDF8;
+  padding: 7px;
+  border: 1px solid rgba(28, 22, 19, 0.08);
+  box-shadow:
+    0 6px 24px rgba(28, 22, 19, 0.12),
+    0 2px 6px rgba(28, 22, 19, 0.06);
+  z-index: 4;
+  transform: rotate(var(--stamp-rotate, 0deg));
+  /* Scalloped postage edge */
+  mask-image:
+    radial-gradient(circle at 4px 0, transparent 3px, black 3.5px),
+    radial-gradient(circle at 4px 100%, transparent 3px, black 3.5px);
+  mask-size: 8px 51%;
+  mask-position: top, bottom;
+  mask-repeat: repeat-x;
+  mask-composite: intersect;
+  -webkit-mask-image:
+    radial-gradient(circle at 4px 0, transparent 3px, black 3.5px),
+    radial-gradient(circle at 4px 100%, transparent 3px, black 3.5px);
+  -webkit-mask-size: 8px 51%;
+  -webkit-mask-position: top, bottom;
+  -webkit-mask-repeat: repeat-x;
+  -webkit-mask-composite: source-in;
+}
+
+.fm-stamp-photo img {
+  width: 100%;
+  display: block;
+  aspect-ratio: 4 / 3;
+  object-fit: cover;
+  border-radius: 2px;
+}
+
+/* ── Story 1 stamps: right side, stacked near top-right ── */
+.fm-imagery--right .fm-stamp--1 {
+  top: 4%;
+  right: 24%;
+  z-index: 5;
+}
+
+.fm-imagery--right .fm-stamp--2 {
+  top: 0;
+  right: 6%;
+  z-index: 2;
+}
+
+/* ── Story 2 stamp: left side, behind-left of main plate ── */
+.fm-imagery--left .fm-stamp--1 {
+  bottom: 6%;
+  left: 22%;
+  z-index: 5;
+}
+
+/* ══════════════════════════════════════════
+   Floating Cutout (transparent PNG accent)
+   ══════════════════════════════════════════ */
+
+.fm-floating-cutout {
+  position: absolute;
+  width: clamp(100px, 12vw, 160px);
+  z-index: 6;
+  pointer-events: none;
+  filter: drop-shadow(0 4px 14px rgba(28, 22, 19, 0.20));
+}
+
+.fm-imagery--right .fm-floating-cutout {
+  bottom: 6%;
+  right: 28%;
+}
+
+/* ══════════════════════════════════════════
+   Ink Postmark Stamp
+   ══════════════════════════════════════════ */
+
+.fm-ink-stamp {
+  position: absolute;
+  width: clamp(100px, 11vw, 130px);
+  height: clamp(100px, 11vw, 130px);
+  color: var(--color-red);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  z-index: 5;
+  opacity: 0.75;
+}
+
+.fm-ink-stamp svg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+}
+
+.fm-ink-stamp-text {
+  position: relative;
+  font-family: var(--font-heading);
+  font-size: 10px;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 1px;
+  text-align: center;
+  line-height: 1.2;
+  color: inherit;
+  padding: 0 14px;
+}
+
+.fm-ink-stamp-subtext {
+  position: relative;
+  font-family: var(--font-body);
+  font-size: 8px;
+  font-weight: 500;
+  text-transform: uppercase;
+  letter-spacing: 1.5px;
+  color: inherit;
+  opacity: 0.7;
+  margin-top: 2px;
+}
+
+/* Position for story 2 shrimp ink stamp */
+.fm-ink-stamp--shrimp {
+  bottom: 18%;
+  left: 44%;
+  transform: rotate(-8deg);
+}
+
+/* ══════════════════════════════════════════
+   Botanical Accent Positioning
+   ══════════════════════════════════════════ */
+
+.fm-botanical {
+  position: absolute;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.35;
+}
+
+.fm-botanical--calamansi {
+  width: 70px;
+  top: 22%;
+  right: 38%;
+}
+
+.fm-botanical--anise {
+  width: 56px;
+  top: 2%;
+  right: 44%;
+}
+
+/* ══════════════════════════════════════════
+   Section Footer
+   ══════════════════════════════════════════ */
+
+.fm-footer {
+  text-align: center;
+  max-width: 520px;
+  margin: clamp(3rem, 6vw, 6rem) auto 0;
+  padding: 0 var(--space-xl);
+}
+
+.fm-footer-text {
+  font-family: var(--font-body);
+  font-size: var(--fs-body);
+  color: var(--color-gray-600);
+  line-height: 1.7;
+  margin-bottom: var(--space-xl);
+}
+
+.fm-footer-actions {
+  display: flex;
+  justify-content: center;
+  gap: var(--space-md);
+  flex-wrap: wrap;
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Large Screens (1440px+)
+   Push food even further toward center
+   ══════════════════════════════════════════ */
+
+@media (min-width: 1440px) {
+  .fm-main-plate {
+    width: 600px;
+    height: 600px;
+  }
+
+  .fm-imagery--right .fm-main-plate {
+    right: -4rem;
+  }
+
+  .fm-imagery--left .fm-main-plate {
+    left: -4rem;
+  }
+
+  .fm-stamp-photo {
+    width: 260px;
+  }
+
+  .fm-floating-cutout {
+    width: 160px;
   }
 }
 
-@media (max-width: 480px) {
-  .menu-grid {
+/* ══════════════════════════════════════════
+   Responsive — Tablet
+   ══════════════════════════════════════════ */
+
+@media (max-width: 1024px) {
+  .fm-story--text-left {
+    grid-template-columns: 40% 60%;
+  }
+
+  .fm-story--text-right {
+    grid-template-columns: 60% 40%;
+  }
+
+  .fm-story {
+    min-height: 420px;
+  }
+
+  .fm-main-plate {
+    width: clamp(280px, 38vw, 440px);
+    height: clamp(280px, 38vw, 440px);
+  }
+
+  .fm-stamp-photo {
+    width: clamp(130px, 16vw, 200px);
+  }
+
+  .fm-story-text {
+    max-width: 380px;
+    padding: var(--space-xl);
+  }
+}
+
+/* ══════════════════════════════════════════
+   Responsive — Mobile
+   ══════════════════════════════════════════ */
+
+@media (max-width: 768px) {
+  .featured-menu {
+    padding: clamp(3rem, 6vw, 5rem) 0;
+  }
+
+  .fm-story {
     grid-template-columns: 1fr;
+    grid-template-areas:
+      "text"
+      "imagery";
+    min-height: auto;
+  }
+
+  .fm-story--text-right {
+    grid-template-columns: 1fr;
+    grid-template-areas:
+      "text"
+      "imagery";
+  }
+
+  .fm-story-text {
+    max-width: 100%;
+    padding: 0 var(--space-xl);
+    justify-self: stretch !important;
+    text-align: center;
+  }
+
+  .fm-accent-marks {
+    margin-left: auto;
+    margin-right: auto;
+  }
+
+  .fm-story-actions {
+    justify-content: center;
+  }
+
+  .fm-story-imagery {
+    position: relative;
+    min-height: 340px;
+    width: 100%;
+  }
+
+  .fm-main-plate {
+    position: relative;
+    width: 280px;
+    height: 280px;
+    margin: 0 auto;
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+  }
+
+  .fm-imagery--right .fm-main-plate,
+  .fm-imagery--left .fm-main-plate {
+    top: auto;
+    left: auto;
+    right: auto;
+    transform: none;
+    margin: 0 auto;
+  }
+
+  .fm-stamp-photo {
+    width: 130px;
+  }
+
+  .fm-imagery--right .fm-stamp--1 {
+    top: -8%;
+    right: 5%;
+  }
+
+  .fm-imagery--right .fm-stamp--2 {
+    top: -12%;
+    right: auto;
+    left: 5%;
+  }
+
+  .fm-imagery--left .fm-stamp--1 {
+    bottom: -6%;
+    left: 5%;
+  }
+
+  .fm-floating-cutout {
+    width: 80px;
+  }
+
+  .fm-imagery--right .fm-floating-cutout {
+    bottom: -4%;
+    right: 15%;
+  }
+
+  .fm-ink-stamp {
+    width: 85px;
+    height: 85px;
+  }
+
+  .fm-ink-stamp--shrimp {
+    bottom: -2%;
+    left: auto;
+    right: 8%;
+  }
+
+  .fm-stories {
+    gap: clamp(3rem, 5vw, 4rem);
+  }
+
+  .fm-spec-row {
+    text-align: left;
+  }
+
+  .fm-spec-heading,
+  .fm-spec-detail {
+    text-align: left;
+  }
+}
+
+/* ══════════════════════════════════════════
+   Small Mobile
+   ══════════════════════════════════════════ */
+
+@media (max-width: 480px) {
+  .fm-main-plate {
+    width: 240px;
+    height: 240px;
+  }
+
+  .fm-stamp-photo {
+    width: 110px;
+  }
+
+  .fm-story-title {
+    font-size: 1.5rem;
+  }
+
+  .fm-section-title {
+    font-size: 1.8rem;
+  }
+
+  .fm-btn {
+    font-size: 11px;
+    padding: 9px 16px;
+  }
+}
+
+/* ══════════════════════════════════════════
+   Reduced Motion
+   ══════════════════════════════════════════ */
+
+@media (prefers-reduced-motion: reduce) {
+  .fm-btn {
+    transition: none;
   }
 }

@@ -4,34 +4,14 @@ import { HiOutlineArrowRight } from 'react-icons/hi';
 import './FAQ.css';
 
 const faqData = [
-  {
-    question: 'How much capital do I need to start a Siomai Street franchise?',
-    answer: 'Our franchise packages start at ₱39,999 for the Cart Package, ₱149,999 for the Kiosk Package, and ₱299,999 for the Store Package. Each package includes everything you need to get started — no hidden fees.',
-  },
-  {
-    question: 'Do I need prior food business experience?',
-    answer: 'Not at all! We provide comprehensive training covering food preparation, operations, customer service, and business management. Our system is designed for beginners and experienced entrepreneurs alike.',
-  },
-  {
-    question: 'How long before I can start operating?',
-    answer: 'Typically, you can be up and running within 2-4 weeks after signing the franchise agreement. This includes training, setup, and your grand opening preparation.',
-  },
-  {
-    question: 'What kind of support do you provide to franchisees?',
-    answer: 'We provide full support including initial training, marketing materials, operations manual, supply chain access, ongoing consultation, and a dedicated franchise manager for Kiosk and Store packages.',
-  },
-  {
-    question: 'Can I choose my own location?',
-    answer: 'Yes! You can propose your preferred location, and our team will help evaluate its potential. We look for high-foot-traffic areas near schools, offices, markets, and transportation hubs.',
-  },
-  {
-    question: 'Is the franchise fee a one-time payment?',
-    answer: 'Yes, the franchise fee is a one-time investment. There are no monthly royalty fees. You only need to purchase your supplies through our approved supply chain to maintain quality standards.',
-  },
-  {
-    question: 'What is the average ROI for a Siomai Street franchise?',
-    answer: 'Most franchisees see a return on investment within 3-6 months, depending on their location and package. Our Kiosk and Store packages typically have faster ROI due to higher volume potential.',
-  },
+  { question: 'How much capital do I need?', answer: 'Request a current written quotation for Food Cart, Kiosk or Casual Dining. Prices and package scope are awaiting confirmation. Budget separately for rent, deposits, permits, payroll, utilities and working capital unless expressly included.' },
+  { question: 'Do I need prior food business experience?', answer: 'You can describe your actual experience, including no employment history. Do not invent a job to complete the form. Your application is subject to review; submitting does not establish eligibility or approval.' },
+  { question: 'How long before I can start operating?', answer: 'An opening date depends on application review, site assessment, agreement, permits, equipment and training. There is no guaranteed review or opening timeline on this website.' },
+  { question: 'What support is included?', answer: 'Ask for the written scope of training, supply arrangements, software, marketing and operational support, including service limits and any additional charges. These items are not confirmed inclusions until specified in your offer.' },
+  { question: 'Can I apply without a location or final package choice?', answer: 'Yes. Select No for a specific location and Not sure yet for your package. Provide your preferred city and region. A proposed site still needs review; applying does not reserve a territory.' },
+  { question: 'Are there recurring fees?', answer: 'Fees are not yet confirmed here. Request disclosure of initial, recurring, royalty, marketing, software, renewal and transfer charges, taxes, payment milestones and cancellation terms before signing or paying.' },
+  { question: 'Are sales or investment returns guaranteed?', answer: 'No. Sales and investment recovery depend on costs, demand, location and operations. This website does not provide a verified payback forecast.' },
+  { question: 'What happens after I submit?', answer: 'A successful submission shows a reference number after the server confirms receipt. Save that reference. Receipt is not approval, an agreement or activation of a franchise account. If submission fails, retain your draft and retry the same application.' },
 ];
 
 const FaqItem = ({ item, index, isOpen, onToggle }) => {
@@ -124,6 +104,8 @@ const FAQ = () => {
             <div className="faq-info-card__icon-wrap">
               <img
                 src="/images/siomai street logo.png"
+                srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w"
+                sizes="80px"
                 alt="Siomai Street"
                 className="faq-info-card__logo"
               />

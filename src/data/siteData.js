@@ -20,9 +20,9 @@ export const CONTACT = {
 };
 
 export const SOCIALS = {
-  facebook: '#',
-  instagram: '#',
-  tiktok: '#',
+  facebook: 'https://www.facebook.com/siomaistreetfoods',
+  instagram: 'https://www.instagram.com/siomaistreetph',
+  tiktok: 'https://www.tiktok.com/@siomaistreetph',
 };
 
 export const NAV_LINKS = [

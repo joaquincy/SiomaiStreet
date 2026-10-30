@@ -208,11 +208,11 @@
 }
 
 .toggle-option.selected {
-  background: var(--color-charcoal);
-  border-color: var(--color-charcoal);
+  background: var(--color-red);
+  border-color: var(--color-red);
   color: var(--color-white);
   font-weight: 600;
-  box-shadow: 0 2px 8px rgba(29, 29, 29, 0.15);
+  box-shadow: 0 4px 12px rgba(230, 57, 70, 0.18);
 }
 
 /* ─── Select Dropdown ─── */

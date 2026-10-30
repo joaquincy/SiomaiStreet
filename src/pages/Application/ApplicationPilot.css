@@ -1,0 +1,93 @@
+/* Shared application feedback, piloted on Personal Information. */
+.application-page {
+  --app-surface: var(--color-white);
+  --app-ink: var(--color-charcoal);
+  --app-error: var(--color-red-dark);
+  --app-line: var(--color-gray-300);
+  --app-gap: var(--space-lg);
+  --app-radius: var(--radius-md);
+  font-family: var(--font-body);
+}
+.application-page .app-subnav,
+.application-page .step-nav,
+.application-page .helper-sidebar { position: static; }
+.application-page .app-draft-notice { border: thin solid var(--app-line); background: var(--app-surface); }
+.application-page .draft-notice-accent,
+.application-page .submission-error-accent { display: none; }
+.application-page :is(input,button,a,summary,fieldset):focus-visible {
+  outline: medium solid var(--app-ink);
+  outline-offset: var(--space-xs);
+}
+.application-page :is(button,input):disabled { cursor: not-allowed; opacity: .6; }
+.pilot-step-position { font-weight: bold; color: var(--app-ink); }
+.personal-pilot { color: var(--app-ink); }
+.personal-pilot header { margin-bottom: var(--space-xl); }
+.personal-pilot h2 { font-size: var(--fs-h2); font-family: var(--font-heading); }
+.personal-pilot section { margin-block: var(--space-xl); }
+.personal-pilot h3 { font-size: var(--fs-h4); margin-bottom: var(--space-lg); }
+.pilot-field-grid { display: grid; gap: var(--app-gap); }
+.application-field { min-width: 0; margin-block: var(--space-sm); }
+.application-field > label,.application-field legend { display: block; font-weight: bold; margin-bottom: var(--space-sm); }
+.field-requirement { display: inline-block; font-size: var(--fs-small); font-weight: normal; margin-inline-start: var(--space-xs); }
+.application-field > input { width: 100%; min-width: 0; padding: var(--space-md); border: thin solid var(--app-line); border-radius: var(--app-radius); font: inherit; background: var(--app-surface); color: var(--app-ink); }
+.application-field [aria-invalid="true"] { border-color: var(--app-error); }
+.application-field fieldset { border: thin solid var(--app-line); border-radius: var(--app-radius); padding: var(--space-md); min-width: 0; }
+.field-options { display: grid; gap: var(--space-xs); }
+.field-options label { display: flex; align-items: baseline; gap: var(--space-sm); padding: var(--space-sm); cursor: pointer; }
+.field-options input { accent-color: var(--app-error); }
+.field-help { color: var(--color-gray-700); margin-block: var(--space-xs); font-size: var(--fs-small); }
+.field-errors { color: var(--app-error); padding-inline-start: var(--space-lg); margin-block: var(--space-xs); }
+.pilot-error-summary { border: thin solid var(--app-error); border-radius: var(--app-radius); padding: var(--space-lg); margin-block: var(--space-lg); }
+.pilot-error-summary h2 { font-size: var(--fs-h4); }
+.pilot-error-summary ul { padding-inline-start: var(--space-lg); }
+.pilot-error-summary a { display: inline-block; padding-block: var(--space-xs); color: var(--app-error); text-decoration: underline; }
+.personal-pilot [id] { scroll-margin-block: var(--space-5xl); }
+@media (min-width: 48rem) {
+  .pilot-field-grid { grid-template-columns: repeat(2,minmax(0,1fr)); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .application-page *, .application-page *::before, .application-page *::after { animation: none !important; transition: none !important; scroll-behavior: auto !important; }
+}
+
+/* Restore the connected stepper; retain meaningful status and native buttons. */
+.application-page .stepper-circle { cursor: pointer; min-width: var(--space-2xl); min-height: var(--space-2xl); }
+.application-page .stepper-connector { margin-top: var(--space-lg); }
+.stepper-status { font-size: var(--fs-tiny); color: var(--color-gray-600); text-align: center; }
+.application-page .stepper-step.current .stepper-status { color: var(--color-red-dark); font-weight: bold; }
+.application-page .stepper-circle:focus-visible { outline-offset: var(--space-xs); }
+
+/* Calm surfaces and a more deliberate hierarchy throughout the form. */
+.application-page .app-form-card { box-shadow: var(--shadow-sm); }
+.application-page .step-header-centered { padding-block: var(--space-lg); }
+.application-page .form-input, .application-page .form-textarea, .application-field > input {
+  background: var(--color-off-white);
+  transition: border-color var(--transition-fast), background var(--transition-fast), box-shadow var(--transition-fast);
+}
+.application-page .form-input:hover, .application-page .form-textarea:hover, .application-field > input:hover { border-color: var(--color-gray-500); }
+.application-page .form-input:focus, .application-page .form-textarea:focus, .application-field > input:focus {
+  background: var(--app-surface);
+  border-color: var(--color-red);
+}
+.personal-pilot-intro { text-align: center; padding-block: var(--space-lg); }
+.pilot-intro-icon { display: inline-flex; padding: var(--space-md); margin-bottom: var(--space-md); border-radius: var(--radius-lg); background: color-mix(in srgb, var(--color-red) 8%, var(--app-surface)); color: var(--color-red-dark); font-size: var(--fs-h2); }
+.personal-pilot-intro p { color: var(--color-gray-600); margin-top: var(--space-sm); line-height: 1.7; }
+.personal-pilot section { padding: var(--space-lg); border: thin solid var(--color-gray-200); border-radius: var(--radius-lg); background: var(--app-surface); }
+.personal-pilot h3 { display: flex; align-items: center; gap: var(--space-sm); font-family: var(--font-heading); }
+.personal-pilot h3 svg { color: var(--color-red-dark); flex-shrink: 0; }
+.field-requirement { border-radius: var(--radius-full); padding-inline: var(--space-xs); background: var(--color-gray-100); color: var(--color-gray-600); font-size: var(--fs-tiny); line-height: 1.8; }
+.application-field fieldset { padding: 0; border: 0; }
+.application-field legend { padding: 0; }
+.field-options { gap: var(--space-sm); }
+.field-options label { border: thin solid var(--color-gray-200); border-radius: var(--radius-md); padding: var(--space-md); background: var(--color-off-white); transition: border-color var(--transition-fast), background var(--transition-fast); }
+.field-options label:hover { border-color: var(--color-gray-500); }
+.field-options label:has(input:checked) { border-color: var(--color-red); background: color-mix(in srgb, var(--color-red) 6%, var(--app-surface)); color: var(--app-ink); }
+.field-options label:focus-within { outline: thin solid var(--app-ink); outline-offset: var(--space-xs); }
+.application-field fieldset[aria-invalid="true"] .field-options label { border-color: var(--app-error); }
+.application-page .app-draft-notice { background: color-mix(in srgb, var(--color-saffron) 7%, var(--app-surface)); border-radius: var(--radius-lg); }
+.application-page .application-requirements { background: var(--color-off-white); }
+.application-page .step-nav { gap: var(--space-md); padding-top: var(--space-xl); }
+@media (min-width: 48rem) {
+  .personal-pilot section { padding: var(--space-xl); }
+  .field-options { grid-template-columns: repeat(2,minmax(0,1fr)); }
+  .pilot-field-grid > .application-field:has(fieldset) { grid-column: 1 / -1; }
+}

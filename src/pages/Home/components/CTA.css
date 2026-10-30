@@ -8,12 +8,26 @@
 /* ─── SECTION SHELL ─── */
 .cta-art {
   position: relative;
-  background: #0E0C0A;
-  /* Extremely deep warm black */
+  background: #110F0D;
+  /* Night Market Obsidian base */
+  margin-top: -2px; /* Seamless overlap with Testimonials */
   color: #FDFBF7;
   overflow: hidden;
   display: flex;
   flex-direction: column;
+}
+
+/* Night Market Obsidian Film Grain Overlay */
+.cta-art::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilterCTA'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilterCTA)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 0;
 }
 
 /* Blueprint/Editorial Grid Background */
@@ -29,13 +43,9 @@
   z-index: 0;
 }
 
-/* Subtle central warm glow */
+/* Background red glow removed per user request */
 .cta-art__glow {
-  position: absolute;
-  inset: 0;
-  background: radial-gradient(circle at 70% 50%, rgba(214, 27, 34, 0.08) 0%, transparent 60%);
-  pointer-events: none;
-  z-index: 0;
+  display: none;
 }
 
 /* ─── CONTAINER ─── */
@@ -46,15 +56,15 @@
   width: 100%;
   padding: clamp(6rem, 12vh, 8rem) clamp(1.5rem, 5vw, 4rem);
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 4rem;
+  grid-template-columns: 1.15fr 0.85fr;
+  gap: clamp(2.5rem, 5vw, 4.5rem);
   align-items: center;
   z-index: 10;
   flex: 1;
 }
 
 /* ═══════════════════════════════════════════════════
-   LEFT: TYPOGRAPHY
+   LEFT: TYPOGRAPHY (Modern Creative Blended Edition)
    ═══════════════════════════════════════════════════ */
 .cta-art__text-col {
   display: flex;
@@ -63,24 +73,27 @@
 }
 
 .cta-art__badge {
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 8px;
-  font-family: 'Outfit', sans-serif;
-  font-size: 0.7rem;
-  font-weight: 700;
-  letter-spacing: 0.2em;
-  color: #D61B22;
-  border: 1px solid rgba(214, 27, 34, 0.3);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 800;
+  letter-spacing: 0.18em;
+  color: #F5A623;
+  background: rgba(245, 166, 35, 0.08);
+  border: 1px solid rgba(245, 166, 35, 0.28);
   padding: 6px 14px;
-  border-radius: 40px;
-  margin-bottom: 2.5rem;
+  border-radius: 9999px;
+  margin-bottom: 2.25rem;
+  backdrop-filter: blur(8px);
 }
 
 .cta-art__badge-dot {
   width: 6px;
   height: 6px;
-  background: #D61B22;
+  background: #F5A623;
+  box-shadow: 0 0 10px rgba(245, 166, 35, 0.9);
   border-radius: 50%;
   animation: pulse 2s infinite;
 }
@@ -102,40 +115,90 @@
   }
 }
 
+/* ─── Unified Typographic Lockup with Direct Text Gradient Glows ─── */
 .cta-art__title {
   display: flex;
   flex-direction: column;
-  margin: 0 0 2rem 0;
+  margin: 0 0 clamp(1.75rem, 3vw, 2.5rem) 0;
+  gap: 0;
+  position: relative;
+  z-index: 2;
 }
 
 .cta-art__title-line {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(3.5rem, 7vw, 7.5rem);
-  font-weight: 900;
-  line-height: 0.9;
-  letter-spacing: -0.03em;
+  display: block;
   text-transform: uppercase;
+  margin: 0;
+  padding: 0;
+  will-change: transform, opacity;
 }
 
-/* Brutalist typography effects */
+/* Line 1: YOUR — Geometric Anchor (Outfit 900) */
 .cta-art__title-line--1 {
-  color: transparent;
-  -webkit-text-stroke: 1.5px #FDFBF7;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.8rem, 5.2vw, 4.8rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
+  background: linear-gradient(180deg, #FFFFFF 0%, #EDE8DF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+  -webkit-text-stroke: 0;
 }
 
+/* Line 2: JOURNEY — The Last Shuriken (Subtle Saffron Gradient Glow) */
 .cta-art__title-line--2 {
-  color: #FDFBF7;
-  padding-left: 2rem;
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(3.5rem, 6.8vw, 6.2rem);
+  font-weight: normal;
+  line-height: 0.94;
+  letter-spacing: 0.04em;
+  color: #F5A623;
+  background: linear-gradient(135deg, #FFFFFF 0%, #FFE2A4 45%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 14px rgba(245, 166, 35, 0.28));
+  margin-top: -0.04em;
+  -webkit-text-stroke: 0;
 }
 
+/* Line 3: STARTS ON — Geometric Bridge (Outfit 900) */
 .cta-art__title-line--3 {
-  color: transparent;
-  -webkit-text-stroke: 1.5px rgba(253, 251, 247, 0.4);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.6rem, 4.8vw, 4.4rem);
+  font-weight: 900;
+  line-height: 0.92;
+  letter-spacing: -0.025em;
+  color: #FFFFFF;
+  background: linear-gradient(180deg, #FFFFFF 0%, #EDE8DF 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 0 8px rgba(255, 255, 255, 0.1));
+  margin-top: 0.02em;
+  -webkit-text-stroke: 0;
 }
 
+/* Line 4: THE STREET. — The Last Shuriken (Subtle Crimson Gradient Glow) */
 .cta-art__title-line--4 {
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-size: clamp(3.2rem, 6.2vw, 5.6rem);
+  font-weight: normal;
+  line-height: 1;
+  letter-spacing: 0.03em;
   color: #D61B22;
-  padding-left: 4rem;
+  background: linear-gradient(135deg, #FF6B7A 0%, #E62839 48%, #C4161C 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  white-space: nowrap;
+  filter: drop-shadow(0 0 16px rgba(214, 27, 34, 0.3));
+  margin-top: -0.02em;
+  -webkit-text-stroke: 0;
 }
 
 .cta-art__desc {
@@ -432,12 +495,8 @@
 @media (max-width: 1024px) {
   .cta-art__container {
     grid-template-columns: 1fr;
-    gap: 6rem;
+    gap: 4.5rem;
     padding: clamp(5rem, 10vh, 6rem) 2rem;
-  }
-
-  .cta-art__title-line--4 {
-    padding-left: 2rem;
   }
 
   .cta-art__visual-col {
@@ -446,13 +505,21 @@
 }
 
 @media (max-width: 768px) {
-  .cta-art__title-line {
-    font-size: clamp(2.8rem, 12vw, 4rem);
+  .cta-art__title-line--1 {
+    font-size: clamp(2.4rem, 11vw, 3.6rem);
   }
 
-  .cta-art__title-line--2,
+  .cta-art__title-line--2 {
+    font-size: clamp(2.8rem, 12.5vw, 4.2rem);
+  }
+
+  .cta-art__title-line--3 {
+    font-size: clamp(2.2rem, 10vw, 3.4rem);
+  }
+
   .cta-art__title-line--4 {
-    padding-left: 0;
+    font-size: clamp(2.4rem, 11vw, 3.8rem);
+    white-space: nowrap;
   }
 
   .cta-art__visual-col {

@@ -1,0 +1,1 @@
+SYNTHETIC TEST ONLY. Unsupported file type for document validation testing.

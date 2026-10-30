@@ -61,18 +61,33 @@ const CTA = () => {
         <div className="cta-art__visual-col">
           {/* Shape 1: The Arch */}
           <div className="cta-art__shape cta-art__shape--arch">
-            <img src="/images/franchise-store.png" alt="Siomai Street Storefront" loading="lazy" />
+            <img
+              src="/images/franchise-store.png"
+              srcSet="/images/responsive/franchise-store-400w.png 400w, /images/responsive/franchise-store-640w.png 640w"
+              sizes="(max-width: 768px) 280px, 400px"
+              alt="Siomai Street Storefront" loading="lazy"
+            />
           </div>
 
           {/* Shape 2: The Polaroid */}
           <div className="cta-art__shape cta-art__shape--polaroid">
-            <img src="/images/wc-siomai-1.jpg" alt="Siomai Street Culture" loading="lazy" />
+            <img
+              src="/images/wc-siomai-1.jpg"
+              srcSet="/images/responsive/wc-siomai-1-300w.jpg 300w, /images/responsive/wc-siomai-1-500w.jpg 500w"
+              sizes="(max-width: 768px) 200px, 300px"
+              alt="Siomai Street Culture" loading="lazy"
+            />
             <div className="cta-art__polaroid-cap">CROWD FAVORITE</div>
           </div>
 
           {/* Shape 3: The Floating Circle */}
           <div className="cta-art__shape cta-art__shape--circle">
-            <img src="/images/siomai 1.png" alt="Premium Siomai" loading="lazy" />
+            <img
+              src="/images/siomai 1.png"
+              srcSet="/images/responsive/siomai 1-200w.png 200w, /images/responsive/siomai 1-400w.png 400w"
+              sizes="200px"
+              alt="Premium Siomai" loading="lazy"
+            />
             <div className="cta-art__circle-ring"></div>
           </div>
 

@@ -10,7 +10,20 @@
   display: flex;
   align-items: center;
   overflow: hidden;
-  background: var(--color-charcoal);
+  background: #110F0D;
+}
+
+/* ─── Night Market Obsidian Film Grain Overlay ─── */
+.hero::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='noiseFilterHero'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23noiseFilterHero)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.08;
+  pointer-events: none;
+  z-index: 2;
 }
 
 .hero-bg {
@@ -520,7 +533,7 @@
    ═════════════════════════════════════════════════════════ */
 .hero-stats-bar {
   position: relative;
-  background: linear-gradient(180deg, #111827 0%, #1a1f36 100%);
+  background: linear-gradient(180deg, #01091c 0%, #000620 100%);
   border-top: 3px solid var(--color-red);
   padding: var(--space-3xl) var(--space-xl);
 }

@@ -1,5 +1,6 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
+import { getSrcSet } from '../../../utils/responsiveImage';
 import './Hero.css';
 
 const bestSellers = [
@@ -109,6 +110,14 @@ const Hero = () => {
         <div className="hero-bg">
           <img
             src="/images/Group 1.png"
+            srcSet="
+              /images/responsive/Group 1-480w.png 480w,
+              /images/responsive/Group 1-768w.png 768w,
+              /images/responsive/Group 1-1024w.png 1024w,
+              /images/responsive/Group 1-1440w.png 1440w,
+              /images/responsive/Group 1-1920w.png 1920w
+            "
+            sizes="100vw"
             alt="Siomai Street storefront"
             width="1920"
             height="1080"
@@ -205,6 +214,8 @@ const Hero = () => {
                       <div className="food-cutout-wrap">
                         <img
                           src={item.image}
+                          srcSet={getSrcSet(item.image, [400, 800])}
+                          sizes="(max-width: 768px) 280px, 500px"
                           alt={item.name}
                           className="food-cutout-img"
                           draggable="false"
@@ -217,6 +228,8 @@ const Hero = () => {
                       <div className="food-photo-frame">
                         <img
                           src={item.image}
+                          srcSet={getSrcSet(item.image, [300, 600])}
+                          sizes="(max-width: 768px) 280px, 500px"
                           alt={item.name}
                           className="food-photo-img"
                           draggable="false"
@@ -263,8 +276,8 @@ const Hero = () => {
             <div className="hero-stat-label">Years in Business</div>
           </div>
           <div className="hero-stat">
-            <div className="hero-stat-number">18-24</div>
-            <div className="hero-stat-label">Months Average ROI</div>
+            <div className="hero-stat-number">3</div>
+            <div className="hero-stat-label">Franchise Formats to Explore</div>
           </div>
           <div className="hero-stat">
             <div className="hero-stat-number">99%</div>

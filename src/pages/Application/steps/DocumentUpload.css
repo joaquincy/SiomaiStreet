@@ -1,0 +1,60 @@
+/* Scoped to the evidence step; the rest of the application keeps its existing design. */
+.application-page .document-step .document-capture-guide { margin: 1.5rem 0; border: 1px solid #e6e0d7; border-radius: 16px; background: #faf8f4; overflow: hidden; }
+.document-capture-guide summary { display: flex; align-items: center; gap: .85rem; padding: 1.15rem 1.25rem; min-height: 72px; cursor: pointer; list-style: none; }
+.document-capture-guide summary::-webkit-details-marker { display: none; }
+.document-capture-guide .capture-guide-icon { display: grid; place-items: center; width: 40px; height: 40px; flex: none; border: 1px solid #e4dacf; border-radius: 12px; background: #fffdfa; color: #a51f2c; font-size: 1.3rem; }
+.capture-guide-heading { min-width: 0; flex: 1; }
+.capture-guide-heading strong { display: block; font-size: .875rem; font-weight: 600; letter-spacing: -.015em; }
+.capture-guide-heading > span { display: block; margin-top: .2rem; font-size: .75rem; line-height: 1.5; color: #756b60; }
+.capture-guide-chevron { font-size: 1.3rem; flex: none; color: #756b60; transition: transform .18s; }
+.document-capture-guide[open] .capture-guide-chevron { transform: rotate(180deg); }
+.capture-guide-body { display: grid; grid-template-columns: minmax(0, .9fr) minmax(0, 1.1fr); gap: 1.5rem; padding: .25rem 1.5rem 1.25rem; }
+.capture-guide-example { margin: 0; align-self: center; }
+.capture-guide-example svg { display: block; width: 100%; max-width: 360px; margin-inline: auto; height: auto; }
+.capture-guide-example figcaption { text-align: center; font-size: .75rem; color: #51483e; }
+.capture-example-dot { display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: #6b775c; margin-right: .5rem; }
+.capture-guide-example small { display: block; font-size: .6875rem; color: #756b60; margin-top: .3rem; }
+.capture-tips { list-style: none; padding: 0; margin: .75rem 0 0; }
+.capture-tips li { display: flex; align-items: flex-start; gap: .8rem; padding-bottom: 1rem; }
+.capture-tips svg { font-size: 1.15rem; color: #9b7350; flex: none; margin-top: .15rem; }
+.capture-tips strong { font-size: .8125rem; font-weight: 600; color: #3b352e; }
+.capture-tips p { font-size: .75rem; line-height: 1.65; color: #756b60; margin-top: .2rem; }
+.capture-guide-note { grid-column: 1 / -1; border-top: 1px solid #e6e0d7; padding-top: .85rem; color: #756b60; font-size: .75rem; line-height: 1.65; }
+.application-page .document-step .upload-progress-box { background: #fff; border: 1px solid #e7e2da; border-radius: 14px; padding: 1.25rem; box-shadow: none; }
+.application-page .document-step .upload-progress-header { gap: .75rem; align-items: baseline; }
+.application-page .document-step .upload-progress-label { text-transform: none; letter-spacing: -.01em; font-family: var(--app-font); font-size: .875rem; }
+.application-page .document-step .upload-progress-count { font-size: .75rem; color: #756b60; background: transparent; padding: 0; }
+.application-page .document-step .upload-progress-track { height: 4px; margin-block: 1rem; background: #ede7df; border-radius: 10px; }
+.application-page .document-step .upload-progress-fill { background: #b51d2b; }
+.application-page .document-step .upload-missing-heading { font-size: .75rem; font-weight: 500; color: #756b60; }
+.application-page .document-step .upload-missing-list { display: flex; flex-wrap: wrap; gap: .2rem .85rem; list-style: none; padding: 0; margin: .35rem 0 0; }
+.application-page .document-step .upload-missing-list a { display: inline-flex; align-items: center; min-height: 44px; color: #8f1420; font-size: .75rem; text-decoration: underline; text-underline-offset: 3px; }
+.application-page .document-step .document-group-header { align-items: baseline; flex-wrap: wrap; gap: .5rem; border: 0; margin: 2rem 0 .85rem; padding: 0; }
+.application-page .document-step .document-group-title { font-size: .875rem; }
+.application-page .document-step .upload-grid { gap: 1rem; align-items: stretch; }
+.application-page .document-step .file-upload-wrapper { min-width: 0; display: flex; flex-direction: column; border-radius: 16px; }
+.application-page .document-step .file-upload-card { flex: 1; gap: 0; padding: 1.25rem; border: 1px solid #e6e0d7; border-radius: 16px; background: #fff; cursor: default; box-shadow: 0 3px 10px #31261a03; }
+.application-page .document-step .file-upload-card:hover { background: #fff; border-color: #c9bfb0; transform: none; box-shadow: 0 3px 10px #31261a03; }
+.application-page .document-step .file-upload-card.file-attached { background: #fff; border-color: #ccc7ba; }
+.application-page .document-step .has-errors .file-upload-card { border-color: #b42318; }
+.application-page .document-step .file-card-top { align-items: flex-start; gap: .5rem; }
+.application-page .document-step .file-card-title-group { align-items: center; gap: .6rem; }
+.application-page .document-step .document-type-icon { display: grid; place-items: center; flex: none; width: 36px; height: 40px; border-radius: 9px; background: #f5f1eb; color: #927352; font-size: 1.25rem; }
+.application-page .document-step .file-upload-label { font-size: .875rem; line-height: 1.45; font-weight: 600; letter-spacing: -.01em; }
+.application-page .document-step .field-requirement { margin-top: .4rem; font-size: .625rem; padding: .15rem .35rem; }
+.application-page .document-step .file-upload-description { margin: .8rem 0 1rem; font-size: .75rem; line-height: 1.65; color: #756b60; }
+.application-page .document-step .document-picker { margin-top: auto; }
+.application-page .document-step .upload-server-notice { border: 0; border-top: 1px solid #e6e0d7; background: transparent; border-radius: 0; padding: 1rem 0 0; color: #756b60; font-size: .75rem; line-height: 1.75; }
+@media (max-width: 720px) {
+  .application-page .document-step .upload-grid.two-cols { grid-template-columns: minmax(0, 1fr); }
+  .capture-guide-body { grid-template-columns: minmax(0, 1fr); gap: .75rem; padding-inline: 1rem; }
+  .capture-guide-example svg { max-width: 280px; }
+}
+@media (max-width: 380px) {
+  .document-capture-guide summary { gap: .6rem; padding: 1rem; }
+  .document-capture-guide .capture-guide-icon { width: 32px; height: 36px; }
+  .application-page .document-step .file-upload-card { padding: 1rem; }
+  .application-page .document-step .file-card-top { flex-wrap: wrap; }
+  .application-page .document-step .upload-progress-header { flex-direction: column; align-items: flex-start; }
+}
+@media (prefers-reduced-motion: reduce) { .capture-guide-chevron { transition: none; } }

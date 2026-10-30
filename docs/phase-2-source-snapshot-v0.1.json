@@ -1,0 +1,57 @@
+{
+  "checkedAt": "2026-10-27T14:05:49.457Z",
+  "version": "0.1.0",
+  "businessApproval": "pending",
+  "document": "docs/phase-2-owner-review-v0.1.md",
+  "sha256": "8826bb1234dcdb1fbfe7229efc8e66de9efbce0b4b64e12d751bf8c3c636793f",
+  "topLevelFieldCount": 70,
+  "missingFieldKeys": [],
+  "duplicateRequirementIds": [],
+  "documents": true,
+  "sourceHashes": [
+    {
+      "path": "shared/application.js",
+      "sha256": "07cd54b483843fb567040d2157fde93117c56e0aa42a0f035151fc9a60a64677"
+    },
+    {
+      "path": "src/data/siteData.js",
+      "sha256": "68188f096d7a7ec01e8d4dcd3254e2b414b8a69031b049408b64629ff4b0466b"
+    },
+    {
+      "path": "src/pages/Home/components/Packages.jsx",
+      "sha256": "7f1a3802ab23004691a71c3b8bd3bc5d792a7cb517c38c87144424f4d44b3ac9"
+    },
+    {
+      "path": "src/pages/Home/components/FAQ.jsx",
+      "sha256": "3cbd5e86b929aed4e99bed8828bcc96ec73eead0aceeae0eda9dbb35b7a4fa1b"
+    },
+    {
+      "path": "src/pages/Home/components/Journey.jsx",
+      "sha256": "d087424f8dfe09d1ea8f184eb0cefc235776e67de3126627f93ab198cf84bf1d"
+    },
+    {
+      "path": "src/pages/Application/steps/DocumentUpload.jsx",
+      "sha256": "cf11b73d357c718c298e7aa1d60d968f5427e1eeb8de8112a413281ba2ef53c7"
+    },
+    {
+      "path": "src/pages/Application/steps/LegalConsents.jsx",
+      "sha256": "4aada5113f6168fda41bdf0c68d5165c62badb71a9175f786d981465fe81bb28"
+    },
+    {
+      "path": "src/pages/Application/steps/ReviewSubmit.jsx",
+      "sha256": "f7ecf17e84aabb51d2eeb8ad73b0b46242256d7eb199e15416bb4cc8ec9108a3"
+    },
+    {
+      "path": "src/pages/Application/steps/FranchisePlan.jsx",
+      "sha256": "6172546be11e23c9ef6bbe33ac746a773766b33be9cf9ab11b8d053d8187163a"
+    },
+    {
+      "path": "src/pages/Legal/PrivacyPolicy.jsx",
+      "sha256": "b9f8d812d2ae616d6415ad33a12851f5d0c003859a03112e0ffbe80db603965a"
+    },
+    {
+      "path": "src/pages/Legal/CookiePolicy.jsx",
+      "sha256": "1f0b483578809388e6baeca567e6225f164c8fa61150cdf1175ee8318e83f51e"
+    }
+  ]
+}

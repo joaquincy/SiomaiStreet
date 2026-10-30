@@ -1,254 +1,133 @@
-import {
-  BiUser,
-  BiEnvelope,
-  BiGroup,
-} from 'react-icons/bi';
-import { ToggleGroup, ToggleOption, FormSelect } from '../../../components/FormElements';
+import { useState } from 'react';
+import { BiUser, BiEnvelope, BiGroup, BiHeart } from 'react-icons/bi';
+import { ApplicationField } from '../../../components/ApplicationField';
+import { personalFeedback } from '../../../utils/personalFeedback';
 import './Steps.css';
 
-const PersonalInfo = ({ formData, updateField }) => {
+const sections = [
+  ['Primary applicant', [
+    ['firstName', 'First Name', true, 'text', 'Use your legal given name as shown on your government ID.', 'given-name'],
+    ['middleName', 'Middle Name', false, 'text', 'Leave blank if not applicable.', 'additional-name'],
+    ['lastName', 'Last Name', true, 'text', 'Use your legal family name.', 'family-name'],
+    ['dateOfBirth', 'Date of Birth', true, 'date', 'Applicants must be at least 18 years old.', 'bday'],
+    ['citizenship', 'Nationality & Citizenship Status', true, ['Filipino Citizen', 'Dual Citizen', 'Foreign National (with Alien Certificate of Registration)', 'Other'], 'Select your current legal citizenship status.'],
+    ['address', 'Current Residential Address', true, 'text', 'Include house/unit number, street, barangay, city, province, and postal code.', 'street-address'],
+  ]],
+  ['Contact and identification', [
+    ['primaryPhone', 'Primary Phone Number', true, 'tel', 'Enter 7 to 15 digits, for example +63 912 345 6789.', 'tel'],
+    ['secondaryPhone', 'Secondary Phone Number', false, 'tel', 'Optional backup mobile or landline number.'],
+    ['email', 'Email Address', true, 'email', 'We will send application updates here, for example juan@example.com.', 'email'],
+    ['confirmEmail', 'Confirm Email Address', true, 'email', 'Re-enter the exact same email address to prevent typos.', 'email'],
+    ['govIdType', 'Government ID Type', true, ['Passport', "Driver's License", 'UMID', 'PhilID (National ID)', 'Postal ID', "Voter's ID", 'Other'], 'Choose the valid government ID you will upload in Step 7.'],
+    ['govIdNumber', 'Government ID Number', true, 'text', 'Enter the ID number exactly as printed on your selected ID.'],
+  ]],
+  ['Emergency contact', [
+    ['emergencyName', 'Full Name', false, 'text', 'Optional contact person in case you cannot be reached.'],
+    ['emergencyRelationship', 'Relationship', false, 'text', 'For example spouse, parent, or sibling.'],
+    ['emergencyPhone', 'Phone Number', false, 'tel', 'For example +63 917 000 0000.'],
+  ]],
+];
+
+const sectionIcons = [BiUser, BiEnvelope, BiGroup];
+
+export default function PersonalInfo({ formData, updateField, showErrors = false }) {
+  const [touched, setTouched] = useState({});
+  const issues = personalFeedback(formData);
+
+  const renderField = ([key, label, required, type = 'text', hint, autoComplete], co = false) => {
+    const id = `${co ? 'co' : 'pi'}-${key}`;
+    return (
+      <ApplicationField
+        key={id}
+        id={id}
+        label={label}
+        required={required}
+        hint={hint}
+        type={Array.isArray(type) ? undefined : type}
+        options={Array.isArray(type) ? type : undefined}
+        autoComplete={autoComplete}
+        name={co ? `coApplicant.${key}` : key}
+        value={co ? formData.coApplicant?.[key] : formData[key]}
+        errors={showErrors || touched[id] ? issues.filter((issue) => issue.id === id).map((issue) => issue.message) : []}
+        onBlur={() => setTouched((previous) => ({ ...previous, [id]: true }))}
+        onChange={(value) =>
+          co
+            ? updateField('coApplicant', { ...formData.coApplicant, [key]: value })
+            : updateField(key, value)
+        }
+      />
+    );
+  };
+
   return (
-    <div className="step-content animate-fade-in">
-      <div className="step-header-centered">
-        <div className="step-icon-wrapper blue">
+    <div className="personal-pilot step-content">
+      <header className="personal-pilot-intro step-intro">
+        <span className="pilot-intro-icon step-intro-icon red" aria-hidden="true">
           <BiUser />
+        </span>
+        <div className="step-intro-copy">
+          <span className="step-eyebrow">Step 02 · Applicant Identity &amp; Contact</span>
+          <h2 id="personal-step-title" tabIndex={-1} className="step-intro-title">
+            Tell Us About <span className="title-highlight">Yourself</span>
+          </h2>
+          <p className="step-intro-subtitle">
+            Provide your <strong>legal identity</strong> and <strong>contact details</strong>. Every field is clearly marked Required, Optional, or Conditional.
+          </p>
         </div>
-        <h2 className="step-title">Tell Us About Yourself</h2>
-        <p className="step-subtitle">Please provide your legal personal details.</p>
-      </div>
+      </header>
 
-      <div className="form-section">
+      {sections.map(([title, fields], index) => {
+        const Icon = sectionIcons[index];
+        return (
+          <section key={title} className="form-section">
+            <h3 className="section-title">
+              <Icon className="section-icon" aria-hidden="true" />
+              <span>{title}</span>
+            </h3>
+            <div className="pilot-field-grid">{fields.map((field) => renderField(field))}</div>
+          </section>
+        );
+      })}
+
+      <section className="form-section">
         <h3 className="section-title">
-          <BiUser className="section-icon" /> Section A: Primary Applicant
+          <BiGroup className="section-icon" aria-hidden="true" />
+          <span>Co-applicant / Business Partner</span>
         </h3>
+        <ApplicationField
+          id="pi-hasCoApplicant"
+          label="Adding a co-applicant / business partner?"
+          conditional="Conditional"
+          options={['No', 'Yes']}
+          hint="If you select Yes, all four co-applicant details below become required."
+          value={formData.hasCoApplicant === 'yes' ? 'Yes' : 'No'}
+          onChange={(value) => updateField('hasCoApplicant', value.toLowerCase())}
+        />
+        {formData.hasCoApplicant === 'yes' && (
+          <div className="pilot-field-grid co-applicant-grid">
+            {[
+              ['firstName', 'Co-applicant First Name', true, 'text', 'Legal given name of your co-applicant.'],
+              ['lastName', 'Co-applicant Last Name', true, 'text', 'Legal family name of your co-applicant.'],
+              ['email', 'Co-applicant Email', true, 'email', 'For example partner@example.com.'],
+              ['phone', 'Co-applicant Phone', true, 'tel', '7 to 15 digits, for example +63 912 345 6789.'],
+            ].map((field) => renderField(field, true))}
+          </div>
+        )}
+      </section>
 
-        <div className="form-row three-cols">
-          <div className="form-field">
-            <label htmlFor="pi-firstName">First Name</label>
-            <input
-              id="pi-firstName"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Juan"
-              value={formData.firstName || ''}
-              onChange={(e) => updateField('firstName', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-middleName">Middle Name</label>
-            <input
-              id="pi-middleName"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Dela"
-              value={formData.middleName || ''}
-              onChange={(e) => updateField('middleName', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-lastName">Last Name</label>
-            <input
-              id="pi-lastName"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Cruz"
-              value={formData.lastName || ''}
-              onChange={(e) => updateField('lastName', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-row two-cols">
-          <div className="form-field">
-            <label htmlFor="pi-dob">Date of Birth</label>
-            <input
-              id="pi-dob"
-              type="date"
-              className="form-input"
-              value={formData.dateOfBirth || ''}
-              onChange={(e) => updateField('dateOfBirth', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label>Nationality &amp; Citizenship Status</label>
-            <FormSelect
-              options={['Filipino Citizen', 'Dual Citizen', 'Foreign National (with Alien Certificate of Registration)', 'Other']}
-              placeholder="Select..."
-              value={formData.citizenship}
-              onChange={(val) => updateField('citizenship', val)}
-            />
-          </div>
-        </div>
-
-        <div className="form-field">
-          <label htmlFor="pi-address">Current Residential Address</label>
-          <input
-            id="pi-address"
-            type="text"
-            className="form-input"
-            placeholder="Street, City, Province, ZIP, Country"
-            value={formData.address || ''}
-            onChange={(e) => updateField('address', e.target.value)}
-          />
-        </div>
-      </div>
-
-      <div className="form-section">
+      <section className="form-section">
         <h3 className="section-title">
-          <BiEnvelope className="section-icon" /> Contact &amp; Address
+          <BiHeart className="section-icon" aria-hidden="true" />
+          <span>Marital status</span>
         </h3>
-
-        <div className="form-row two-cols">
-          <div className="form-field">
-            <label htmlFor="pi-phone1">Primary Phone Number</label>
-            <input
-              id="pi-phone1"
-              type="tel"
-              className="form-input"
-              placeholder="e.g. +63 912 345 6789"
-              value={formData.primaryPhone || ''}
-              onChange={(e) => updateField('primaryPhone', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-phone2">Secondary Phone Number (Optional)</label>
-            <input
-              id="pi-phone2"
-              type="tel"
-              className="form-input"
-              placeholder="e.g. +63 998 765 4321"
-              value={formData.secondaryPhone || ''}
-              onChange={(e) => updateField('secondaryPhone', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-row two-cols">
-          <div className="form-field">
-            <label htmlFor="pi-email">Email Address</label>
-            <input
-              id="pi-email"
-              type="email"
-              className="form-input"
-              placeholder="juan@example.com"
-              value={formData.email || ''}
-              onChange={(e) => updateField('email', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-confirmEmail">Confirm Email Address</label>
-            <input
-              id="pi-confirmEmail"
-              type="email"
-              className="form-input"
-              placeholder="juan@example.com"
-              value={formData.confirmEmail || ''}
-              onChange={(e) => updateField('confirmEmail', e.target.value)}
-            />
-          </div>
-        </div>
-
-        <div className="form-row two-cols">
-          <div className="form-field">
-            <label>Government ID Type</label>
-            <FormSelect
-              options={['Passport', 'Driver\'s License', 'UMID', 'PhilID (National ID)', 'Postal ID', 'Voter\'s ID', 'Other']}
-              placeholder="Select..."
-              value={formData.govIdType}
-              onChange={(val) => updateField('govIdType', val)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-govIdNum">Government ID Number</label>
-            <input
-              id="pi-govIdNum"
-              type="text"
-              className="form-input"
-              placeholder="ID Number"
-              value={formData.govIdNumber || ''}
-              onChange={(e) => updateField('govIdNumber', e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="form-section highlight-box">
-        <h3 className="section-title">
-          <BiGroup className="section-icon" /> Emergency Contact
-        </h3>
-
-        <div className="form-row three-cols">
-          <div className="form-field">
-            <label htmlFor="pi-emName">Name</label>
-            <input
-              id="pi-emName"
-              type="text"
-              className="form-input"
-              placeholder="Full Name"
-              value={formData.emergencyName || ''}
-              onChange={(e) => updateField('emergencyName', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-emRel">Relationship</label>
-            <input
-              id="pi-emRel"
-              type="text"
-              className="form-input"
-              placeholder="e.g. Spouse"
-              value={formData.emergencyRelationship || ''}
-              onChange={(e) => updateField('emergencyRelationship', e.target.value)}
-            />
-          </div>
-          <div className="form-field">
-            <label htmlFor="pi-emPhone">Phone Number</label>
-            <input
-              id="pi-emPhone"
-              type="tel"
-              className="form-input"
-              placeholder="Phone Number"
-              value={formData.emergencyPhone || ''}
-              onChange={(e) => updateField('emergencyPhone', e.target.value)}
-            />
-          </div>
-        </div>
-      </div>
-
-      <div className="form-section">
-        <h3 className="section-title">Section B: Co-Applicant</h3>
-        <div className="form-field toggle-inline">
-          <label className="toggle-label">Adding a co-applicant / business partner?</label>
-          <ToggleGroup>
-            <ToggleOption
-              label="No"
-              selected={formData.hasCoApplicant !== 'yes'}
-              onClick={() => updateField('hasCoApplicant', 'no')}
-            />
-            <ToggleOption
-              label="Yes"
-              selected={formData.hasCoApplicant === 'yes'}
-              onClick={() => updateField('hasCoApplicant', 'yes')}
-            />
-          </ToggleGroup>
-        </div>
-      </div>
-
-      <div className="form-section">
-        <h3 className="section-title">Section C: Marital Status</h3>
-        <div className="form-row two-cols">
-          <div className="form-field">
-            <FormSelect
-              options={['Single', 'Married', 'Widowed', 'Separated', 'Divorced']}
-              placeholder="Select..."
-              value={formData.maritalStatus}
-              onChange={(val) => updateField('maritalStatus', val)}
-            />
-          </div>
-        </div>
-      </div>
-
+        {renderField([
+          'maritalStatus',
+          'Marital Status',
+          true,
+          ['Single', 'Married', 'Widowed', 'Separated', 'Divorced'],
+          'Required for franchise contract and spousal/partner signatory determination.',
+        ])}
+      </section>
     </div>
   );
-};
-
-export default PersonalInfo;
+}
