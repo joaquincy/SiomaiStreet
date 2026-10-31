@@ -1,0 +1,632 @@
+/* A keepsake receipt: warm paper, brand ink, and useful actions. */
+.application-page.application-receipt-page {
+  background: var(--app-canvas);
+  padding-bottom: 3rem;
+}
+
+.application-receipt {
+  max-width: 1060px;
+  padding: 2rem 1.5rem 0;
+  margin: 0 auto;
+  font-family: var(--app-font);
+}
+
+.receipt-masthead {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding-bottom: 1.25rem;
+  font-size: .75rem;
+  color: var(--app-text-secondary);
+}
+
+.receipt-masthead>span>span {
+  margin-inline: .55rem;
+  color: #a59a8b;
+}
+
+.receipt-masthead a {
+  display: inline-flex;
+  align-items: center;
+  gap: .45rem;
+  min-height: 44px;
+}
+
+.receipt-masthead a:hover {
+  color: var(--app-red-dark);
+}
+
+.receipt-paper {
+  display: grid;
+  grid-template-columns: minmax(0, .95fr) minmax(0, 1.05fr);
+  grid-template-areas: 'intro access' 'next access';
+  background: #fffdf8;
+  border: 1px solid #ded7ca;
+  border-radius: 20px;
+  overflow: hidden;
+  box-shadow: 0 12px 35px #35272008;
+  animation: receipt-arrive 420ms ease-out both;
+}
+
+.receipt-intro {
+  grid-area: intro;
+  padding: 2.5rem 2.5rem 1.7rem;
+  background: #382425;
+  color: #fff6e7;
+}
+
+.receipt-confirmation {
+  display: flex;
+  align-items: center;
+  gap: .7rem;
+  font-size: .75rem;
+  font-weight: 500;
+  color: #efd5b8;
+}
+
+.receipt-confirmation>span {
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border: 1px solid #b98a6e;
+  border-radius: 7px;
+}
+
+.receipt-confirmation svg {
+  width: 17px;
+  height: 17px;
+}
+
+.application-receipt h1 {
+  font-family: var(--app-font-display);
+  font-size: clamp(2.2rem, 4vw, 3.3rem);
+  font-weight: 500;
+  letter-spacing: -.045em;
+  line-height: 1.08;
+  margin: 1.75rem 0 1.2rem;
+  color: #fff6e7;
+}
+
+.application-receipt h1 em {
+  font-style: normal;
+  color: #eec291;
+}
+
+.application-page .application-receipt h1:focus {
+  outline: none;
+}
+
+.receipt-visually-hidden {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
+}
+
+.receipt-intro-copy {
+  color: #e1ccc2;
+  font-size: .875rem;
+  line-height: 1.8;
+  max-width: 33ch;
+}
+
+.receipt-approval-note {
+  margin-top: 1.7rem;
+  padding-top: 1.25rem;
+  border-top: 1px solid #76595a;
+}
+
+.receipt-approval-note strong {
+  font-size: .8125rem;
+  font-weight: 600;
+  color: #fff6e7;
+}
+
+.receipt-approval-note p {
+  margin-top: .45rem;
+  color: #d9c1b7;
+  font-size: .75rem;
+  line-height: 1.75;
+}
+
+.receipt-followup {
+  grid-area: next;
+  background: #382425;
+  color: #fff6e7;
+  padding: .5rem 2.5rem 2.5rem;
+}
+
+.receipt-followup h2 {
+  font-family: var(--app-font-display);
+  font-size: 1rem;
+  font-weight: 500;
+  margin: 0 0 1.1rem;
+}
+
+.receipt-followup ol {
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+.receipt-followup li {
+  display: grid;
+  grid-template-columns: 22px minmax(0, 1fr);
+  gap: .75rem;
+  margin-top: 1.1rem;
+}
+
+.receipt-followup li>span {
+  font-family: var(--app-font-mono);
+  font-size: .6875rem;
+  line-height: 1.9;
+  color: #eec291;
+}
+
+.receipt-followup h3 {
+  font-family: var(--app-font);
+  font-size: .8125rem;
+  font-weight: 500;
+  line-height: 1.6;
+  margin: 0 0 .3rem;
+}
+
+.receipt-followup p {
+  font-size: .75rem;
+  line-height: 1.75;
+  color: #d9c1b7;
+}
+
+.receipt-access {
+  grid-area: access;
+  min-width: 0;
+  padding: 2.5rem;
+  border-left: 1px dashed #cfbfa5;
+}
+
+.receipt-access-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  color: #8f1420;
+  margin-bottom: .75rem;
+}
+
+.receipt-eyebrow {
+  font-size: .6875rem;
+  font-weight: 600;
+  letter-spacing: .11em;
+  text-transform: uppercase;
+}
+
+.receipt-access-heading>svg {
+  font-size: 1.25rem;
+}
+
+.receipt-access h2 {
+  font-family: var(--app-font-display);
+  font-size: clamp(1.4rem, 2.3vw, 1.7rem);
+  font-weight: 500;
+  letter-spacing: -.035em;
+  line-height: 1.2;
+  margin: 0 0 .75rem;
+}
+
+.receipt-access-description {
+  font-size: .8125rem;
+  line-height: 1.75;
+  color: #665d53;
+}
+
+.receipt-timestamp {
+  margin-top: 1rem;
+  font-size: .6875rem;
+  line-height: 1.7;
+  color: #756655;
+}
+
+.receipt-credential {
+  border-top: 1px solid #e1d8ca;
+  margin-top: 1.25rem;
+  padding-top: .5rem;
+}
+
+.receipt-credential-label {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: .4rem;
+}
+
+.receipt-credential-label h3 {
+  font-family: var(--app-font);
+  font-size: .75rem;
+  font-weight: 600;
+  line-height: 1.5;
+  margin: 0;
+}
+
+.application-receipt .receipt-copy-button,
+.application-receipt .receipt-reveal-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .4rem;
+  min-height: 44px;
+  padding: .5rem;
+  border-radius: 6px;
+  background: transparent;
+  color: #8f1420;
+  font-size: .6875rem;
+  font-weight: 600;
+  flex-shrink: 0;
+}
+
+.receipt-copy-button svg,
+.receipt-reveal-button svg {
+  width: 16px;
+  height: 16px;
+}
+
+.application-receipt .receipt-copy-button:hover,
+.application-receipt .receipt-reveal-button:hover {
+  background: #efe5d9;
+}
+
+.receipt-code {
+  display: block;
+  font-family: var(--app-font-mono);
+  font-size: .8125rem;
+  line-height: 1.8;
+  color: #382425;
+  overflow-wrap: anywhere;
+  user-select: all;
+  padding-block: .25rem;
+}
+
+.receipt-secret-row {
+  display: flex;
+  align-items: flex-start;
+  gap: .5rem;
+  min-height: 44px;
+}
+
+.receipt-secret-row .receipt-code {
+  flex: 1;
+  min-width: 0;
+}
+
+.receipt-code--masked {
+  letter-spacing: .12em;
+  padding-top: .6rem;
+}
+
+.receipt-expiry {
+  margin-top: .4rem;
+  font-size: .6875rem;
+  line-height: 1.7;
+  color: #756655;
+}
+
+.receipt-privacy,
+.receipt-access-missing {
+  margin-top: 1.25rem;
+  font-size: .75rem;
+  line-height: 1.75;
+  color: #665d53;
+}
+
+.receipt-access-missing {
+  padding: 1rem;
+  background: #f6edda;
+  border-radius: 8px;
+  color: #694c1e;
+}
+
+.receipt-access-actions {
+  display: grid;
+  gap: .6rem;
+  margin-top: 1.75rem;
+}
+
+.application-receipt .receipt-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: .65rem;
+  min-height: 48px;
+  padding: .8rem 1rem;
+  border: 1px solid transparent;
+  border-radius: 9px;
+  font-size: .8125rem;
+  font-weight: 600;
+  line-height: 1.5;
+  transition: background-color 160ms ease, border-color 160ms ease;
+}
+
+.receipt-action>svg {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  transition: transform 180ms ease;
+}
+
+.application-receipt .receipt-action--primary {
+  background: #aa2030;
+  color: #fff8ed;
+}
+
+.application-receipt .receipt-action--primary:hover {
+  background: #8f1420;
+}
+
+.receipt-file-type {
+  font-family: var(--app-font-mono);
+  font-size: .6rem;
+  font-weight: 400;
+  color: #f5d0c4;
+  margin-left: auto;
+}
+
+.application-receipt .receipt-action--secondary {
+  color: #382425;
+  border-color: #d5c7b5;
+  background: transparent;
+}
+
+.application-receipt .receipt-action--secondary:hover {
+  background: #f1eadd;
+  border-color: #ad9378;
+}
+
+.receipt-action--secondary:hover svg {
+  transform: translateX(3px);
+}
+
+.receipt-save-reminder {
+  font-size: .6875rem;
+  line-height: 1.7;
+  color: #756655;
+  margin-top: .75rem;
+}
+
+.receipt-action-feedback {
+  min-height: 2.8em;
+  margin-top: .75rem;
+  font-size: .75rem;
+  line-height: 1.6;
+  color: #8f1420;
+  overflow-wrap: anywhere;
+}
+
+.receipt-device-note {
+  display: flex;
+  align-items: flex-start;
+  gap: .65rem;
+  margin-top: 1.25rem;
+  padding: .9rem 1rem;
+  border: 1px solid #ded9ce;
+  border-radius: 10px;
+  background: #efede6;
+  color: #555d4e;
+  font-size: .75rem;
+  line-height: 1.75;
+}
+
+.receipt-device-note>svg {
+  flex-shrink: 0;
+  width: 17px;
+  height: 17px;
+  margin-top: .15rem;
+}
+
+.receipt-device-note>div {
+  min-width: 0;
+}
+
+.receipt-device-note .receipt-cleanup-pending {
+  visibility: hidden;
+}
+
+.receipt-device-note--warning {
+  background: #fff4db;
+  border-color: #ddc288;
+  color: #704e15;
+}
+
+.application-receipt .receipt-text-button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: .45rem;
+  min-height: 44px;
+  padding: .6rem 0;
+  background: transparent;
+  color: #8f1420;
+  font-size: .75rem;
+  font-weight: 600;
+  text-align: left;
+}
+
+.receipt-text-button:hover {
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+
+.receipt-help {
+  display: grid;
+  grid-template-columns: 120px minmax(0, 1fr);
+  gap: 1rem;
+  padding-block: 1.5rem;
+}
+
+.receipt-help h2 {
+  font-family: var(--app-font-display);
+  font-size: .9375rem;
+  font-weight: 500;
+  line-height: 1.6;
+}
+
+.receipt-help p {
+  font-size: .75rem;
+  color: #71675c;
+  line-height: 1.8;
+  overflow-wrap: anywhere;
+}
+
+.receipt-help a {
+  color: #8f1420;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.receipt-another {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  border-top: 1px solid #ded9ce;
+  padding-top: 1rem;
+}
+
+.receipt-another p {
+  font-size: .6875rem;
+  line-height: 1.75;
+  color: #71675c;
+}
+
+.receipt-another button {
+  flex-shrink: 0;
+}
+
+.application-receipt button:disabled {
+  opacity: .5;
+  cursor: not-allowed;
+}
+
+@keyframes receipt-arrive {
+  from {
+    opacity: 0;
+    transform: translateY(8px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@media (max-width: 900px) {
+
+  .receipt-intro,
+  .receipt-access {
+    padding: 2rem;
+  }
+
+  .receipt-followup {
+    padding: 0 2rem 2rem;
+  }
+}
+
+@media (max-width: 680px) {
+  .application-receipt {
+    padding: 1rem 1rem 0;
+  }
+
+  .receipt-masthead {
+    font-size: .6875rem;
+    gap: .5rem;
+    padding-bottom: .75rem;
+  }
+
+  .receipt-masthead>span>span {
+    margin-inline: .25rem;
+  }
+
+  .receipt-paper {
+    grid-template-columns: minmax(0, 1fr);
+    grid-template-areas: 'intro' 'access' 'next';
+    border-radius: 15px;
+  }
+
+  .receipt-intro,
+  .receipt-access {
+    padding: 1.75rem 1.25rem;
+  }
+
+  .application-receipt h1 {
+    font-size: clamp(2.2rem, 9vw, 3rem);
+    margin-block: 1.4rem 1rem;
+  }
+
+  .receipt-intro-copy {
+    max-width: none;
+  }
+
+  .receipt-approval-note {
+    margin-top: 1.25rem;
+    padding-top: 1rem;
+  }
+
+  .receipt-access {
+    border-left: 0;
+    border-bottom: 1px dashed #cfbfa5;
+  }
+
+  .receipt-followup {
+    padding: 1.5rem 1.25rem 1.75rem;
+    background: #f2ede4;
+    color: #382425;
+  }
+
+  .receipt-followup h2 {
+    font-size: 1.125rem;
+  }
+
+  .receipt-followup li>span {
+    color: #8f1420;
+  }
+
+  .receipt-followup p {
+    color: #665d53;
+  }
+
+  .receipt-help {
+    grid-template-columns: minmax(0, 1fr);
+    gap: .35rem;
+    padding-block: 1.25rem;
+  }
+
+  .receipt-another {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: .2rem;
+  }
+
+  .receipt-code {
+    font-size: .75rem;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .receipt-paper {
+    animation: none;
+  }
+
+  .application-receipt .receipt-action,
+  .receipt-action>svg {
+    transition: none;
+  }
+
+  .receipt-action--secondary:hover svg {
+    transform: none;
+  }
+}

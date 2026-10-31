@@ -1,0 +1,6 @@
+.security-check { width: min(440px, calc(100vw - 24px)); box-sizing: border-box; padding: 24px; border: 1px solid #dfd4bf; border-radius: 20px; background: #faf5e7; color: #382820; font-family: inherit; }
+.security-check::backdrop { background: #21140eb3; }
+.security-check h2 { font-size: 22px; margin: 0 0 12px; }
+.security-check p { font-size: 14px; line-height: 1.6; margin-bottom: 16px; }
+.security-check button { min-height: 44px; margin-top: 16px; padding: 10px 14px; border-radius: 10px; background: #a9252c; color: white; cursor: pointer; }
+.security-check button:focus-visible { outline: 3px solid #245b89; outline-offset: 3px; }

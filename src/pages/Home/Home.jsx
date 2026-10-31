@@ -8,9 +8,11 @@ import Journey from './components/Journey';
 import Requirements from './components/Requirements';
 import Packages from './components/Packages';
 import FeaturedMenu from './components/FeaturedMenu';
+import StoreFinder from './components/StoreFinder';
 import FAQ from './components/FAQ';
 import Testimonials from './components/Testimonials';
 import CTA from './components/CTA';
+import ContactSupport from './components/ContactSupport';
 
 const Home = () => {
   useScrollReveal();
@@ -29,10 +31,12 @@ const Home = () => {
       <Requirements />
       <Packages />
       <FeaturedMenu />
+      <StoreFinder />
       {/* Publish franchise performance stories only after verifying claims and permission. */}
       <FAQ />
       <Testimonials />
       <CTA />
+      <ContactSupport />
     </main>
   );
 };

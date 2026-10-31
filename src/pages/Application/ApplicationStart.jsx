@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { BiArrowToRight, BiCheck, BiFile, BiTimeFive, BiX } from 'react-icons/bi';
+import { BiArrowToRight, BiCheck, BiFile, BiTimeFive, BiX, BiStore } from 'react-icons/bi';
 import { APPLICATION_DOCUMENTS } from '../../../shared/application.js';
 import './ApplicationWelcome.css';
 
@@ -47,15 +47,15 @@ export default function ApplicationStart({ ready = true }) {
       <div className="welcome-layout">
         <div className="welcome-intro">
           <span className="welcome-eyebrow">SIOMAI STREET / FRANCHISING</span>
-          <div className="welcome-illustration" aria-hidden="true"><BiFile /><span><BiCheck /></span></div>
+          <div className="welcome-scene" aria-hidden="true"><div className="welcome-scene-paper"><span>YOUR APPLICATION</span><i /><i /><i /><div><BiFile />READY WHEN YOU ARE</div></div><div className="welcome-scene-store"><BiStore /><span>SIOMAI<br />STREET</span></div></div>
           <p className="welcome-kicker">Before you start</p>
-          <h2 id="application-welcome-title" tabIndex={-1} ref={heading}>Your next chapter,<br /><em>starts here.</em></h2>
-          <p>Let’s get you ready for a thoughtful, complete application.</p>
+          <h2 id="application-welcome-title" tabIndex={-1} ref={heading}>A little preparation.<br /><em>A smoother start.</em></h2>
+          <p>Your plans, your experience, your next opportunity. Let’s get the essentials ready.</p>
           <div className="welcome-time"><BiTimeFive aria-hidden="true" /><span>About 25–35 minutes <span>·</span> 9 steps</span></div>
           <p className="welcome-disclaimer">Submitting is a request for consideration, not franchise approval or a commitment to purchase.</p>
         </div>
         <div className="welcome-content">
-          <div className="welcome-section-heading"><span className="welcome-eyebrow">A QUICK CHECKLIST</span><h3>A few things to have ready.</h3></div>
+          <div className="welcome-section-heading"><span className="welcome-eyebrow">YOUR PREPARATION GUIDE</span><h3>Three things. Then you’re ready.</h3><p>Keep these nearby as you move through the form.</p></div>
           <ol className="welcome-checklist">
             <li><span className="welcome-number" aria-hidden="true">01</span><div><h4>Your details &amp; plans</h4><p>Contact details, available investment and preferred territory. The current form requires applicants to be at least 18. Package prices are quotation-only; final eligibility is subject to owner review.</p></div></li>
             <li><span className="welcome-number" aria-hidden="true">02</span><div><h4>Your supporting documents</h4><ul className="welcome-documents">{APPLICATION_DOCUMENTS.filter(doc => doc.required).map(doc => <li key={doc.key}><BiCheck aria-hidden="true" />{doc.label}</li>)}</ul><p className="welcome-format">PDF, JPG or PNG · Up to 10 MiB each.<br />The ID portrait must be JPG or PNG.</p></div></li>
@@ -66,7 +66,7 @@ export default function ApplicationStart({ ready = true }) {
             <p>Use a private device. Answers and files may be saved in this browser for seven days after your last save. Watch for Save failed notices.</p>
             <p>After submission, save your reference and private access code securely. Use Track Status to check progress and replace only documents requested by the reviewer.</p>
           </div></details>
-          <div className="welcome-footer"><button type="button" onClick={dismiss}>I’m ready to begin <BiArrowToRight aria-hidden="true" /></button><span>You can reopen this guide anytime.</span></div>
+          <div className="welcome-footer"><button type="button" onClick={dismiss}>Continue to application <BiArrowToRight aria-hidden="true" /></button><span>No commitment to purchase. Reopen this guide anytime.</span></div>
         </div>
       </div>
     </dialog>

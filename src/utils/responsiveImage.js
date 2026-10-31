@@ -4,9 +4,11 @@
  *
  * @param {string} src - Original image path, e.g. "/images/menu-classic.png"
  * @param {number[]} widths - Array of widths to include
- * @returns {string} srcSet attribute value
+ * @returns {string} srcSet attribute value, or empty string if widths is empty/null
  */
 export function getSrcSet(src, widths) {
+  if (!widths || widths.length === 0) return '';
+
   const lastSlash = src.lastIndexOf('/');
   const filename = src.substring(lastSlash + 1);
   const dotIndex = filename.lastIndexOf('.');

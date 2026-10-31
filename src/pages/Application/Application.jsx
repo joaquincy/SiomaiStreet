@@ -1,16 +1,15 @@
+import { requestTurnstile } from '../../utils/turnstile';
 import { validateStep, validateApplication } from '../../../shared/application.js';
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ApplicationStart from './ApplicationStart';
-import ReceiptAccess from './ReceiptAccess';
+import ApplicationReceipt from './ApplicationReceipt';
 import { HiOutlineCheck } from 'react-icons/hi';
 import { stepFeedback } from '../../utils/personalFeedback';
 import { ApplicationFeedbackContext } from '../../components/applicationFeedbackContext';
 import {
   BiDevices,
-  BiCheckCircle,
   BiXCircle,
-  BiCopy,
   BiArrowBack,
   BiRefresh,
 } from 'react-icons/bi';
@@ -47,7 +46,7 @@ import './ApplicationAccess.css';
 const SUB_NAV_TABS = [
   { id: 'apply', label: 'Submit Application', active: true },
   { id: 'track', label: 'Track Status' },
-  { id: 'onboard', label: 'Onboarding', disabled: true },
+  { id: 'onboard', label: 'Onboarding' },
 ];
 
 const PACKAGE_LABELS = {
@@ -86,21 +85,19 @@ const ApplicationPage = () => {
   });
   const [pendingPackageChoice, setPendingPackageChoice] = useState(() =>
     requestedPackage &&
-    savedDraft.formData?.selectedPackage &&
-    savedDraft.formData.selectedPackage !== requestedPackage
+      savedDraft.formData?.selectedPackage &&
+      savedDraft.formData.selectedPackage !== requestedPackage
       ? requestedPackage
       : null
   );
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
   const [transferStatus, setTransferStatus] = useState('');
-  const [submissionId, setSubmissionId] = useState('');
   const [cleanupStatus, setCleanupStatus] = useState('');
   const [stepErrors, setStepErrors] = useState([]);
   const [submissionError, setSubmissionError] = useState('');
   const [draftRestored, setDraftRestored] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
-  const [copiedRef, setCopiedRef] = useState(false);
   const submitLock = useRef(false);
   const requestId = useRef(savedDraft.requestId);
   const [saveStatus, setSaveStatus] = useState('Loading draft');
@@ -151,7 +148,7 @@ const ApplicationPage = () => {
     setSaveStatus('Saving');
     const textSaved = saveApplicationDraft(currentStep, formData, requestId.current);
     documentWrite.current = documentWrite.current
-      .catch(() => {})
+      .catch(() => { })
       .then(async () => {
         if (restoreFailed.current) throw new Error('Saved documents could not be restored');
         if (savedDocuments.current !== formData.documents) {
@@ -202,11 +199,11 @@ const ApplicationPage = () => {
   const cleanupDraft = async () => {
     setCleanupStatus('Clearing local draft…');
     try {
-      await documentWrite.current.catch(() => {});
+      await documentWrite.current.catch(() => { });
       await clearApplicationDraft();
       setCleanupStatus('Local draft cleared from this device.');
     } catch {
-      setCleanupStatus('Cleanup failed. Your application was received, but answers or files may remain on this device. Retry cleanup or clear this site’s browser data after saving your reference number.');
+      setCleanupStatus('Cleanup failed. Your application was received, but answers or files may remain on this device. Retry cleanup or clear this site’s browser data after saving your private receipt.');
     }
   };
 
@@ -264,12 +261,11 @@ const ApplicationPage = () => {
     setSubmitting(true);
     saveApplicationDraft(currentStep, formData, requestId.current);
     try {
-      const result = await submitFranchiseApplication({ formData, requestId: requestId.current, onProgress:setTransferStatus });
-      setSubmissionId(result.id);
+      const turnstileToken = await requestTurnstile('application');
+      const result = await submitFranchiseApplication({ turnstileToken, formData, requestId: requestId.current, onProgress: setTransferStatus });
       setPortalReceipt(result);
       setSubmitted(true);
       await cleanupDraft();
-      window.scrollTo({ top: 0, behavior: 'smooth' });
     } catch (error) {
       setSubmissionError(error.message || 'Your application could not be submitted. Please retry.');
       if (Array.isArray(error.validationErrors) && error.validationErrors.length) {
@@ -349,96 +345,34 @@ const ApplicationPage = () => {
     }
   };
 
-  const handleCopyReference = () => {
-    if (!submissionId || !navigator.clipboard) return;
-    navigator.clipboard
-      .writeText(submissionId)
-      .then(() => {
-        setCopiedRef(true);
-        setTimeout(() => setCopiedRef(false), 2500);
-      })
-      .catch(() => {});
-  };
-
   /* ─── Receipt Screen (Only After Valid Server Receipt) ─── */
   if (submitted) {
     return (
-      <main className="application-page">
+      <main className="application-page application-receipt-page">
         <PageMeta
           title="Application Submitted"
           path="/application"
           description="Your Siomai Street franchise application has been submitted successfully."
         />
-        <div className="container receipt-container">
-          <div className="app-form-card">
-            <div className="submit-success">
-              <div className="success-glow" aria-hidden="true" />
-              <div className="success-icon-ring" aria-hidden="true">
-                <BiCheckCircle />
-              </div>
-              <span className="receipt-status-pill">Submission Receipt Confirmed</span>
-              <h2>Application Submitted</h2>
-              <p>
-                Thank you for applying to become a Siomai Street franchise partner.
-                Your application record has been received. Save your private receipt and use Track Status to check for review updates.
-              </p>
-
-              {submissionId && (
-                <div className="submission-reference-badge">
-                  <span className="ref-label">Reference No.</span>
-                  <span className="ref-value">{submissionId}</span>
-                  <button
-                    type="button"
-                    className="ref-copy-btn"
-                    onClick={handleCopyReference}
-                    aria-label="Copy reference number"
-                  >
-                    <BiCopy aria-hidden="true" />
-                    <span>{copiedRef ? 'Copied' : 'Copy reference'}</span>
-                  </button>
-                </div>
-              )}
-
-              <div className="receipt-next-steps">
-                <h3>Important Notice &amp; Next Steps</h3>
-                <p className="receipt-disclaimer">
-                  Save your reference number for your records. This receipt confirms submission only, not franchise approval, a binding franchise agreement, or account activation. Official review and response timelines have not yet been confirmed.
-                </p>
-              </div>
-
-              <ReceiptAccess receipt={portalReceipt} />
-              <div className="receipt-next-steps" role="status" aria-live="polite">
-                <p>{cleanupStatus}</p>
-                {cleanupStatus.startsWith('Cleanup failed') && (
-                  <button type="button" className="ref-copy-btn" onClick={cleanupDraft}>
-                    Retry local draft cleanup
-                  </button>
-                )}
-              </div>
-
-              <button
-                type="button"
-                className="step-nav-continue receipt-new-btn"
-                disabled={submitting || cleanupStatus.startsWith('Clearing') || cleanupStatus.startsWith('Cleanup failed')}
-                onClick={() => {
-                  requestId.current = crypto.randomUUID();
-                  setFormData({});
-                  setCurrentStep(0);
-                  setSubmissionId('');
-                  setCleanupStatus('');
-                  savedDocuments.current = null;
-                  restoreFailed.current = false;
-                  setAttempted({});
-                  setVisited({ 0: true });
-                  setReturnToReview(false);
-                  setSubmitted(false);
-                }}
-              >
-                Start a New Application
-              </button>
-            </div>
-          </div>
-        </div>
+        <ApplicationReceipt
+          receipt={portalReceipt}
+          cleanupStatus={cleanupStatus}
+          busy={submitting}
+          onRetryCleanup={cleanupDraft}
+          onNewApplication={() => {
+            requestId.current = crypto.randomUUID();
+            setFormData({});
+            setCurrentStep(0);
+            setPortalReceipt(null);
+            setCleanupStatus('');
+            savedDocuments.current = null;
+            restoreFailed.current = false;
+            setAttempted({});
+            setVisited({ 0: true });
+            setReturnToReview(false);
+            setSubmitted(false);
+          }}
+        />
       </main>
     );
   }
@@ -461,7 +395,7 @@ const ApplicationPage = () => {
               className={`app-subnav-tab ${tab.active ? 'active' : ''} ${tab.disabled ? 'disabled' : ''}`}
               disabled={tab.disabled}
               id={`subnav-${tab.id}`}
-              onClick={() => { if (tab.id === 'track') navigate('/application/status'); }}
+              onClick={() => { if (tab.id === 'track') navigate('/application/status'); if (tab.id === 'onboard') navigate('/application/onboarding'); }}
             >
               {tab.label}
             </button>
@@ -508,19 +442,18 @@ const ApplicationPage = () => {
               index === currentStep
                 ? 'current'
                 : status === 'Complete'
-                ? 'completed'
-                : status === 'Needs attention'
-                ? 'attention'
-                : 'pending';
+                  ? 'completed'
+                  : status === 'Needs attention'
+                    ? 'attention'
+                    : 'pending';
 
             return (
               <Fragment key={step.id}>
                 {index > 0 && (
                   <div
                     aria-hidden="true"
-                    className={`stepper-connector ${
-                      index <= currentStep || status === 'Complete' ? 'active' : ''
-                    }`}
+                    className={`stepper-connector ${index <= currentStep || status === 'Complete' ? 'active' : ''
+                      }`}
                   />
                 )}
                 <div className={`stepper-step ${stateClass}`}>
@@ -656,24 +589,24 @@ const ApplicationPage = () => {
               <ul>
                 {currentIssues.length > 0
                   ? currentIssues.map((issue) => (
-                      <li key={issue.message}>
-                        <a
-                          href={`#${issue.id}`}
-                          onClick={(event) => {
-                            event.preventDefault();
-                            const target = document.getElementById(issue.id);
-                            const focusTarget =
-                              target?.matches('input, button, textarea, select, [tabindex]')
-                                ? target
-                                : target?.querySelector('input, button, textarea, select, [tabindex]') || target;
-                            focusTarget?.focus();
-                            (target || focusTarget)?.scrollIntoView({ block: 'center', behavior: 'auto' });
-                          }}
-                        >
-                          {issue.message}
-                        </a>
-                      </li>
-                    ))
+                    <li key={issue.message}>
+                      <a
+                        href={`#${issue.id}`}
+                        onClick={(event) => {
+                          event.preventDefault();
+                          const target = document.getElementById(issue.id);
+                          const focusTarget =
+                            target?.matches('input, button, textarea, select, [tabindex]')
+                              ? target
+                              : target?.querySelector('input, button, textarea, select, [tabindex]') || target;
+                          focusTarget?.focus();
+                          (target || focusTarget)?.scrollIntoView({ block: 'center', behavior: 'auto' });
+                        }}
+                      >
+                        {issue.message}
+                      </a>
+                    </li>
+                  ))
                   : stepErrors.map((message) => <li key={message}>{message}</li>)}
               </ul>
             </div>

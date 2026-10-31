@@ -12,10 +12,35 @@ const PrivacyPolicy = () => (
       <div className="legal-header">
         <span className="legal-badge">Legal</span>
         <h1>Privacy Policy</h1>
-        <p className="legal-updated">Last updated: October 25, 2026</p>
+        <p className="legal-updated">Last updated: October 31, 2026</p>
       </div>
 
       <div className="legal-content">
+        <section className="legal-section" id="support-inquiries">
+          <h2>Homepage support inquiries</h2>
+          <p>
+            When online messaging is enabled, the contact form sends your name, reply email,
+            chosen topic and message to the customer-support or franchise-inquiry queue you
+            select. Branch and order details are optional. These details are used to handle
+            your inquiry and reply to you; this form does not sign you up for marketing.
+          </p>
+          <p>
+            Unsent answers are not saved as a browser draft. After submission, messages are
+            stored in a private database queue with a receipt reference and the version of
+            this notice you acknowledged. Access is reserved for authorized support staff
+            through the connected administration system. Please do not send identity documents,
+            payment credentials or private application access codes through this form.
+          </p>
+          <p>
+            Rate limiting uses keyed hashes of the connection IP address and reply email to
+            limit repeated attempts. A receipt confirms that your message was saved; it does
+            not confirm staff review, a refund or franchise approval. Support contacts, service
+            hours and any response target are shown in the homepage contact section only when
+            configured. A support-specific retention period and privacy contact must be approved
+            and published before online messaging is activated.
+          </p>
+        </section>
+
         <section className="legal-section">
           <h2>1. Introduction</h2>
           <p>
@@ -69,6 +94,16 @@ const PrivacyPolicy = () => (
 
         <section className="legal-section">
           <h2>5. Data Sharing</h2>
+          <p>
+            The homepage store finder requests device location only when you choose “Use my location”
+            and your browser permits it. Coordinates are used in browser memory to calculate approximate
+            distances, are not sent to our store-directory server, and are cleared when you leave the
+            homepage or choose “Clear my location”. Loading the optional interactive map connects your
+            browser to Google Maps, which receives technical information such as your IP address.
+            Our distance-sorting feature does not send your coordinates to Google. Opening directions
+            takes you to Google Maps, where Google’s own location settings and privacy policy apply.
+            See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google’s Privacy Policy</a>.
+          </p>
           <p>We do not sell your personal data. We may share your data with:</p>
           <ul>
             <li>Authorized franchise reviewers and operations staff</li>
@@ -88,8 +123,8 @@ const PrivacyPolicy = () => (
             <li><strong>Data portability</strong> — receive your data in a structured, machine-readable format</li>
           </ul>
           <p>
-            To exercise any of these rights, contact our Data Protection Officer at{' '}
-            <a href="mailto:privacy@siomaistreet.ph">privacy@siomaistreet.ph</a>.
+            Verified privacy-request contact details are pending confirmation. Once published,
+            use those details to request access, correction or deletion of your information.
           </p>
         </section>
 
@@ -113,13 +148,11 @@ const PrivacyPolicy = () => (
         <section className="legal-section">
           <h2>9. Contact Us</h2>
           <p>
-            For privacy-related concerns or to file a complaint, contact:
+            Privacy contact details will be published once confirmed by Siomai Street.
           </p>
           <p>
-            <strong>Siomai Street Data Protection Officer</strong><br />
-            Email: <a href="mailto:privacy@siomaistreet.ph">privacy@siomaistreet.ph</a><br />
-            Phone: +63 912 345 6789<br />
-            Address: Manila, Philippines
+            For available customer and franchise support channels, visit the{' '}
+            <a href="/#contact">homepage contact section</a>.
           </p>
           <p>
             You may also file a complaint with the National Privacy Commission at{' '}

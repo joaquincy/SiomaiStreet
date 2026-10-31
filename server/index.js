@@ -1,4 +1,9 @@
+import { createTurnstileVerifier, createTransactionalSender } from './transactionalServices.js';
+import { startNotificationWorker } from './notificationWorker.js';
+import { createNotificationWebhook } from './notificationWebhook.js';
 import { readMultipart } from './multipart.js';
+import { createStoreLocationsReader } from './storeLocations.js';
+import { contactConfiguration, publicContactConfiguration, createContactHandler } from './contact.js';
 import { portalAccess, createPortalHandler } from './applicationPortal.js';
 import { createApplicationHandler } from './applications.js';
 import { createApplicationAdmission, createSharedApplicationRateLimit, clientIP } from './applicationSecurity.js';
@@ -77,6 +82,7 @@ const supabaseRequest = async (path, options = {}) => {
 };
 
 const safeFileName = (name) => name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-100) || 'upload';
+const readStoreLocations = createStoreLocationsReader(supabaseRequest);
 const storagePath = (bucket, path) => `${supabaseUrl}/storage/v1/object/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
 const uploadFile = async (bucket, path, file, contentType) => {
@@ -188,13 +194,30 @@ const applicationRate = createSharedApplicationRateLimit({
   secret: process.env.APPLICATION_RATE_SECRET,
   rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
 });
+const turnstileEnabled = process.env.NODE_ENV === 'production' || process.env.TURNSTILE_ENABLED !== 'false';
+const verifyTurnstile = createTurnstileVerifier({ secret: process.env.TURNSTILE_SECRET_KEY, hostnames: (process.env.TURNSTILE_HOSTNAMES || '').split(',').map(s => s.trim()).filter(Boolean) });
+const verifyPublic = action => async req => {
+ if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
+};
+const handleEmailWebhook = createNotificationWebhook({ secret: process.env.RESEND_WEBHOOK_SECRET, request: supabaseRequest, json });
 const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
+const contactConfig = contactConfiguration(process.env);
+const handleContactPost = createContactHandler({
+  configuration: contactConfig, json, verify: verifyPublic('inquiry'),
+  allowedOrigins: (process.env.CONTACT_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean),
+  rate: (req, scope, limit, email) => applicationRate(email || clientIP(req, trustedProxies), scope, limit),
+  repository: {
+    find: async id => (await supabaseRequest(`/rest/v1/contact_inquiries?select=id,request_hash,received_at&id=eq.${id}&limit=1`))?.[0],
+    insert: async row => (await supabaseRequest('/rest/v1/contact_inquiries?select=id,request_hash,received_at', { method: 'POST', headers: { prefer: 'return=representation' }, body: JSON.stringify(row) }))?.[0],
+  },
+});
 const scanDisabled = isDocumentScanDisabled(process.env);
 if (scanDisabled) console.warn('⚠ DOCUMENT SCANNING IS DISABLED. Documents will NOT be virus-checked.');
 const scanDocument = scanDisabled
   ? createSkippedScanner()
   : createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) });
 const applicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies });
+const protectedApplicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies, verify: verifyPublic('application') });
 const verifyApplicationStorage = async () => {
   // Check portal configuration before accepting a new submission.
   access.receipt({id:'00000000-0000-4000-8000-000000000000',submitted_at:new Date().toISOString()});
@@ -220,7 +243,7 @@ const handlePortal = createPortalHandler({
 const handleApplicationPost = createApplicationHandler({
   receiptDetails: access.receipt,
   readMultipart, uploadFile, deleteStorageObjects, json,
-  admit: applicationAdmission,
+  admit: protectedApplicationAdmission,
   rateLimit: req => applicationRate(clientIP(req, trustedProxies), 'new-application', 4),
   scanDocument,
   allowUnscannedDocuments: scanDisabled,
@@ -242,16 +265,24 @@ const apiServer = createServer(async (req, res) => {
   if (origin && ['http://localhost:5173', 'http://127.0.0.1:5173'].includes(origin)) {
     res.setHeader('access-control-allow-origin', origin);
     res.setHeader('vary', 'Origin');
-    res.setHeader('access-control-allow-headers', 'content-type, authorization');
+    res.setHeader('access-control-allow-headers', 'content-type, authorization, x-turnstile-token');
     res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
   }
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });
+    if (url.pathname === '/api/webhooks/resend' && req.method === 'POST') return await handleEmailWebhook(req,res);
     if (url.pathname === '/api/health' && req.method === 'GET') {
       return json(res, 200, { ok: true, configured: Boolean(supabaseUrl && serviceKey) });
     }
     if (url.pathname === '/api/branches' && req.method === 'GET') return await handleBranchesGet(req, res);
+    if (url.pathname === '/api/contact-options' && req.method === 'GET') return json(res, 200, publicContactConfiguration(contactConfig));
+    if (url.pathname === '/api/contact-inquiries' && req.method === 'POST') return await handleContactPost(req, res);
+    if (url.pathname === '/api/store-locations' && req.method === 'GET') {
+      try { return json(res, 200, await readStoreLocations()); }
+      catch { return json(res, 503, { error: 'Store information is temporarily unavailable. Please try again shortly.' }); }
+    }
     if (url.pathname === '/api/reviews' && req.method === 'GET') return await handleReviewsGet(url, res);
     if (url.pathname === '/api/reviews' && req.method === 'POST') return await handleReviewPost(req, res);
     const helpfulMatch = url.pathname.match(/^\/api\/reviews\/([0-9a-f-]{36})\/helpful$/i);
@@ -302,3 +333,9 @@ apiServer.requestTimeout = 120000;
 apiServer.headersTimeout = 15000;
 apiServer.setTimeout(30000, socket => socket.destroy());
 apiServer.listen(port, () => console.log(`Siomai Street API listening on port ${port}`));
+
+if (process.env.EMAIL_WORKER_ENABLED === 'true') {
+ if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.RESEND_WEBHOOK_SECRET) throw new Error('Email worker configuration is incomplete.');
+ const stopNotifications = startNotificationWorker({ request: supabaseRequest, send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }) });
+ apiServer.on('close', stopNotifications);
+}

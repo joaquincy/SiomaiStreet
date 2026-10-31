@@ -14,8 +14,8 @@
   overflow: clip;
   background: #110F0D;
   /* Deep warm black canvas */
-  padding: clamp(5.5rem, 10vh, 8.5rem) 0 0;
-  /* Seamless transition directly into Franchise Packages */
+  padding: clamp(5.5rem, 8vh, 7.5rem) 0 clamp(6rem, 10vh, 9rem);
+  /* Generous bottom padding to allow tilted cards & shadows full clearance */
   display: flex;
   flex-direction: column;
   z-index: 1;
@@ -62,8 +62,11 @@
 .req-max__header {
   position: relative;
   z-index: 10;
-  padding: 0 clamp(2rem, 5vw, 6rem);
-  margin-bottom: clamp(3rem, 6vh, 4.75rem);
+  max-width: 1280px;
+  width: 100%;
+  margin: 0 auto clamp(3rem, 6vh, 4.75rem);
+  padding: 0 clamp(1.25rem, 4vw, 2.5rem);
+  box-sizing: border-box;
   display: flex;
   align-items: center;
   justify-content: space-between;
@@ -226,7 +229,7 @@
   justify-content: center;
   align-items: center;
   gap: clamp(1rem, 2vw, 3rem);
-  padding: 0 clamp(1rem, 4vw, 4rem);
+  padding: 1.5rem clamp(1rem, 4vw, 4rem) clamp(3.5rem, 6vh, 5.5rem);
   perspective: 1000px;
 }
 
@@ -234,9 +237,10 @@
 .req-max__card {
   position: relative;
   width: clamp(280px, 28vw, 400px);
-  height: clamp(450px, 60vh, 550px);
+  min-height: clamp(480px, 60vh, 560px);
+  height: auto;
   border-radius: 12px;
-  padding: 2rem 1.5rem;
+  padding: 2rem 1.5rem 1.75rem;
   display: flex;
   flex-direction: column;
   justify-content: space-between;
@@ -356,6 +360,8 @@
   position: relative;
   flex: 1;
   display: flex;
+  min-height: 160px;
+  max-height: 220px;
   margin: 1.5rem 0;
   width: 100%;
   overflow: hidden;
@@ -426,7 +432,7 @@
   font-weight: 500;
   line-height: 1.5;
   margin: 0;
-  text-align: justify;
+  text-align: left;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -509,7 +515,7 @@
   }
 
   .req-max__header {
-    padding: 0 1.5rem;
+    padding: 0 clamp(1.25rem, 4vw, 2.5rem);
     margin-bottom: 3rem;
     gap: 1.5rem;
   }

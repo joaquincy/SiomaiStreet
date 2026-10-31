@@ -7,16 +7,14 @@
 
 .application-page {
   /* ─── Typography ─── */
-  --app-font: var(
-    --font-interface,
-    -apple-system,
-    BlinkMacSystemFont,
-    'SF Pro Text',
-    'Inter',
-    'Segoe UI',
-    system-ui,
-    sans-serif
-  );
+  --app-font: var(--font-interface,
+      -apple-system,
+      BlinkMacSystemFont,
+      'SF Pro Text',
+      'Inter',
+      'Segoe UI',
+      system-ui,
+      sans-serif);
   --app-font-display: var(--font-heading, 'Outfit', var(--app-font));
   --app-font-mono: ui-monospace, SFMono-Regular, 'SF Mono', Menlo, Consolas, monospace;
   --app-font-input: -apple-system, BlinkMacSystemFont, 'SF Pro Text', 'SF Pro',
@@ -422,20 +420,23 @@
   left: 0;
   right: 0;
   bottom: 0;
-  background: linear-gradient(
-    90deg,
-    transparent 0%,
-    rgba(255, 255, 255, 0.35) 50%,
-    transparent 100%
-  );
+  background: linear-gradient(90deg,
+      transparent 0%,
+      rgba(255, 255, 255, 0.35) 50%,
+      transparent 100%);
   background-size: 200% 100%;
   animation: shimmer 2.4s ease-in-out infinite;
   border-radius: inherit;
 }
 
 @keyframes shimmer {
-  0%   { background-position: 200% 0; }
-  100% { background-position: -200% 0; }
+  0% {
+    background-position: 200% 0;
+  }
+
+  100% {
+    background-position: -200% 0;
+  }
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -990,7 +991,7 @@
   flex-shrink: 0;
 }
 
-.application-page .application-requirements-body > p:not(.requirements-disclaimer) {
+.application-page .application-requirements-body>p:not(.requirements-disclaimer) {
   display: flex;
   align-items: center;
   gap: 0.45rem;
@@ -1235,7 +1236,7 @@
 }
 
 .application-page .form-group.full-width,
-.application-page .pilot-field-grid > .application-field:has(fieldset) {
+.application-page .pilot-field-grid>.application-field:has(fieldset) {
   grid-column: 1 / -1;
 }
 
@@ -1249,9 +1250,9 @@
   min-width: 0;
 }
 
-.application-page .application-field > label,
+.application-page .application-field>label,
 .application-page .application-field legend,
-.application-page .form-field > label {
+.application-page .form-field>label {
   display: block;
   width: 100%;
   margin: 0;
@@ -1266,7 +1267,7 @@
 }
 
 .application-page .field-label-text,
-.application-page .field-label-row > span:first-child,
+.application-page .field-label-row>span:first-child,
 .application-page .form-label {
   font-size: 0.9375rem;
   font-weight: 500;
@@ -1321,7 +1322,7 @@
 /* ─── Apple iOS-Style Text Inputs & Textareas ─── */
 .application-page .form-input,
 .application-page .form-textarea,
-.application-page .application-field > input {
+.application-page .application-field>input {
   width: 100%;
   min-height: 38px;
   padding: 0.42rem 0.75rem;
@@ -1345,7 +1346,7 @@
 
 .application-page .form-input::placeholder,
 .application-page .form-textarea::placeholder,
-.application-page .application-field > input::placeholder {
+.application-page .application-field>input::placeholder {
   color: #8e8e93;
   font-family: var(--app-font-input);
   font-size: 0.8125rem;
@@ -1355,13 +1356,13 @@
 
 .application-page .form-input:hover:not(:disabled),
 .application-page .form-textarea:hover:not(:disabled),
-.application-page .application-field > input:hover:not(:disabled) {
+.application-page .application-field>input:hover:not(:disabled) {
   border-color: #a1a1a6;
 }
 
 .application-page .form-input:focus,
 .application-page .form-textarea:focus,
-.application-page .application-field > input:focus {
+.application-page .application-field>input:focus {
   outline: none;
   background: #ffffff;
   border-color: var(--app-red);
@@ -1553,6 +1554,7 @@
     opacity: 0;
     transform: translateY(-4px) scale(0.985);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -1992,7 +1994,7 @@
     transform 0.16s ease;
 }
 
-.application-page .field-options label > input[type="radio"] {
+.application-page .field-options label>input[type="radio"] {
   position: absolute;
   opacity: 0;
   width: 1px;
@@ -3348,13 +3350,11 @@
 }
 
 .application-page .helper-card {
-  background: linear-gradient(
-    145deg,
-    rgba(255, 255, 255, 0.65) 0%,
-    rgba(255, 245, 245, 0.5) 35%,
-    rgba(255, 248, 235, 0.5) 65%,
-    rgba(255, 255, 255, 0.6) 100%
-  );
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.65) 0%,
+      rgba(255, 245, 245, 0.5) 35%,
+      rgba(255, 248, 235, 0.5) 65%,
+      rgba(255, 255, 255, 0.6) 100%);
   backdrop-filter: blur(20px) saturate(1.5);
   -webkit-backdrop-filter: blur(20px) saturate(1.5);
   border: 1px solid rgba(255, 255, 255, 0.5);
@@ -3378,12 +3378,10 @@
   width: 110px;
   height: 110px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(214, 40, 57, 0.1) 0%,
-    rgba(245, 166, 35, 0.08) 50%,
-    transparent 75%
-  );
+  background: radial-gradient(circle,
+      rgba(214, 40, 57, 0.1) 0%,
+      rgba(245, 166, 35, 0.08) 50%,
+      transparent 75%);
   pointer-events: none;
 }
 
@@ -3396,12 +3394,10 @@
   width: 80px;
   height: 80px;
   border-radius: 50%;
-  background: radial-gradient(
-    circle,
-    rgba(245, 166, 35, 0.1) 0%,
-    rgba(214, 40, 57, 0.05) 50%,
-    transparent 75%
-  );
+  background: radial-gradient(circle,
+      rgba(245, 166, 35, 0.1) 0%,
+      rgba(214, 40, 57, 0.05) 50%,
+      transparent 75%);
   pointer-events: none;
 }
 
@@ -3497,7 +3493,7 @@
   margin-bottom: 0.5rem;
 }
 
-.application-page .submit-success > p {
+.application-page .submit-success>p {
   font-size: 0.96875rem;
   color: var(--app-text-secondary);
   margin-bottom: 1.35rem;
@@ -3593,6 +3589,7 @@
 }
 
 @media (max-width: 720px) {
+
   .application-page .app-subnav-inner,
   .application-page .app-page-header,
   .application-page .app-stepper,

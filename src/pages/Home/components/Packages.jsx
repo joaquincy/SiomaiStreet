@@ -86,17 +86,31 @@ const Packages = () => {
       <div className="pkg__inner">
         {/* ─── Section Header ─── */}
         <header className="pkg__header">
-          <div className="pkg__tag">
-            <span className="pkg__tag-line" aria-hidden="true" />
-            FRANCHISE PACKAGES
+          <div className="pkg__heading-wrap">
+            <div className="pkg__badge">
+              <span className="pkg__badge-dot" aria-hidden="true" />
+              <span className="pkg__badge-title">FRANCHISE PACKAGES</span>
+              <span className="pkg__badge-divider" aria-hidden="true">/</span>
+              <span className="pkg__badge-notice">3 PROVEN FORMATS</span>
+            </div>
+
+            <h2 className="pkg__heading">
+              <span className="pkg__heading-outline">CHOOSE THE SETUP</span>
+              <span className="pkg__heading-solid">THAT FITS YOUR GOALS</span>
+            </h2>
+
+            <p className="pkg__desc">
+              Flexible packages to match your budget and goals. Every package includes our proven system and ongoing support.
+            </p>
           </div>
-          <h2 className="pkg__title">
-            Choose the setup{' '}
-            that fits your <span className="pkg__title-red">goals.</span>
-          </h2>
-          <p className="pkg__desc">
-            Flexible packages to match your budget and goals. Every package includes our proven system and ongoing support.
-          </p>
+
+          <div className="pkg__header-badge" aria-hidden="true">
+            <svg viewBox="0 0 100 100" className="pkg__spin-text">
+              <path id="pkg-curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
+              <text><textPath href="#pkg-curve" startOffset="0%">SIOMAI STREET FRANCHISE • SIOMAI STREET FRANCHISE • </textPath></text>
+            </svg>
+            <div className="pkg__spin-icon">S</div>
+          </div>
         </header>
 
         {/* ─── Three Package Cards ─── */}

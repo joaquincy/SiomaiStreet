@@ -16,7 +16,7 @@ export function clientIP(req, trustedProxies = []) {
   return ip;
 }
 
-export function createApplicationAdmission({ checkRate, trustedProxies = [], maxConcurrent = 1 }) {
+export function createApplicationAdmission({ checkRate, trustedProxies = [], maxConcurrent = 1, verify = async () => {} }) {
   let active = 0;
   return async (req, res) => {
     res.setHeader('Connection', 'close'); // Rejections must not drain an untrusted upload.
@@ -35,6 +35,7 @@ export function createApplicationAdmission({ checkRate, trustedProxies = [], max
         res.setHeader('Retry-After', '3600');
         throw fail('Too many upload attempts. Keep your draft and try again later.', 429);
       }
+      await verify(req);
     } catch (error) { active--; throw error; }
     res.removeHeader?.('Retry-After');
     let released = false;

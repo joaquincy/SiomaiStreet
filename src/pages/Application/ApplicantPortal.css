@@ -1,0 +1,628 @@
+/* Portal-specific layout only. Shared application classes own navigation, headings,
+   form surfaces, inputs and primary actions in ApplicationExperience.css. */
+.application-page.applicant-portal .portal-shell {
+    max-width: var(--max-width, 1200px);
+    margin: auto;
+    padding: 0 2rem 2rem;
+}
+
+.applicant-portal .app-subnav-tab {
+    display: inline-flex;
+    align-items: center;
+    min-height: 44px;
+    text-decoration: none;
+}
+
+.application-page .portal-page-header {
+    padding-inline: 0;
+}
+
+.portal-access-layout,
+.portal-onboarding-layout {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) 290px;
+    gap: 2.25rem;
+    align-items: start;
+}
+
+.portal-access-card,
+.portal-roadmap,
+.portal-access-intro,
+.portal-onboarding-aside {
+    min-width: 0;
+}
+
+.applicant-portal .portal-access-card .step-intro {
+    gap: .35rem;
+}
+
+.portal-access-card form {
+    display: grid;
+    gap: .65rem;
+    margin: 0;
+}
+
+.portal-access-card label {
+    display: flex;
+    align-items: baseline;
+    justify-content: space-between;
+    gap: .75rem;
+    font-size: .9375rem;
+    font-weight: 500;
+    line-height: 1.4;
+    margin-top: .65rem;
+}
+
+.portal-access-card label:first-child {
+    margin-top: 0;
+}
+
+.portal-password {
+    display: flex;
+    position: relative;
+    min-width: 0;
+}
+
+.application-page .portal-password input {
+    padding-right: 3rem;
+}
+
+.portal-password button {
+    position: absolute;
+    inset: 0 0 0 auto;
+    width: 44px;
+    display: grid;
+    place-items: center;
+    border: 0;
+    border-radius: var(--app-radius-sm);
+    background: transparent;
+    color: var(--app-text-secondary);
+    font-size: 1.15rem;
+    cursor: pointer;
+}
+
+.portal-password button:hover {
+    color: var(--app-red);
+    background: var(--app-red-soft);
+}
+
+.applicant-portal .portal-small-note {
+    font-size: .8125rem;
+    color: var(--app-text-secondary);
+    line-height: 1.6;
+    margin: .75rem 0;
+}
+
+.applicant-portal .portal-primary {
+    justify-content: space-between;
+    text-decoration: none;
+}
+
+.portal-access-card form>.portal-primary {
+    justify-self: end;
+    margin-top: .65rem;
+}
+
+.applicant-portal button:disabled {
+    opacity: .5;
+    cursor: not-allowed;
+}
+
+.applicant-portal .helper-card h2 {
+    font-family: var(--app-font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    line-height: 1.3;
+    letter-spacing: -.015em;
+    margin: .65rem 0;
+}
+
+.applicant-portal .helper-card>p {
+    margin: .75rem 0;
+}
+
+.portal-large-icon {
+    width: 32px;
+    height: 32px;
+    display: grid;
+    place-items: center;
+    border: 1px solid var(--app-red-border-soft);
+    border-radius: var(--app-radius-sm);
+    background: var(--app-red-soft);
+    color: var(--app-red);
+    font-size: 1.1rem;
+}
+
+.portal-access-steps {
+    list-style: none;
+    margin: 1.25rem 0;
+    padding: 0;
+}
+
+.portal-access-steps li {
+    display: flex;
+    gap: .7rem;
+    padding: .8rem 0;
+    border-top: 1px solid var(--app-border-subtle);
+    font-size: .8125rem;
+    line-height: 1.6;
+    color: var(--app-text-secondary);
+}
+
+.portal-access-steps li span {
+    color: var(--app-red);
+    font-family: var(--app-font-mono);
+    font-size: .72rem;
+}
+
+.portal-help {
+    border-top: 1px solid var(--app-border-subtle);
+    margin-top: 1.75rem;
+    padding-top: .75rem;
+}
+
+.portal-help summary {
+    min-height: 44px;
+    padding: .65rem 0;
+    font-size: .84375rem;
+    font-weight: 500;
+    color: var(--app-text);
+    cursor: pointer;
+}
+
+.portal-help p,
+.portal-support {
+    font-size: .8125rem;
+    color: var(--app-text-secondary);
+    line-height: 1.65;
+}
+
+.portal-error {
+    padding: .85rem 1rem;
+    margin-block: .5rem;
+    background: var(--app-danger-bg);
+    border: 1px solid var(--app-danger-border);
+    border-radius: var(--app-radius-md);
+    color: var(--app-danger);
+    font-size: .84375rem;
+    overflow-wrap: anywhere;
+}
+
+.portal-message {
+    margin-top: 1rem;
+    font-size: .84375rem;
+    color: var(--app-text-secondary);
+}
+
+.portal-message:empty {
+    display: none;
+}
+
+.portal-bottom-links {
+    display: flex;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+    border-top: 1px solid var(--app-border-subtle);
+    padding-top: 1rem;
+    margin-top: 1.5rem;
+}
+
+.portal-bottom-links a,
+.portal-text-link {
+    min-height: 44px;
+    display: inline-flex;
+    align-items: center;
+    gap: .5rem;
+    font-size: .8125rem;
+    color: var(--app-red-dark);
+    text-underline-offset: 4px;
+}
+
+.portal-status-card {
+    margin-bottom: 2rem;
+}
+
+.portal-status-top {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 1rem;
+    flex-wrap: wrap;
+}
+
+.portal-record-actions {
+    display: flex;
+    flex-wrap: wrap;
+    gap: .5rem;
+}
+
+.portal-record-actions button {
+    display: inline-flex;
+    align-items: center;
+    gap: .4rem;
+    min-height: 44px;
+    border: 1px solid var(--app-border);
+    border-radius: var(--app-radius-pill);
+    padding: .55rem 1rem;
+    font: inherit;
+    font-size: .8125rem;
+    background: var(--app-surface);
+    color: var(--app-text-secondary);
+    cursor: pointer;
+}
+
+.portal-record-actions button:hover {
+    color: var(--app-red);
+    border-color: var(--app-red-border-soft);
+    background: var(--app-red-soft);
+}
+
+.applicant-portal .portal-status-card h2 {
+    font-family: var(--app-font-display);
+    font-size: clamp(1.375rem, 2vw, 1.65rem);
+    font-weight: 700;
+    margin: 1rem 0 .65rem;
+    color: var(--app-text);
+    letter-spacing: -.025em;
+}
+
+.portal-status-card>p {
+    max-width: 64ch;
+    font-size: .9375rem;
+    color: var(--app-text-secondary);
+    line-height: 1.6;
+}
+
+.portal-record-meta {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 1.5rem 3rem;
+    padding: 1.25rem 0;
+    margin-top: 1.25rem;
+    border-block: 1px solid var(--app-border-subtle);
+}
+
+.portal-record-meta>div {
+    min-width: 0;
+}
+
+.portal-record-meta dt {
+    font-size: .75rem;
+    color: var(--app-text-muted);
+    margin-bottom: .4rem;
+}
+
+.portal-record-meta dd {
+    font-size: .84375rem;
+    color: var(--app-text);
+}
+
+.portal-section-heading {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: .75rem;
+    margin-bottom: 1rem;
+}
+
+.applicant-portal .portal-section-heading h2 {
+    font-family: var(--app-font-display);
+    margin: .2rem 0 0;
+    font-size: clamp(1.375rem, 2vw, 1.65rem);
+    font-weight: 700;
+    color: var(--app-text);
+    letter-spacing: -.025em;
+    line-height: 1.22;
+}
+
+.portal-tag {
+    flex: none;
+    padding: .2rem .6rem;
+    border: 1px solid var(--app-red-border-soft);
+    background: var(--app-red-soft);
+    border-radius: var(--app-radius-pill);
+    color: var(--app-red-dark);
+    font-family: var(--app-font-mono);
+    font-size: .72rem;
+}
+
+.portal-empty {
+    display: flex;
+    align-items: center;
+    gap: 1rem;
+    padding: 1.5rem;
+    border: 1px solid var(--app-border);
+    background: var(--app-surface);
+    border-radius: var(--app-radius-lg);
+}
+
+.portal-empty>svg {
+    color: var(--app-success);
+    font-size: 1.5rem;
+    flex: none;
+}
+
+.applicant-portal .portal-empty h3,
+.applicant-portal .portal-request-heading h3 {
+    font-family: var(--app-font-display);
+    font-size: 1.0625rem;
+    font-weight: 600;
+    color: var(--app-text);
+    letter-spacing: -.015em;
+    line-height: 1.3;
+}
+
+.portal-empty p {
+    margin-top: .4rem;
+    font-size: .84375rem;
+    color: var(--app-text-secondary);
+}
+
+.portal-request-grid {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 1rem;
+}
+
+.portal-request-card {
+    padding: 1.5rem;
+    border: 1px solid var(--app-border-subtle);
+    border-radius: var(--app-radius-lg);
+    background: var(--app-surface);
+    min-width: 0;
+}
+
+.portal-request-heading {
+    display: flex;
+    align-items: center;
+    gap: .6rem;
+    margin-bottom: .65rem;
+}
+
+.portal-request-heading>svg {
+    color: var(--app-red);
+    font-size: 1.3rem;
+    flex: none;
+}
+
+.portal-request-state {
+    display: inline-block;
+    font-size: .75rem;
+    color: var(--app-text-secondary);
+    padding: .3rem .6rem;
+    border-radius: var(--app-radius-pill);
+    background: var(--app-surface-subtle);
+}
+
+.portal-request-state.needs-action {
+    color: var(--app-warning);
+    background: var(--app-warning-bg);
+}
+
+.portal-reviewer-note {
+    margin: 1rem 0;
+    font-size: .84375rem;
+    line-height: 1.6;
+    color: var(--app-text-secondary);
+    overflow-wrap: anywhere;
+    white-space: pre-wrap;
+}
+
+.portal-request-card>.portal-primary {
+    width: 100%;
+}
+
+.portal-support {
+    margin-top: 1.5rem;
+}
+
+.portal-art {
+    display: flex;
+    align-items: center;
+    gap: .65rem;
+    padding-bottom: 1rem;
+    margin-bottom: 1rem;
+    border-bottom: 1px solid var(--app-border-subtle);
+    color: var(--app-red);
+}
+
+.portal-art svg {
+    font-size: 1.75rem;
+    flex: none;
+}
+
+.portal-art span {
+    font-family: var(--app-font-mono);
+    font-size: .72rem;
+    letter-spacing: .09em;
+}
+
+.portal-onboarding-aside .portal-primary {
+    width: 100%;
+    margin-top: .5rem;
+}
+
+.portal-aside-note {
+    display: flex;
+    align-items: flex-start;
+    gap: .5rem;
+    font-size: .75rem;
+    color: var(--app-text-secondary);
+    margin-top: 1rem;
+    line-height: 1.6;
+}
+
+.portal-aside-note svg {
+    flex: none;
+    margin-top: .2rem;
+}
+
+.portal-roadmap-note {
+    font-size: .9375rem;
+    color: var(--app-text-secondary);
+    line-height: 1.6;
+    padding-bottom: 1.5rem;
+    margin-bottom: .5rem;
+    border-bottom: 1px solid var(--app-border-subtle);
+}
+
+.portal-stage {
+    border-bottom: 1px solid var(--app-border-subtle);
+    padding: .35rem 0;
+}
+
+.portal-stage summary {
+    display: flex;
+    align-items: center;
+    gap: .75rem;
+    min-height: 84px;
+    list-style: none;
+    cursor: pointer;
+    padding: .65rem 0;
+}
+
+.portal-stage summary::-webkit-details-marker {
+    display: none;
+}
+
+.portal-stage-number {
+    width: 30px;
+    height: 30px;
+    display: grid;
+    place-items: center;
+    flex: none;
+    border: 1px solid var(--app-red-border-soft);
+    border-radius: 50%;
+    background: var(--app-red-soft);
+    font-family: var(--app-font-mono);
+    font-size: .72rem;
+    font-weight: 600;
+    color: var(--app-red);
+}
+
+.portal-stage summary>span:nth-child(2) {
+    flex: 1;
+    min-width: 0;
+}
+
+.portal-stage strong {
+    display: block;
+    font-size: .9375rem;
+    font-weight: 500;
+    color: var(--app-text);
+}
+
+.portal-stage small {
+    display: block;
+    margin-top: .25rem;
+    font-size: .8125rem;
+    color: var(--app-text-secondary);
+    line-height: 1.5;
+}
+
+.portal-stage summary>svg {
+    flex: none;
+    color: var(--app-text-muted);
+    transition: transform .16s;
+}
+
+.portal-stage[open] summary>svg {
+    transform: rotate(180deg);
+    color: var(--app-red);
+}
+
+.portal-stage ul {
+    list-style: none;
+    margin: 0;
+    padding: 0 0 1rem 2.65rem;
+}
+
+.portal-stage li {
+    display: flex;
+    align-items: flex-start;
+    gap: .6rem;
+    margin: .65rem 0;
+    font-size: .84375rem;
+    color: var(--app-text-secondary);
+    line-height: 1.65;
+}
+
+.portal-stage li svg {
+    flex: none;
+    margin-top: .3rem;
+    color: var(--app-red);
+}
+
+.portal-guidance {
+    display: flex;
+    gap: .75rem;
+    padding: 1rem;
+    border: 1px solid var(--app-border-subtle);
+    border-radius: var(--app-radius-md);
+    background: var(--app-surface-input);
+    margin-top: 1.5rem;
+}
+
+.portal-guidance>svg {
+    flex: none;
+    margin-top: .2rem;
+    color: var(--app-red);
+}
+
+.portal-guidance strong {
+    font-size: .84375rem;
+    font-weight: 600;
+}
+
+.portal-guidance p {
+    font-size: .8125rem;
+    color: var(--app-text-secondary);
+    line-height: 1.6;
+    margin-top: .35rem;
+}
+
+@media (max-width: 1024px) {
+
+    .portal-access-layout,
+    .portal-onboarding-layout {
+        grid-template-columns: minmax(0, 1fr);
+        gap: 1.5rem;
+    }
+}
+
+@media (max-width: 720px) {
+    .application-page.applicant-portal .portal-shell {
+        padding-inline: 1rem;
+    }
+
+    .application-page .portal-page-header {
+        padding-inline: 0;
+    }
+
+    .portal-section-heading {
+        flex-wrap: wrap;
+        align-items: flex-start;
+    }
+
+    .portal-access-card form>.portal-primary {
+        width: 100%;
+    }
+
+    .portal-request-grid {
+        grid-template-columns: minmax(0, 1fr);
+    }
+
+    .portal-stage ul {
+        padding-left: 0;
+    }
+
+    .application-page .portal-access-card .form-input {
+        min-height: 44px;
+        font-size: 16px;
+    }
+
+    .portal-bottom-links {
+        gap: .35rem 1rem;
+    }
+}

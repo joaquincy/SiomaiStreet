@@ -5,7 +5,7 @@
 .faq-section {
   position: relative;
   padding: clamp(4.5rem, 8vw, 7.5rem) 0;
-  background-color: #FAF6F0;
+  background-color: #f0e9da;
   /* Warm off-white background */
   overflow: hidden;
 }

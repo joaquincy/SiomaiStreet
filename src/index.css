@@ -223,6 +223,10 @@ body {
   overflow-x: hidden;
 }
 
+main {
+  overflow-x: clip;
+}
+
 h1,
 h2,
 h3,

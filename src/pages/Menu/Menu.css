@@ -5,7 +5,7 @@
    ═══════════════════════════════════════════════════════════════════ */
 
 .food-page {
-  background-color: var(--color-canvas);
+  background-color: #f0e9da;
   color: var(--color-text-primary);
   font-family: var(--font-body);
   min-height: 100vh;
@@ -83,7 +83,7 @@
 /* ─── Dirty-White Canvas & Background Line-Art Illustrations ─── */
 .food-canvas {
   position: relative;
-  background-color: var(--color-canvas);
+  background-color: #f0e9da;
   overflow: hidden;
   isolation: isolate;
 }

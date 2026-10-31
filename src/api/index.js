@@ -1,7 +1,7 @@
 import { APPLICATION_ENDPOINT, CONTRACT_VERSION, isValidReceipt } from '../../shared/application.js';
 import { uploadWithProgress } from './uploadTransport.js';
 
-export const submitFranchiseApplication = async ({ formData, requestId, fetcher = fetch, onProgress }) => {
+export const submitFranchiseApplication = async ({ formData, requestId, fetcher = fetch, onProgress, turnstileToken = '' }) => {
   const { documents = {}, ...applicationData } = formData;
   const submission = new FormData();
   submission.append('version', String(CONTRACT_VERSION));
@@ -13,10 +13,10 @@ export const submitFranchiseApplication = async ({ formData, requestId, fetcher 
   let response;
 
   try {
-    response = onProgress && typeof XMLHttpRequest !== 'undefined' ? await uploadWithProgress(APPLICATION_ENDPOINT, submission, onProgress) : await fetcher(APPLICATION_ENDPOINT, {
+    response = onProgress && typeof XMLHttpRequest !== 'undefined' ? await uploadWithProgress(APPLICATION_ENDPOINT, submission, onProgress, turnstileToken) : await fetcher(APPLICATION_ENDPOINT, {
       method: 'POST',
       body: submission,
-      headers: { Accept: 'application/json' },
+      headers: { Accept: 'application/json', 'x-turnstile-token': turnstileToken },
     });
   } catch {
     throw new Error('We could not confirm receipt. Keep this application and retry; the same request will not create a duplicate.');

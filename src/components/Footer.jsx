@@ -71,7 +71,7 @@ const Footer = () => {
           <img
             src="/images/siomai street logo.png"
             srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w, /images/responsive/siomai street logo-400w.png 400w"
-            sizes="120px"
+            sizes="(max-width: 768px) 14vw, 10.5vw"
             alt="Siomai Street" className="footer-sign-logo"
           />
           <div className="footer-sign-col footer-sign-col--right">
@@ -90,7 +90,7 @@ const Footer = () => {
               key={index}
               src={siomai.src}
               srcSet={getSrcSet(siomai.src, siomai.widths)}
-              sizes="(max-width: 768px) 150px, 280px"
+              sizes="(max-width: 768px) 29vw, 280px"
               alt={siomai.alt}
               className="footer-poster__food-piece"
               style={{

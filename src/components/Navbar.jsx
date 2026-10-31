@@ -6,6 +6,8 @@ const Navbar = () => {
   const [scrolled, setScrolled] = useState(false);
   const [menuOpen, setMenuOpen] = useState(false);
   const tickingRef = useRef(false);
+  const panelRef = useRef(null);
+  const closeRef = useRef(null);
   const location = useLocation();
   const hasDarkPageNav = ['/application', '/reviews'].includes(location.pathname);
 
@@ -24,14 +26,25 @@ const Navbar = () => {
     return () => window.removeEventListener('scroll', handleScroll);
   }, []);
 
-  const toggleMenu = () => {
-    setMenuOpen(!menuOpen);
-    document.body.style.overflow = !menuOpen ? 'hidden' : '';
-  };
+  useEffect(() => {
+    if (!menuOpen) return;
+    const panel = panelRef.current;
+    const previousOverflow = document.body.style.overflow;
+    panel.showModal();
+    document.body.style.overflow = 'hidden';
+    closeRef.current?.focus();
+    return () => {
+      panel.close();
+      document.body.style.overflow = previousOverflow;
+    };
+  }, [menuOpen]);
+
+  useEffect(() => { setMenuOpen(false); }, [location.pathname]);
+
+  const toggleMenu = () => setMenuOpen(open => !open);
 
   const closeMenu = () => {
     setMenuOpen(false);
-    document.body.style.overflow = '';
   };
 
   return (
@@ -78,6 +91,9 @@ const Navbar = () => {
           className={`scroll-pill-hamburger ${menuOpen ? 'active' : ''}`}
           onClick={toggleMenu}
           aria-label="Toggle menu"
+          aria-expanded={menuOpen}
+          aria-controls="site-side-menu"
+          aria-haspopup="dialog"
           id="scroll-hamburger-btn"
         >
           <span></span>
@@ -85,29 +101,43 @@ const Navbar = () => {
         </button>
       </div>
 
-      {/* ── Dark backdrop when menu is open ── */}
-      <div
-        className={`menu-backdrop ${menuOpen ? 'open' : ''}`}
-        onClick={closeMenu}
-      />
-
       {/* ── Side panel menu — slides from right ── */}
-      <div className={`side-panel ${menuOpen ? 'open' : ''}`}>
+      <dialog ref={panelRef} id="site-side-menu" className="side-panel" aria-label="Explore Siomai Street"
+        onCancel={event => { event.preventDefault(); closeMenu(); }}
+        onClick={event => {
+          if (event.target !== event.currentTarget) return;
+          const bounds = event.currentTarget.getBoundingClientRect();
+          if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) closeMenu();
+        }}>
+        <div className="side-panel-header">
         <button
+          ref={closeRef}
+          type="button"
           className="side-panel-close"
           onClick={closeMenu}
           aria-label="Close menu"
         >
           ✕
         </button>
+        </div>
 
-        <nav className="side-panel-nav">
-          <NavLink to="/" end onClick={closeMenu}>Home</NavLink>
-          <NavLink to="/application" onClick={closeMenu}>Application</NavLink>
-          <NavLink to="/menu" onClick={closeMenu}>Menu</NavLink>
-          <NavLink to="/reviews" onClick={closeMenu}>Reviews</NavLink>
+        <nav className="side-panel-nav" aria-label="Main pages">
+          {[
+            { to: '/', label: 'Home', image: 'about-story-400w.png' },
+            { to: '/application', label: 'Application', image: 'franchise-store-400w.png' },
+            { to: '/menu', label: 'Menu', image: 'menu-classic-300w.png' },
+            { to: '/reviews', label: 'Reviews', image: 'wc-siomai-1-300w.jpg' },
+          ].map((item, index) => <NavLink key={item.to} to={item.to} end={item.to === '/'} onClick={closeMenu} aria-label={item.label} style={{ '--menu-index': index }}>
+            <span className="side-link-content">
+              <span className="side-link-title" aria-hidden="true">
+                <span className="side-link-photo"><img src={`/images/responsive/${item.image}`} alt="" width="80" height="80" decoding="async" /></span>
+                <span className="side-link-label">{item.label}</span>
+              </span>
+            </span>
+          </NavLink>)}
         </nav>
 
+        <div className="side-panel-footer">
         <div className="side-panel-socials">
           <a
             href="https://www.facebook.com"
@@ -132,7 +162,8 @@ const Navbar = () => {
             </svg>
           </a>
         </div>
-      </div>
+        </div>
+      </dialog>
     </>
   );
 };

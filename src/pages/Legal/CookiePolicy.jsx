@@ -12,7 +12,7 @@ const CookiePolicy = () => (
       <div className="legal-header">
         <span className="legal-badge">Legal</span>
         <h1>Cookie Policy</h1>
-        <p className="legal-updated">Last updated: October 25, 2026</p>
+        <p className="legal-updated">Last updated: October 31, 2026</p>
       </div>
 
       <div className="legal-content">
@@ -61,6 +61,12 @@ const CookiePolicy = () => (
 
         <section className="legal-section">
           <h2>3. Third-Party Cookies</h2>
+          <p>
+            The optional store map loads Google Maps only after you choose “Explore the map”.
+            Google may process technical information and use its own storage technologies under
+            its privacy policy. You can use the store list without loading the map.
+            Store search and distance sorting do not save your location in cookies or browser storage.
+          </p>
           <p>
             We may use the following third-party services that set their own cookies:
           </p>

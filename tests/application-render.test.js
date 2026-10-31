@@ -41,6 +41,11 @@ test('all nine steps render synthetic complete and empty/error states without cr
   assert.match(portal, /Private access code/);
   assert.match(portal, /type="password"/);
   assert.doesNotMatch(portal, /replace-with-a/);
+  const { default: Onboarding } = await vite.ssrLoadModule('/src/pages/Application/ApplicationOnboarding.jsx');
+  const onboarding = renderToStaticMarkup(createElement(MemoryRouter, {initialEntries:['/application/onboarding']}, createElement(Onboarding)));
+  assert.match(onboarding, /preparation guide, not your personal onboarding record/);
+  assert.match(onboarding, /aria-current="page"[^>]*href="\/application\/onboarding"/);
+  assert.match(onboarding, /Confirm launch readiness/);
   const { default: Start } = await vite.ssrLoadModule('/src/pages/Application/ApplicationStart.jsx');
   const preparation = renderToStaticMarkup(createElement(Start));
   assert.match(preparation, /No employment history/);
