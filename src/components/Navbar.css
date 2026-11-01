@@ -6,6 +6,28 @@
   --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
   --color-cream: #DE0000;
   --color-cream-hover: #FFEAA7;
+  --nav-menu-height: 78px;
+  --nav-top: 20px;
+  --nav-margin-x: clamp(1.5rem, 3.5vw, 4rem);
+  --nav-height: calc(var(--nav-top) * 2 + var(--nav-menu-height));
+}
+
+@media (max-width: 768px) {
+  :root {
+    --nav-menu-height: 70px;
+    --nav-top: 16px;
+    --nav-margin-x: 18px;
+    --nav-height: calc(var(--nav-top) * 2 + var(--nav-menu-height));
+  }
+}
+
+@media (max-width: 380px) {
+  :root {
+    --nav-menu-height: 62px;
+    --nav-top: 14px;
+    --nav-margin-x: 14px;
+    --nav-height: calc(var(--nav-top) * 2 + var(--nav-menu-height));
+  }
 }
 
 /* ═══════════════════════════════════════════════
@@ -38,23 +60,21 @@
   max-width: 100%;
   height: 100%;
   margin: 0;
-  padding: 0 20px 0 clamp(1.5rem, 3vw, 3.5rem);
+  padding: 0 var(--nav-margin-x);
   pointer-events: auto;
 }
 
-/* Hide text links + logo when scrolled */
+/* Hide text links when scrolled, keep logo in nav header */
 .navbar.scrolled .navbar-inner {
   pointer-events: none;
 }
 
-.navbar.scrolled .navbar-logo,
 .navbar.scrolled .navbar-links {
   opacity: 0;
   transform: translateY(-12px);
   pointer-events: none;
 }
 
-.navbar-logo,
 .navbar-links {
   transition:
     opacity 0.35s var(--ease-out-expo),
@@ -69,22 +89,41 @@
   z-index: 1001;
   text-decoration: none;
   position: relative;
+  height: var(--nav-menu-height);
+  pointer-events: auto;
+  opacity: 1;
+  transform: none;
+  transition:
+    gap 0.35s var(--ease-out-expo),
+    opacity 0.35s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+.navbar.scrolled .navbar-logo {
+  opacity: 1;
+  transform: none;
+  pointer-events: auto;
+  gap: 0;
 }
 
 .navbar-logo .logo-image {
-  width: 44px;
-  height: 44px;
+  width: var(--nav-menu-height);
+  height: var(--nav-menu-height);
   border-radius: var(--radius-full);
   object-fit: cover;
-  border: 1.5px solid rgba(255, 255, 255, 0.1);
+  border: 1.5px solid rgba(255, 255, 255, 0.15);
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.35);
+  flex-shrink: 0;
   transition:
     transform 0.4s var(--ease-out-expo),
-    border-color 0.4s ease;
+    border-color 0.4s ease,
+    box-shadow 0.4s ease;
 }
 
 .navbar-logo:hover .logo-image {
   transform: rotate(-8deg) scale(1.06);
   border-color: var(--color-saffron);
+  box-shadow: 0 6px 20px rgba(245, 166, 35, 0.25);
 }
 
 .logo-text-group {
@@ -92,6 +131,24 @@
   flex-direction: column;
   line-height: 1;
   gap: 0px;
+  max-width: 200px;
+  opacity: 1;
+  transform: translateX(0);
+  white-space: nowrap;
+  overflow: hidden;
+  transition:
+    opacity 0.35s var(--ease-out-expo),
+    max-width 0.4s var(--ease-out-expo),
+    transform 0.35s var(--ease-out-expo);
+}
+
+/* Hide wordmark when scrolled down */
+.navbar.scrolled .logo-text-group {
+  opacity: 0;
+  max-width: 0;
+  transform: translateX(-8px);
+  pointer-events: none;
+  visibility: hidden;
 }
 
 .logo-text-brand {
@@ -186,8 +243,10 @@
    ═══════════════════════════════════════════════ */
 .scroll-pill {
   position: fixed;
-  top: 20px;
-  right: 28px;
+  top: var(--nav-top);
+  right: var(--nav-margin-x);
+  height: var(--nav-menu-height);
+  box-sizing: border-box;
   z-index: 1001;
   display: flex;
   align-items: center;
@@ -195,7 +254,7 @@
   background: rgba(12, 10, 8, 0.92);
   border: 1.5px solid rgba(232, 220, 200, 0.12);
   border-radius: 100px;
-  padding: 5px;
+  padding: 6px;
   backdrop-filter: blur(16px);
   -webkit-backdrop-filter: blur(16px);
   box-shadow:
@@ -219,16 +278,21 @@
 
 /* ─── APPLY Button ─── */
 .scroll-pill-apply {
+  height: 100%;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  box-sizing: border-box;
   font-family: var(--font-shuriken);
-  font-size: 1.05rem;
-  letter-spacing: 3.5px;
+  font-size: clamp(1.05rem, 1.35vw, 1.25rem);
+  letter-spacing: 4px;
   text-transform: uppercase;
   text-decoration: none;
   color: #1a1714;
   background: var(--color-cream);
   border: none;
   border-radius: 100px;
-  padding: 12px 32px;
+  padding: 0 clamp(24px, 3vw, 38px);
   cursor: pointer;
   white-space: nowrap;
   transition:
@@ -251,18 +315,21 @@
 
 /* ─── Hamburger Button (2-line style) ─── */
 .scroll-pill-hamburger {
+  height: 100%;
+  aspect-ratio: 1 / 1;
+  width: auto;
+  box-sizing: border-box;
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  gap: 6px;
-  width: 48px;
-  height: 48px;
+  gap: 7px;
   background: transparent;
   border: 1.5px solid rgba(232, 220, 200, 0.15);
   border-radius: 50%;
   cursor: pointer;
-  margin-left: 6px;
+  margin-left: 8px;
+  flex-shrink: 0;
   transition:
     background 0.3s ease,
     border-color 0.3s ease,
@@ -276,8 +343,8 @@
 
 .scroll-pill-hamburger span {
   display: block;
-  width: 18px;
-  height: 2px;
+  width: 24px;
+  height: 2.5px;
   background: var(--color-cream);
   border-radius: 2px;
   transition:
@@ -292,11 +359,11 @@
 }
 
 .scroll-pill-hamburger.active span:nth-child(1) {
-  transform: translateY(4px) rotate(45deg);
+  transform: translateY(4.75px) rotate(45deg);
 }
 
 .scroll-pill-hamburger.active span:nth-child(2) {
-  transform: translateY(-4px) rotate(-45deg);
+  transform: translateY(-4.75px) rotate(-45deg);
 }
 
 /* Side menu: native modal handles focus containment and background inertness.
@@ -370,19 +437,50 @@
     display: none;
   }
 
-  /* On mobile, show scroll pill always (even at top) */
-  .scroll-pill {
-    opacity: 1;
-    transform: translateY(0) scale(1);
-    pointer-events: auto;
-    top: 14px;
-    right: 16px;
+  /* On mobile: always hide wordmark, only show the logo */
+  .logo-text-group {
+    display: none !important;
   }
 
   .navbar-logo {
+    gap: 0 !important;
     opacity: 1 !important;
     transform: none !important;
     pointer-events: auto !important;
   }
 
+  /* On mobile, show scroll pill always (even at top) */
+  .scroll-pill {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    pointer-events: auto;
+  }
+
+  .scroll-pill-apply {
+    padding: 0 24px;
+    letter-spacing: 3px;
+    font-size: 1.08rem;
+  }
+
+  .scroll-pill-hamburger {
+    margin-left: 6px;
+  }
+
+  .scroll-pill-hamburger span {
+    width: 21px;
+    height: 2.5px;
+  }
+}
+
+@media (max-width: 380px) {
+  .scroll-pill-apply {
+    padding: 0 16px;
+    letter-spacing: 2px;
+    font-size: 0.95rem;
+  }
+
+  .scroll-pill-hamburger span {
+    width: 18px;
+    height: 2px;
+  }
 }

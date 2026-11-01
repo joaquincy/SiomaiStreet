@@ -47,16 +47,20 @@
   justify-content: flex-start;
   align-items: center;
   gap: 12px;
-  font: 700 .75rem/1.5 var(--font-heading, sans-serif);
+  font: 700 .75rem/1 var(--font-heading, sans-serif);
   letter-spacing: 2.5px;
-  color: var(--contact-red);
+  text-transform: uppercase;
+  color: var(--color-red, #E63946);
   margin: 0 0 16px;
 }
 
 .contact-support__eyebrow>span {
-  height: 2px;
-  width: 25px;
-  background: currentColor;
+  display: block;
+  height: 3px;
+  width: 28px;
+  background: var(--color-red, #E63946);
+  border-radius: 999px;
+  flex: none;
 }
 
 .contact-support h2 {

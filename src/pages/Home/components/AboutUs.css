@@ -531,166 +531,165 @@
   }
 }
 
-/* ═══════════════════════════════════════════════
-   RESPONSIVE — MOBILE (≤768px)
-   ═══════════════════════════════════════════════ */
-@media (max-width: 768px) {
+/* Mobile story: keep the artwork, give each content group its own space.
+   Content-driven height also handles short landscape screens and text zoom. */
+@media (max-width: 768px), (max-width: 1024px) and (max-height: 500px) {
   .chef-section {
-    height: 350vh;
+    height: auto;
+    scroll-margin-top: 88px;
   }
 
-  .chef-title-group {
-    top: 5%;
-    left: 4%;
+  .chef-stage {
+    --chef-gutter: clamp(20px, 5vw, 40px);
+    position: relative;
+    height: auto;
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    grid-template-rows: auto auto auto auto auto;
+    gap: 28px 24px;
+    padding: 48px var(--chef-gutter);
   }
 
+  /* Let the existing red surface follow the title and artwork rows. */
+  .chef-bg { display: contents; }
+  .chef-stage .chef-bg-red {
+    position: relative;
+    grid-area: 1 / 1 / 3 / -1;
+    width: auto;
+    height: auto !important;
+    margin: -48px calc(-1 * var(--chef-gutter)) -24px;
+    transform: none !important;
+    will-change: auto;
+  }
+
+  .chef-title-group,
+  .chef-storefront,
+  .chef-siomai,
+  .chef-card,
+  .chef-text-col,
+  .chef-desc-group,
+  .chef-year-stamp {
+    position: relative;
+    inset: auto;
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  /* Inline desktop animation values must never hide or displace mobile text. */
+  .chef-title-group,
+  .chef-storefront,
+  .chef-siomai,
+  .chef-card,
+  .chef-subtitle-reveal,
+  .chef-meet,
+  .chef-desc-line,
+  .chef-year-stamp {
+    transform: none !important;
+    opacity: 1 !important;
+    will-change: auto;
+  }
+
+  .chef-title-group { grid-area: 1 / 1 / 2 / -1; }
   .chef-title-once {
-    font-size: clamp(1.6rem, 7vw, 2.8rem);
-  }
-
-  .chef-title-siomai {
-    font-size: clamp(3rem, 14vw, 5.5rem);
-    letter-spacing: -1px;
-  }
-
-  .chef-storefront {
-    top: 1%;
-    right: -2%;
-    width: clamp(160px, 36vw, 230px);
-  }
-
-  .chef-card {
-    top: 28%;
-    left: 4%;
-    width: clamp(130px, 30vw, 175px);
-  }
-
-  .chef-card-inner {
-    border-radius: 12px;
-  }
-
-  .chef-card-photo {
-    aspect-ratio: 1 / 1;
-  }
-
-  .chef-card-photo-label {
-    font-size: 0.5rem;
-  }
-
-  .chef-card-body {
-    padding: 0.6rem 0.8rem;
-    gap: 0.4rem;
-  }
-
-  .chef-card-btn {
-    font-size: 0.45rem;
-    padding: 5px 10px;
+    font-size: clamp(1.3rem, 6.3vw, 3rem);
     letter-spacing: 1.5px;
+    line-height: 1.15;
   }
-
-  .chef-siomai {
-    width: clamp(120px, 30vw, 200px);
-  }
-
-  /* Stack text below card on mobile */
-  .chef-text-col {
-    bottom: 6%;
-    left: 4%;
-    max-width: 90vw;
-  }
-
-  .chef-meet-name {
-    font-size: clamp(0.9rem, 3.2vw, 1.25rem);
-    white-space: nowrap;
-  }
-
-  .chef-meet-desc {
-    max-width: 280px;
-    font-size: 0.7rem;
-  }
-
-  .chef-desc-group {
-    right: 4%;
-    bottom: 22%;
-  }
-
-  .chef-desc-line {
-    font-size: clamp(1.6rem, 7.5vw, 3.2rem);
-  }
-
-  .chef-editorial-line {
-    display: none;
-  }
-
-  .chef-accent--3,
-  .chef-accent--4 {
-    display: none;
-  }
-}
-
-/* ═══════════════════════════════════════════════
-   RESPONSIVE — SMALL MOBILE (≤480px)
-   ═══════════════════════════════════════════════ */
-@media (max-width: 480px) {
-  .chef-section {
-    height: 300vh;
-  }
-
-  .chef-title-once {
-    font-size: clamp(1.3rem, 8vw, 2rem);
-  }
-
   .chef-title-siomai {
-    font-size: clamp(2.4rem, 16vw, 4rem);
+    font-size: clamp(2.8rem, 13.5vw, 6.5rem);
     letter-spacing: -1px;
+    margin-top: .12em;
+    line-height: 1;
   }
 
   .chef-storefront {
-    width: clamp(130px, 38vw, 190px);
-    top: 1%;
-    right: -3%;
+    grid-area: 2 / 1 / 3 / -1;
+    width: min(78%, 380px);
+    justify-self: end;
+    align-self: start;
+    margin-bottom: 20px;
   }
-
-  .chef-card {
-    width: clamp(115px, 32vw, 155px);
-    top: 28%;
-    left: 3%;
-  }
-
   .chef-siomai {
-    width: clamp(100px, 30vw, 160px);
-  }
-
-  .chef-desc-group {
-    right: 3%;
-    bottom: 24%;
-  }
-
-  .chef-desc-line {
-    font-size: clamp(1.3rem, 8.5vw, 2.5rem);
+    grid-area: 2 / 1 / 3 / -1;
+    width: clamp(96px, 28vw, 180px);
+    justify-self: start;
+    align-self: end;
   }
 
   .chef-text-col {
-    bottom: 5%;
-    left: 3%;
-    max-width: 92vw;
+    grid-area: 3 / 1 / 4 / -1;
+    width: 100%;
+    margin-top: 24px;
+    gap: 12px;
   }
-
+  .chef-subtitle-text {
+    display: block;
+    font-size: .65rem;
+    letter-spacing: 2px;
+    line-height: 1.6;
+  }
   .chef-meet-name {
-    font-size: clamp(0.8rem, 3.8vw, 1.1rem);
+    font-size: clamp(1.1rem, 4.6vw, 1.8rem);
+    white-space: normal;
     letter-spacing: 1px;
-    white-space: nowrap;
+    line-height: 1.4;
   }
-
+  .chef-meet-line { margin-top: 12px; }
   .chef-meet-desc {
-    max-width: 220px;
-    font-size: 0.65rem;
+    font-size: .875rem;
+    max-width: 48ch;
+    margin-top: 16px;
+    line-height: 1.8;
   }
 
-  .chef-accent--3,
-  .chef-accent--4 {
-    display: none;
+  .chef-card {
+    grid-area: 4 / 1 / 5 / 2;
+    width: min(100%, 240px);
+    align-self: center;
   }
+  .chef-card-body { padding: 16px 12px; gap: 8px; }
+  .chef-card-photo-label { font-size: .625rem; letter-spacing: 1px; }
+  .chef-card-subtitle { font-size: .625rem; letter-spacing: 2px; }
+  .chef-card-name { font-size: .8rem; letter-spacing: .5px; line-height: 1.5; }
+  .chef-card-btn {
+    min-height: 44px;
+    padding: 10px 8px;
+    font-size: .625rem;
+    letter-spacing: 1px;
+    line-height: 1.5;
+  }
+  .chef-desc-group {
+    grid-area: 4 / 2 / 5 / 3;
+    align-self: center;
+    justify-self: end;
+  }
+  .chef-desc-line {
+    font-size: clamp(1.2rem, 5.7vw, 2.8rem);
+    letter-spacing: 1px;
+    line-height: 1.15;
+    overflow-wrap: anywhere;
+  }
+  .chef-year-stamp {
+    grid-area: 5 / 1 / 6 / -1;
+    justify-self: end;
+    writing-mode: horizontal-tb;
+    font-size: .625rem;
+    letter-spacing: 2px;
+  }
+  .chef-editorial-line, .chef-accent { display: none; }
+
+  .chef-accent--1, .chef-accent--2 {
+    display: block;
+    position: relative;
+    grid-area: 2 / 1 / 3 / -1;
+    inset: auto;
+    align-self: center;
+    justify-self: start;
+    margin-left: 25%;
+    transform: none !important;
+    opacity: 1 !important;
+  }
+  .chef-accent--2 { margin-left: 30%; margin-top: 28px; }
 }
 
 /* ═══════════════════════════════════════════════

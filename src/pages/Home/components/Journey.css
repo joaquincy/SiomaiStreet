@@ -347,13 +347,13 @@
 }
 
 .journey-step__title {
-  font-family: 'Outfit', sans-serif;
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
   font-size: clamp(2.35rem, 4.6vw, 4.8rem);
-  font-weight: 900;
+  font-weight: normal;
   color: var(--journey-ink);
   line-height: 0.96;
   margin-bottom: 1rem;
-  letter-spacing: -0.025em;
+  letter-spacing: 0.03em;
   text-shadow: 0 2px 0 rgba(23, 16, 12, 0.1);
 }
 
@@ -515,6 +515,9 @@
 }
 
 .journey-step--final .journey-step__title {
+  font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
+  font-weight: normal;
+  letter-spacing: 0.04em;
   font-size: clamp(3.6rem, 12.5vw, 11.5rem);
   margin-bottom: 1.35rem;
   line-height: 0.9;

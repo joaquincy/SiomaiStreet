@@ -169,86 +169,98 @@ const AboutUs = () => {
     const section = sectionRef.current;
     if (!section) return;
 
-    // Respect reduced-motion preference
-    const prefersReducedMotion =
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) {
-      // Set everything to its final resting state
-      applyFrame(0);
-      return;
-    }
-
-    const updatePath = () => {
-      const w = window.innerWidth;
-      if (w <= 480) {
-        pathConfig.current = {
-          start: { x: 12, y: 48, scale: 0.65, rotate: -5 },
-          mid: { x: 25, y: 34, scale: 0.82, rotate: 7 },
-          end: { x: 32, y: 38, scale: 0.95, rotate: 0 },
-        };
-      } else if (w <= 768) {
-        pathConfig.current = {
-          start: { x: 14, y: 48, scale: 0.7, rotate: -6 },
-          mid: { x: 30, y: 32, scale: 0.88, rotate: 9 },
-          end: { x: 40, y: 35, scale: 1.05, rotate: 0 },
-        };
-      } else if (w <= 1024) {
-        pathConfig.current = {
-          start: { x: 14, y: 48, scale: 0.75, rotate: -7 },
-          mid: { x: 32, y: 30, scale: 0.95, rotate: 10 },
-          end: { x: 46, y: 33, scale: 1.12, rotate: 0 },
-        };
-      } else {
-        pathConfig.current = {
-          start: { x: 16, y: 48, scale: 0.8, rotate: -8 },
-          mid: { x: 32, y: 30, scale: 1.0, rotate: 10 },
-          end: { x: 48, y: 32, scale: 1.18, rotate: 0 },
-        };
+    // Small screens use content-sized rows; desktop keeps its pinned story.
+    // Reconfigure on rotation/breakpoint changes, not on every scroll or resize.
+    const mobileLayout = window.matchMedia('(max-width: 768px), (max-width: 1024px) and (max-height: 500px)');
+    const setup = () => {
+      if (mobileLayout.matches) {
+        applyFrame(0);
+        return;
       }
-    };
-
-    updatePath();
-    window.addEventListener('resize', updatePath, { passive: true });
-    window.addEventListener('scroll', onScroll, { passive: true });
-
-    // Pause when tab is hidden
-    const onVisibility = () => {
-      if (document.hidden) {
-        if (rafId.current) {
-          cancelAnimationFrame(rafId.current);
-          rafId.current = null;
-        }
-      } else if (isActive.current) {
-        isSettled.current = false;
-        rafId.current = requestAnimationFrame(onFrame);
+      // Respect reduced-motion preference
+      const prefersReducedMotion =
+        window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+      if (prefersReducedMotion) {
+        // Set everything to its final resting state
+        applyFrame(0);
+        return;
       }
-    };
-    document.addEventListener('visibilitychange', onVisibility);
 
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          isActive.current = true;
-          isSettled.current = false;
-          rafId.current = requestAnimationFrame(onFrame);
+      const updatePath = () => {
+        const w = window.innerWidth;
+        if (w <= 1024) {
+          pathConfig.current = {
+            start: { x: 14, y: 48, scale: 0.75, rotate: -7 },
+            mid: { x: 32, y: 30, scale: 0.95, rotate: 10 },
+            end: { x: 46, y: 33, scale: 1.12, rotate: 0 },
+          };
         } else {
-          isActive.current = false;
+          pathConfig.current = {
+            start: { x: 16, y: 48, scale: 0.8, rotate: -8 },
+            mid: { x: 32, y: 30, scale: 1.0, rotate: 10 },
+            end: { x: 48, y: 32, scale: 1.18, rotate: 0 },
+          };
+        }
+      };
+
+      updatePath();
+      window.addEventListener('resize', updatePath, { passive: true });
+      window.addEventListener('scroll', onScroll, { passive: true });
+
+      // Pause when tab is hidden
+      const onVisibility = () => {
+        if (document.hidden) {
           if (rafId.current) {
             cancelAnimationFrame(rafId.current);
             rafId.current = null;
           }
+        } else if (isActive.current) {
+          isSettled.current = false;
+          rafId.current = requestAnimationFrame(onFrame);
         }
-      },
-      { rootMargin: '200px 0px 200px 0px', threshold: 0 }
-    );
-    observer.observe(section);
+      };
+      document.addEventListener('visibilitychange', onVisibility);
 
+      const observer = new IntersectionObserver(
+        ([entry]) => {
+          if (entry.isIntersecting) {
+            isActive.current = true;
+            isSettled.current = false;
+            rafId.current = requestAnimationFrame(onFrame);
+          } else {
+            isActive.current = false;
+            if (rafId.current) {
+              cancelAnimationFrame(rafId.current);
+              rafId.current = null;
+            }
+          }
+        },
+        { rootMargin: '200px 0px 200px 0px', threshold: 0 }
+      );
+      observer.observe(section);
+
+      return () => {
+        observer.disconnect();
+        window.removeEventListener('resize', updatePath);
+        window.removeEventListener('scroll', onScroll);
+        document.removeEventListener('visibilitychange', onVisibility);
+        if (rafId.current) cancelAnimationFrame(rafId.current);
+        rafId.current = null;
+        isActive.current = false;
+      };
+    };
+    let cleanup = setup();
+    const onLayoutChange = () => {
+      cleanup?.();
+      currentP.current = 0;
+      targetP.current = 0;
+      isSettled.current = false;
+      cleanup = setup();
+    };
+    mobileLayout.addEventListener('change', onLayoutChange);
     return () => {
-      observer.disconnect();
-      window.removeEventListener('resize', updatePath);
-      window.removeEventListener('scroll', onScroll);
-      document.removeEventListener('visibilitychange', onVisibility);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      cleanup?.();
+      mobileLayout.removeEventListener('change', onLayoutChange);
     };
   }, [onFrame, onScroll, applyFrame]);
 

@@ -21,7 +21,7 @@
   isolation: isolate;
   max-width: 1440px;
   margin-inline: auto;
-  padding: clamp(20px, 2.8vw, 36px);
+  padding: clamp(140px, 13vw, 190px) clamp(20px, 2.8vw, 36px) clamp(20px, 2.8vw, 36px);
   border-radius: 28px;
   background: var(--sf-red);
   overflow: hidden;
@@ -84,26 +84,34 @@
 .store-finder__eyebrow {
   display: flex;
   align-items: center;
-  gap: 10px;
+  gap: 12px;
   color: var(--sf-yellow);
-  font: 700 11px/1.6 var(--font-heading, sans-serif);
-  letter-spacing: .12em;
-  margin: 0 0 8px;
+  font: 700 0.75rem/1 var(--font-heading, sans-serif);
+  letter-spacing: 2.5px;
+  text-transform: uppercase;
+  margin: 0 0 16px;
+}
+
+.store-finder__eyebrow-line {
+  display: block;
+  width: 28px;
+  height: 3px;
+  background: var(--sf-yellow, #eba028);
+  border-radius: 999px;
+  flex: none;
 }
 
 .store-finder__eyebrow svg {
-  width: 20px;
-  height: 20px;
+  width: 16px;
+  height: 16px;
   flex: none;
 }
 
 .store-finder__heading h2 {
-  font: 850 clamp(29px, 3.6vw, 50px)/1.05 var(--font-heading, sans-serif);
-  letter-spacing: -.045em;
+  font: 850 clamp(2.2rem, 3.8vw, 3.4rem)/1.1 var(--font-heading, sans-serif);
+  letter-spacing: -.03em;
   margin: 0;
   color: var(--sf-ink);
-
-  font-size: clamp(29px, 3.6vw, 50px);
 }
 
 .store-finder__heading h2 em {
@@ -1106,7 +1114,7 @@
 
 @media (max-width: 760px) {
   .store-finder__poster {
-  padding: clamp(20px, 2.8vw, 36px);
+    padding: clamp(80px, 14vw, 110px) 16px 16px;
     border-radius: 20px;
   }
 
@@ -1298,10 +1306,8 @@
 
 @media (max-width: 380px) {
   .store-finder__poster {
-    padding-inline: 14px;
-  
-  padding: clamp(20px, 2.8vw, 36px);
-}
+    padding: 75px 14px 14px;
+  }
 
   .store-finder__heading h2 {
   font-size: clamp(29px, 3.6vw, 50px);
@@ -1346,8 +1352,7 @@
 }
 
 @media (max-width: 760px) {
- .store-finder__heading { grid-template-columns: minmax(0,1fr); gap: 0; }
- .store-finder__poster { padding: 20px 16px 14px; }
+  .store-finder__heading { grid-template-columns: minmax(0,1fr); gap: 0; }
 }
 @media (prefers-reduced-motion: reduce) {
 

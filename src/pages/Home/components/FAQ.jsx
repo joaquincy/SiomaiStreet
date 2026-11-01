@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { HiOutlineArrowRight } from 'react-icons/hi';
 import './FAQ.css';
@@ -50,30 +50,13 @@ const FaqItem = ({ item, index, isOpen, onToggle }) => {
 const FAQ = () => {
   // Ensure the first FAQ is open by default
   const [openIndex, setOpenIndex] = useState(0);
-  const sectionRef = useRef(null);
 
   const toggle = (index) => {
     setOpenIndex(openIndex === index ? -1 : index);
   };
 
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        if (entry.isIntersecting) {
-          section.classList.add('faq--visible');
-          observer.unobserve(section);
-        }
-      },
-      { threshold: 0.08 }
-    );
-    observer.observe(section);
-    return () => observer.disconnect();
-  }, []);
-
   return (
-    <section className="faq-section" id="faq" ref={sectionRef}>
+    <section className="faq-section" id="faq">
       <div className="faq-section__container">
 
         {/* ─── Left Column ─── */}
@@ -88,7 +71,7 @@ const FAQ = () => {
 
           <h2 className="faq-left__heading">
             Frequently Asked<br />
-            Questions
+            <em>Questions.</em>
           </h2>
 
           <p className="faq-left__desc">

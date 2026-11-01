@@ -266,13 +266,13 @@ const Testimonials = () => {
         {/* ─── Editorial Header (Aligned with Requirements & Packages) ─── */}
         <header className="reviews__header">
           <div className="reviews__header-top">
+            <span className="reviews__stamp-tag">EST. 2015</span>
             <div className="reviews__badge">
               <span className="reviews__badge-dot" aria-hidden="true" />
               <span className="reviews__badge-title">STREET CREDIBILITY</span>
               <span className="reviews__badge-divider" aria-hidden="true">/</span>
               <span className="reviews__badge-notice">COMMUNITY & OPERATOR LOGS</span>
             </div>
-            <span className="reviews__stamp-tag">EST. 2015</span>
           </div>
 
           <div className="reviews__heading-wrap">

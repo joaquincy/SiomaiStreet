@@ -55,15 +55,15 @@ const Navbar = () => {
         id="navbar"
       >
         <div className="navbar-inner">
-          <Link to="/" className="navbar-logo" onClick={closeMenu}>
+          <Link to="/" className="navbar-logo" onClick={closeMenu} aria-label="Siomai Street Home">
             <img
               src="/images/siomai street logo.png"
               srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w"
-              sizes="48px"
+              sizes="(max-width: 768px) 70px, 78px"
               alt="Siomai Street"
               className="logo-image"
             />
-            <div className="logo-text-group">
+            <div className="logo-text-group" aria-hidden="true">
               <span className="logo-text-brand">SIOMAI</span>
               <span className="logo-text-street">STREET</span>
             </div>

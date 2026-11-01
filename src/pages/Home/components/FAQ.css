@@ -59,15 +59,16 @@
   display: flex;
   align-items: center;
   gap: 12px;
-  margin-bottom: 1rem;
+  margin-bottom: 16px;
 }
 
 .faq-left__label-line {
   display: block;
-  width: 24px;
-  height: 2px;
+  width: 28px;
+  height: 3px;
   background: var(--color-red, #E63946);
-  border-radius: 2px;
+  border-radius: 999px;
+  flex: none;
 }
 
 .faq-left__label-text {
@@ -77,24 +78,25 @@
   letter-spacing: 2.5px;
   text-transform: uppercase;
   color: var(--color-red, #E63946);
+  line-height: 1;
 }
 
 .faq-left__heading {
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: clamp(2.2rem, 3.5vw, 3rem);
-  font-weight: 800;
-  line-height: 1.1;
-  letter-spacing: -0.5px;
-  color: var(--color-charcoal, #1D1D1D);
-  margin-bottom: 1.2rem;
+  font: 800 clamp(2.2rem, 4vw, 3.4rem)/1.1 var(--font-heading, sans-serif);
+  letter-spacing: -.025em;
+  color: #291d19;
+  margin-bottom: 20px;
+}
+
+.faq-left__heading em {
+  font-style: normal;
+  color: var(--color-red-dark, #c62828);
 }
 
 .faq-left__desc {
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(0.9rem, 1vw, 1rem);
-  line-height: 1.65;
-  color: #6B6560;
-  max-width: 380px;
+  font: 400 clamp(0.95rem, 1.2vw, 1.05rem)/1.7 var(--font-body, sans-serif);
+  color: #6b5c54;
+  max-width: 440px;
   margin-bottom: 2rem;
 }
 
@@ -147,20 +149,17 @@
 .faq-info-card__title {
   position: relative;
   z-index: 1;
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 1.05rem;
-  font-weight: 700;
-  color: var(--color-charcoal, #1D1D1D);
+  font: 800 clamp(1.15rem, 1.8vw, 1.35rem)/1.2 var(--font-heading, sans-serif);
+  letter-spacing: -.015em;
+  color: #291d19;
   margin-bottom: 0.4rem;
 }
 
 .faq-info-card__text {
   position: relative;
   z-index: 1;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.85rem;
-  line-height: 1.5;
-  color: #7A7470;
+  font: 400 0.92rem/1.6 var(--font-body, sans-serif);
+  color: #6b5c54;
   margin-bottom: 1.2rem;
 }
 
@@ -310,16 +309,14 @@
 /* ─── Question Text ─── */
 .faq-card__q {
   flex: 1;
-  font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 1rem;
-  font-weight: 600;
-  color: var(--color-charcoal, #1D1D1D);
-  line-height: 1.4;
-  letter-spacing: -0.15px;
+  font: 700 1.05rem/1.35 var(--font-heading, sans-serif);
+  color: #291d19;
+  letter-spacing: -.015em;
 }
 
 .faq-card--open .faq-card__q {
-  font-weight: 700;
+  font-weight: 800;
+  color: var(--color-red-dark, #c62828);
 }
 
 /* ─── Toggle Icon ─── */
@@ -384,31 +381,18 @@
 .faq-card__answer {
   padding: 0 1.4rem 1.25rem calc(1.4rem + 1.1rem + 20px);
   margin: 0;
-  font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: 0.9rem;
-  line-height: 1.7;
-  color: #6B6560;
+  font: 400 0.95rem/1.7 var(--font-body, sans-serif);
+  color: #6b5c54;
   max-width: 520px;
 }
 
 /* ═══════════════════════════════════════════════════
-   ENTRANCE ANIMATION
+   CONTENT VISIBILITY — never depend on a scroll observer to show FAQs
    ═══════════════════════════════════════════════════ */
 .faq-left,
 .faq-right {
-  opacity: 0;
-  transform: translateY(16px);
-  transition: opacity 0.6s ease, transform 0.6s ease;
-}
-
-.faq-right {
-  transition-delay: 0.1s;
-}
-
-.faq-section.faq--visible .faq-left,
-.faq-section.faq--visible .faq-right {
   opacity: 1;
-  transform: translateY(0);
+  transform: none;
 }
 
 /* ═══════════════════════════════════════════════════

@@ -119,7 +119,14 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
   return <section className="store-finder" id="stores" aria-labelledby="store-finder-title" ref={sectionRef}>
     <div className="store-finder__poster">
       <header className="store-finder__heading">
-        <div><p className="store-finder__eyebrow"><BiMap aria-hidden="true" />GOOD FOOD. AROUND THE CORNER.</p><h2 id="store-finder-title">FIND YOUR <em>NEXT STOP.</em></h2></div>
+        <div>
+          <p className="store-finder__eyebrow">
+            <span className="store-finder__eyebrow-line" aria-hidden="true" />
+            <BiMap aria-hidden="true" />
+            <span>GOOD FOOD. AROUND THE CORNER.</span>
+          </p>
+          <h2 id="store-finder-title">FIND YOUR <em>NEXT STOP.</em></h2>
+        </div>
         <a className="store-finder__menu-link" href="#menu">Explore the menu <BiArrowToRight aria-hidden="true" /></a>
       </header>
 

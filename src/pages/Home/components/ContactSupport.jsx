@@ -231,7 +231,7 @@ export default function ContactSupport() {
   return <section className="contact-support" id="contact" aria-labelledby="contact-title" ref={section}>
     <div className="contact-support__container">
       <header className="contact-support__intro">
-        <p className="contact-support__eyebrow"><span />CONTACT SIOMAI STREET<span /></p>
+        <p className="contact-support__eyebrow"><span aria-hidden="true" />CONTACT SIOMAI STREET</p>
         <h2 id="contact-title">Good conversations<br />start <em>here.</em></h2>
         <p className="contact-support__lead">From your last order to your next business idea. Choose a conversation and find your next step.</p>
       </header>

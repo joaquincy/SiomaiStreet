@@ -113,8 +113,11 @@ const FeaturedMenu = () => {
     <section className="featured-menu" id="menu">
       {/* ─── Section Intro ─── */}
       <div className="fm-intro reveal">
-        <span className="fm-kicker">Our Signature Selection</span>
-        <h2 className="fm-section-title">Meet Your Street Favorites</h2>
+        <span className="fm-kicker">
+          <span className="fm-kicker-line" aria-hidden="true" />
+          Meet Your Street Favorites
+        </span>
+        <h2 className="fm-section-title">Featured <em>Menu</em></h2>
         <p className="fm-section-lead">
           Signature offerings from our steamer baskets, served with
           house-simmered chili garlic crisp and fresh calamansi.
@@ -127,7 +130,7 @@ const FeaturedMenu = () => {
         <article className="fm-story fm-story--text-left reveal">
           <div className="fm-story-text">
             <AccentMarks className="fm-accent-marks--story1" />
-            <h3 className="fm-story-title">Classic Pork Siomai</h3>
+            <h3 className="fm-story-title">Classic Pork <em>Siomai</em></h3>
 
             <div className="fm-story-specs">
               <div className="fm-spec-row">
@@ -218,7 +221,7 @@ const FeaturedMenu = () => {
 
           <div className="fm-story-text">
             <AccentMarks className="fm-accent-marks--story2" />
-            <h3 className="fm-story-title">Crispy Lumpia &amp; Bilao Platters</h3>
+            <h3 className="fm-story-title">Crispy Lumpia &amp; <em>Bilao Platters</em></h3>
 
             <div className="fm-story-specs">
               <div className="fm-spec-row">
