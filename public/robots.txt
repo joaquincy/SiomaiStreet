@@ -3,7 +3,7 @@ User-agent: *
 Allow: /
 
 # Sitemap location
-Sitemap: https://siomaistreet.ph/sitemap.xml
+Sitemap: https://www.siomaistreet.online/sitemap.xml
 
 # Block access to dev/build artifacts if accidentally exposed
 Disallow: /src/
