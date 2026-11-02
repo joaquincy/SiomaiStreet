@@ -11,7 +11,8 @@
 /* ─── SECTION SHELL ─── */
 .wc-section {
   position: relative;
-  height: 280vh;
+  height: 380vh;
+  height: 380svh;
   background: #f0e9da;
   z-index: 1;
 }
@@ -20,6 +21,7 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100svh;
   width: 100%;
   overflow: hidden;
   contain: layout style paint;
@@ -47,6 +49,9 @@
   display: flex;
   align-items: center;
   justify-content: center;
+  /* Hardware accelerate smooth unfocus & depth scale during curtain reveal */
+  will-change: filter, transform;
+  transform-origin: center center;
 }
 
 /* ═══════════════════════════════════════════════
@@ -396,7 +401,8 @@
    ═══════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .wc-section {
-    height: 260vh;
+    height: 360vh;
+    height: 360svh;
   }
 
   .wc-title {
@@ -444,7 +450,8 @@
    ═══════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .wc-section {
-    height: 260vh;
+    height: 360vh;
+    height: 360svh;
   }
 
   .wc-title {
@@ -502,7 +509,8 @@
    ═══════════════════════════════════════════════ */
 @media (max-width: 480px) {
   .wc-section {
-    height: 280vh;
+    height: 380vh;
+    height: 380svh;
   }
 
   .wc-title {

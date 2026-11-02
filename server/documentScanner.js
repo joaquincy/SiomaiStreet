@@ -1,7 +1,7 @@
 import { createConnection } from 'node:net';
 import { once } from 'node:events';
 
-// Scanning is required unless DOCUMENT_SCAN=off is set explicitly (local demos only).
+// Scanning is required unless DOCUMENT_SCAN=off is explicitly set by the server operator.
 export const isDocumentScanDisabled = env => String(env?.DOCUMENT_SCAN || '').trim().toLowerCase() === 'off';
 
 // Records that a file was NOT virus-checked so reviewers can see it in the stored metadata.

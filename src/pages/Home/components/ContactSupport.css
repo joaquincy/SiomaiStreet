@@ -9,7 +9,7 @@
   position: relative;
   isolation: isolate;
   padding: clamp(4.5rem, 8vw, 7.5rem) clamp(20px, 4vw, 40px) clamp(4rem, 6vw, 6rem);
-  background: #faf6f0;
+  background: #f0e9da;
   color: var(--contact-ink);
   font-family: var(--font-body, sans-serif);
   scroll-margin-top: 90px;

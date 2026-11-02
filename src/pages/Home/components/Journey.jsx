@@ -54,15 +54,13 @@ const Journey = () => {
   const targetStage = useRef(0);
   const currentStage = useRef(0);
   const isSettled = useRef(false);
-  const wheelLockedUntil = useRef(0);
-  const programmaticScrollUntil = useRef(0);
-  const snapTimerRef = useRef(null);
+  const syncOnEntry = useRef(true);
 
   const getSectionMetrics = useCallback(() => {
     const section = sectionRef.current;
     if (!section) return null;
     const rect = section.getBoundingClientRect();
-    const vh = window.innerHeight;
+    const vh = stageRef.current?.offsetHeight || window.innerHeight;
     const sectionTop = window.scrollY + rect.top;
     const totalScroll = Math.max(1, section.offsetHeight - vh);
     const rawP = clamp01(-rect.top / totalScroll);
@@ -70,21 +68,26 @@ const Journey = () => {
   }, []);
 
   const onFrame = useCallback(() => {
+    rafId.current = null;
     if (!isActive.current || !sectionRef.current) return;
 
-    const now = performance.now();
     const metrics = getSectionMetrics();
     if (!metrics) return;
 
-    // Sync targetStage from scroll position when user scrolls via scrollbar or touch
-    if (now > programmaticScrollUntil.current) {
-      targetStage.current = clamp(Math.round(metrics.rawP * MAX_STAGE), 0, MAX_STAGE);
+    // Always follow actual scroll, including an interrupted dot-button scroll.
+    targetStage.current = clamp(Math.round(metrics.rawP * MAX_STAGE), 0, MAX_STAGE);
+    if (syncOnEntry.current || metrics.rawP === 0 || metrics.rawP === 1) {
+      currentStage.current = targetStage.current;
+      syncOnEntry.current = false;
+      isSettled.current = false;
     }
 
-    // Smooth spring-like interpolation toward the discrete target stage
+    // Smooth interpolation toward the target stage (adaptive speed)
     const diff = targetStage.current - currentStage.current;
-    if (Math.abs(diff) > 0.001) {
-      currentStage.current += diff * 0.14;
+    const absDiff = Math.abs(diff);
+    if (absDiff > 0.001) {
+      const speed = Math.min(0.4, 0.14 + absDiff * 0.08);
+      currentStage.current += diff * speed;
       isSettled.current = false;
     } else {
       currentStage.current = targetStage.current;
@@ -165,7 +168,6 @@ const Journey = () => {
     isSettled.current = false;
 
     const targetY = metrics.sectionTop + (clamped / MAX_STAGE) * metrics.totalScroll;
-    programmaticScrollUntil.current = performance.now() + 520;
     window.scrollTo({ top: targetY, behavior: 'smooth' });
 
     if (!rafId.current && isActive.current) {
@@ -173,31 +175,15 @@ const Journey = () => {
     }
   }, [getSectionMetrics, onFrame]);
 
-  // Restart rAF loop when user scrolls after settling, and gently snap when scroll stops
+  // Restart rAF loop when user scrolls after settling
   const onScroll = useCallback(() => {
-    if (!isActive.current) return;
+    if (!isActive.current || document.hidden) return;
 
     if (!rafId.current) {
       isSettled.current = false;
       rafId.current = requestAnimationFrame(onFrame);
     }
-
-    if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
-    snapTimerRef.current = setTimeout(() => {
-      const now = performance.now();
-      if (now <= programmaticScrollUntil.current) return;
-      const metrics = getSectionMetrics();
-      if (!metrics) return;
-      // Only snap when the sticky container fills the viewport
-      if (metrics.rect.top <= -8 && metrics.rect.bottom >= metrics.vh + 8) {
-        const nearestStage = clamp(Math.round(metrics.rawP * MAX_STAGE), 0, MAX_STAGE);
-        const expectedY = metrics.sectionTop + (nearestStage / MAX_STAGE) * metrics.totalScroll;
-        if (Math.abs(window.scrollY - expectedY) > 12) {
-          scrollToStage(nearestStage);
-        }
-      }
-    }, 150);
-  }, [getSectionMetrics, onFrame, scrollToStage]);
+  }, [onFrame]);
 
   useEffect(() => {
     const section = sectionRef.current;
@@ -225,43 +211,8 @@ const Journey = () => {
       return;
     }
 
-    // Step-by-step wheel locking while inside the sticky Journey viewport
-    const onWheel = (e) => {
-      if (!isActive.current || e.ctrlKey || e.metaKey) return;
-      if (Math.abs(e.deltaY) < 6) return;
-
-      const metrics = getSectionMetrics();
-      if (!metrics) return;
-
-      const { rect, vh } = metrics;
-      const dir = e.deltaY > 0 ? 1 : -1;
-
-      // Check if sticky stage is currently engaged in viewport
-      const isPinned = rect.top <= 16 && rect.bottom >= vh - 16;
-      if (!isPinned) return;
-
-      const activeIdx = targetStage.current;
-
-      // Allow natural page exit at top (Stage 0 scrolling up) and bottom (Stage 5 scrolling down)
-      if (dir < 0 && activeIdx <= 0 && rect.top >= -24) {
-        return;
-      }
-      if (dir > 0 && activeIdx >= MAX_STAGE && rect.bottom <= vh + 24) {
-        return;
-      }
-
-      // Lock scroll to discrete step progression
-      e.preventDefault();
-      const now = performance.now();
-      if (now < wheelLockedUntil.current) return;
-
-      const nextStage = clamp(activeIdx + dir, 0, MAX_STAGE);
-      wheelLockedUntil.current = now + 520;
-      scrollToStage(nextStage);
-    };
-
     window.addEventListener('scroll', onScroll, { passive: true });
-    window.addEventListener('wheel', onWheel, { passive: false });
+    window.addEventListener('resize', onScroll, { passive: true });
 
     const onVisibility = () => {
       if (document.hidden) {
@@ -271,7 +222,8 @@ const Journey = () => {
         }
       } else if (isActive.current) {
         isSettled.current = false;
-        rafId.current = requestAnimationFrame(onFrame);
+        syncOnEntry.current = true;
+        onScroll();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -281,7 +233,9 @@ const Journey = () => {
         if (entry.isIntersecting) {
           isActive.current = true;
           isSettled.current = false;
-          rafId.current = requestAnimationFrame(onFrame);
+          syncOnEntry.current = true;
+          if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+          onFrame();
         } else {
           isActive.current = false;
           if (rafId.current) {
@@ -297,12 +251,13 @@ const Journey = () => {
     return () => {
       observer.disconnect();
       window.removeEventListener('scroll', onScroll);
-      window.removeEventListener('wheel', onWheel);
+      window.removeEventListener('resize', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
-      if (snapTimerRef.current) clearTimeout(snapTimerRef.current);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+      isActive.current = false;
     };
-  }, [getSectionMetrics, onFrame, onScroll, scrollToStage]);
+  }, [onFrame, onScroll]);
 
   return (
     <section className="journey-section" id="journey" ref={sectionRef}>

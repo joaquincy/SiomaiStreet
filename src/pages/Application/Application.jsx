@@ -29,7 +29,9 @@ import LegalConsents from './steps/LegalConsents';
 import PlaceholderStep from './steps/PlaceholderStep';
 import ReviewSubmit from './steps/ReviewSubmit';
 import { submitFranchiseApplication } from '../../api';
+import { clearUploadTransfers } from '../../api/resumableDocuments';
 import PageMeta from '../../components/PageMeta';
+import { getSrcSet } from '../../utils/responsiveImage';
 import {
   clearApplicationDraft,
   loadApplicationDraft,
@@ -99,6 +101,17 @@ const ApplicationPage = () => {
   const [draftRestored, setDraftRestored] = useState(false);
   const [returnToReview, setReturnToReview] = useState(false);
   const submitLock = useRef(false);
+  const submissionAbort = useRef(null);
+  useEffect(() => () => {
+    submissionAbort.current?.abort();
+    clearUploadTransfers();
+  }, []);
+  useEffect(() => {
+    if (!submitting) return;
+    const warnBeforeLeaving = event => { event.preventDefault(); event.returnValue = ''; };
+    window.addEventListener('beforeunload', warnBeforeLeaving);
+    return () => window.removeEventListener('beforeunload', warnBeforeLeaving);
+  }, [submitting]);
   const requestId = useRef(savedDraft.requestId);
   const [saveStatus, setSaveStatus] = useState('Loading draft');
   const [attempted, setAttempted] = useState({});
@@ -259,14 +272,19 @@ const ApplicationPage = () => {
     // Synchronous lock closes the double-click window before React renders disabled controls.
     submitLock.current = true;
     setSubmitting(true);
+    const controller = new AbortController();
+    submissionAbort.current = controller;
     saveApplicationDraft(currentStep, formData, requestId.current);
     try {
       const turnstileToken = await requestTurnstile('application');
-      const result = await submitFranchiseApplication({ turnstileToken, formData, requestId: requestId.current, onProgress: setTransferStatus });
+      controller.signal.throwIfAborted();
+      const result = await submitFranchiseApplication({ turnstileToken, formData, requestId: requestId.current, signal: controller.signal, onProgress: setTransferStatus });
+      controller.signal.throwIfAborted();
       setPortalReceipt(result);
       setSubmitted(true);
       await cleanupDraft();
     } catch (error) {
+      if (controller.signal.aborted) return;
       setSubmissionError(error.message || 'Your application could not be submitted. Please retry.');
       if (Array.isArray(error.validationErrors) && error.validationErrors.length) {
         const firstStep = error.validationErrors[0].step;
@@ -284,7 +302,8 @@ const ApplicationPage = () => {
       }
     } finally {
       submitLock.current = false;
-      setSubmitting(false);
+      if (!controller.signal.aborted) setSubmitting(false);
+      if (submissionAbort.current === controller) submissionAbort.current = null;
     }
   };
 
@@ -384,6 +403,26 @@ const ApplicationPage = () => {
         path="/application"
         description="Apply for consideration as a Siomai Street franchise partner. Review your details before submitting; application receipt is not approval."
       />
+
+      {/* ── Hero Photography Banner (Matching Menu Page Hero Style) ── */}
+      <section className="franchise-banner">
+        <img
+          className="franchise-banner__bg"
+          src="/images/franchising hero header.png"
+          srcSet={getSrcSet('/images/franchising hero header.png', [480, 768, 1024, 1440, 1920])}
+          sizes="100vw"
+          alt="Siomai Street franchise storefront"
+          width="2056"
+          height="765"
+          fetchPriority="high"
+        />
+        <div className="franchise-banner__scrim" aria-hidden="true" />
+        <div className="franchise-banner__content">
+          <h1 className="franchise-banner__title">
+            Franchise <em>Application</em>
+          </h1>
+        </div>
+      </section>
 
       {/* ── Sub Navigation ── */}
       <nav className="app-subnav" id="app-subnav" aria-label="Application portal sections">

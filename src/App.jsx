@@ -1,11 +1,18 @@
 import { lazy, Suspense } from 'react';
 import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
+import './App.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import SiteNotice from './components/SiteNotice';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home/Home';
 import BackToTop from './components/BackToTop';
+import {
+  MenuPageSkeleton,
+  ReviewsPageSkeleton,
+  ApplicationPageSkeleton,
+  DefaultPageSkeleton,
+} from './components/Skeleton';
 
 const MenuPage = lazy(() => import('./pages/Menu/Menu'));
 const ReviewsPage = lazy(() => import('./pages/Reviews/Reviews'));
@@ -80,17 +87,73 @@ function App() {
     <Router>
       <ErrorBoundary>
         <Navbar />
-        <Suspense fallback={<PageLoader />}>
+        <Suspense fallback={<DefaultPageSkeleton />}>
           <Routes>
             <Route path="/" element={<Home />} />
-            <Route path="/menu" element={<MenuPage />} />
-            <Route path="/reviews" element={<ReviewsPage />} />
-            <Route path="/application" element={<ApplicationPage />} />
-            <Route path="/application/status" element={<ApplicationStatus />} />
-            <Route path="/application/onboarding" element={<ApplicationOnboarding />} />
-            <Route path="/privacy" element={<PrivacyPolicy />} />
-            <Route path="/terms" element={<TermsOfService />} />
-            <Route path="/cookies" element={<CookiePolicy />} />
+            <Route
+              path="/menu"
+              element={
+                <Suspense fallback={<MenuPageSkeleton />}>
+                  <MenuPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/reviews"
+              element={
+                <Suspense fallback={<ReviewsPageSkeleton />}>
+                  <ReviewsPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/application"
+              element={
+                <Suspense fallback={<ApplicationPageSkeleton />}>
+                  <ApplicationPage />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/application/status"
+              element={
+                <Suspense fallback={<ApplicationPageSkeleton />}>
+                  <ApplicationStatus />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/application/onboarding"
+              element={
+                <Suspense fallback={<ApplicationPageSkeleton />}>
+                  <ApplicationOnboarding />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/privacy"
+              element={
+                <Suspense fallback={<DefaultPageSkeleton title="Privacy Policy" />}>
+                  <PrivacyPolicy />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/terms"
+              element={
+                <Suspense fallback={<DefaultPageSkeleton title="Terms of Service" />}>
+                  <TermsOfService />
+                </Suspense>
+              }
+            />
+            <Route
+              path="/cookies"
+              element={
+                <Suspense fallback={<DefaultPageSkeleton title="Cookie Policy" />}>
+                  <CookiePolicy />
+                </Suspense>
+              }
+            />
             <Route path="*" element={<NotFound />} />
           </Routes>
           <BackToTop />

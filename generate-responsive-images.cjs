@@ -45,6 +45,7 @@ const IMAGE_CONFIGS = {
   'hero-bg.png':        [480, 768, 1024],
   // Other
   '27980247527.png':    [400, 800],
+  'franchising hero header.png': [480, 768, 1024, 1440, 1920],
 };
 
 async function run() {

@@ -5,16 +5,19 @@ import { readMultipart } from './multipart.js';
 import { createStoreLocationsReader } from './storeLocations.js';
 import { contactConfiguration, publicContactConfiguration, createContactHandler } from './contact.js';
 import { portalAccess, createPortalHandler } from './applicationPortal.js';
-import { createApplicationHandler } from './applications.js';
+import { createDirectUploadHandler, uploadSessionAccess, cleanupExpiredUploads } from './directUploads.js';
+import { createUploadRepository, createUploadStorage, createReviewerDocumentHandler, maintenanceAuthorized } from './directUploadServices.js';
 import { createApplicationAdmission, createSharedApplicationRateLimit, clientIP } from './applicationSecurity.js';
 import { isDocumentScanDisabled, createSkippedScanner, createDocumentScanner } from './documentScanner.js';
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
 import { randomUUID } from 'node:crypto';
+import { MAX_REVIEW_PHOTO_BYTES, MAX_REVIEW_REQUEST_BYTES, REVIEW_PHOTO_TYPES } from '../shared/reviewUpload.js';
 
 const root = process.cwd();
-const envFiles = ['.env.local', '.env'];
+const serverless = process.env.SIOMAI_SERVERLESS === 'true' || process.env.VERCEL === '1';
+const envFiles = serverless ? [] : ['.env.local', '.env'];
 
 for (const file of envFiles) {
   try {
@@ -37,7 +40,7 @@ const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
 
-const allowedReviewTypes = new Set(['image/jpeg', 'image/png', 'image/webp']);
+const allowedReviewTypes = new Set(REVIEW_PHOTO_TYPES);
 const requestCounts = new Map();
 
 const json = (res, status, body) => {
@@ -158,7 +161,7 @@ const handleBranchesGet = async (_req, res) => {
 
 const handleReviewPost = async (req, res) => {
   if (!rateLimit(req, 8, 60 * 60 * 1000)) return json(res, 429, { error: 'Too many review submissions. Please try again later.' });
-  const form = await readMultipart(req);
+  const form = await readMultipart(req, { maxBytes: MAX_REVIEW_REQUEST_BYTES });
   const displayName = String(form.get('displayName') || '').trim();
   const reviewText = String(form.get('text') || '').trim();
   const rating = Number(form.get('rating'));
@@ -172,7 +175,7 @@ const handleReviewPost = async (req, res) => {
   if (!activeBranches?.length) throw Object.assign(new Error('That branch is no longer available for reviews.'), { status: 400 });
   let photoPath = null;
   if (photo instanceof File && photo.size > 0) {
-    if (photo.size > 5 * 1024 * 1024 || !allowedReviewTypes.has(photo.type)) throw Object.assign(new Error('Review photos must be JPG, PNG, or WebP files under 5 MB.'), { status: 400 });
+    if (photo.size > MAX_REVIEW_PHOTO_BYTES || !allowedReviewTypes.has(photo.type)) throw Object.assign(new Error('Review photos must be JPG, PNG, or WebP files up to 3 MiB.'), { status: 400 });
     photoPath = `${randomUUID()}/${safeFileName(photo.name)}`;
     await uploadFile('review-photos', photoPath, photo, photo.type);
   }
@@ -195,9 +198,12 @@ const applicationRate = createSharedApplicationRateLimit({
   rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
 });
 const turnstileEnabled = process.env.NODE_ENV === 'production' || process.env.TURNSTILE_ENABLED !== 'false';
-const verifyTurnstile = createTurnstileVerifier({ secret: process.env.TURNSTILE_SECRET_KEY, hostnames: (process.env.TURNSTILE_HOSTNAMES || '').split(',').map(s => s.trim()).filter(Boolean) });
+const turnstileHostnames = (process.env.TURNSTILE_HOSTNAMES || '').split(',').map(s => s.trim()).filter(Boolean);
+// Vercel supplies this exact deployment host; never trust the incoming Host header.
+if (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_URL) turnstileHostnames.push(process.env.VERCEL_URL);
+const verifyTurnstile = createTurnstileVerifier({ secret: process.env.TURNSTILE_SECRET_KEY, hostnames: turnstileHostnames });
 const verifyPublic = action => async req => {
- if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
+  if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
 };
 const handleEmailWebhook = createNotificationWebhook({ secret: process.env.RESEND_WEBHOOK_SECRET, request: supabaseRequest, json });
 const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
@@ -211,17 +217,18 @@ const handleContactPost = createContactHandler({
     insert: async row => (await supabaseRequest('/rest/v1/contact_inquiries?select=id,request_hash,received_at', { method: 'POST', headers: { prefer: 'return=representation' }, body: JSON.stringify(row) }))?.[0],
   },
 });
+// Scanning is required by default. Only the server's explicit off setting skips it.
+const schoolDemo = process.env.VERCEL_ENV === 'preview' && process.env.APPLICATION_DEMO_MODE === 'true';
 const scanDisabled = isDocumentScanDisabled(process.env);
 if (scanDisabled) console.warn('⚠ DOCUMENT SCANNING IS DISABLED. Documents will NOT be virus-checked.');
 const scanDocument = scanDisabled
   ? createSkippedScanner()
   : createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) });
-const applicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies });
-const protectedApplicationAdmission = createApplicationAdmission({ checkRate:applicationRate, trustedProxies, verify: verifyPublic('application') });
+const applicationAdmission = createApplicationAdmission({ checkRate: applicationRate, trustedProxies });
 const verifyApplicationStorage = async () => {
   // Check portal configuration before accepting a new submission.
-  access.receipt({id:'00000000-0000-4000-8000-000000000000',submitted_at:new Date().toISOString()});
-  if (await supabaseRequest('/rest/v1/rpc/franchise_security_ready', { method:'POST', body:'{}' }) !== true) throw Object.assign(new Error('Private storage is not ready.'), {status:503});
+  access.receipt({ id: '00000000-0000-4000-8000-000000000000', submitted_at: new Date().toISOString() });
+  if (await supabaseRequest('/rest/v1/rpc/franchise_security_ready', { method: 'POST', body: '{}' }) !== true) throw Object.assign(new Error('Private storage is not ready.'), { status: 503 });
   // Fail before accepting files if the tracking migration is absent.
   await supabaseRequest('/rest/v1/franchise_corrections?select=id&limit=0');
   await supabaseRequest('/rest/v1/franchise_applications?select=portal_access_revoked&limit=0');
@@ -235,34 +242,60 @@ const handlePortal = createPortalHandler({
   allowUnscannedDocuments: scanDisabled,
   reportCleanupFailure: event => console.error('Correction reconciliation required:', JSON.stringify(event)),
   repository: {
-    find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,status,submitted_at,updated_at,portal_access_revoked&id=eq.'+id+'&limit=1'))?.[0],
-    requests: id => supabaseRequest('/rest/v1/franchise_corrections?select=*&application_id=eq.'+id+'&order=created_at.asc&limit=100'),
-    replace: body => supabaseRequest('/rest/v1/rpc/receive_franchise_document',{method:'POST',body:JSON.stringify(body)}),
+    find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,status,submitted_at,updated_at,portal_access_revoked&id=eq.' + id + '&limit=1'))?.[0],
+    requests: id => supabaseRequest('/rest/v1/franchise_corrections?select=*&application_id=eq.' + id + '&order=created_at.asc&limit=100'),
+    replace: body => supabaseRequest('/rest/v1/rpc/receive_franchise_document', { method: 'POST', body: JSON.stringify(body) }),
   },
 });
-const handleApplicationPost = createApplicationHandler({
-  receiptDetails: access.receipt,
-  readMultipart, uploadFile, deleteStorageObjects, json,
-  admit: protectedApplicationAdmission,
-  rateLimit: req => applicationRate(clientIP(req, trustedProxies), 'new-application', 4),
-  scanDocument,
+const uploadRepository = createUploadRepository(supabaseRequest);
+const uploadStorage = createUploadStorage({ url: supabaseUrl, serviceKey, request: supabaseRequest, uploadFile, deleteStorageObjects });
+const uploadAccess = uploadSessionAccess(process.env.APPLICATION_UPLOAD_SECRET || process.env.APPLICATION_PORTAL_SECRET);
+const checkCorrectionAccess = async (id, correctionId) => {
+  const application = (await supabaseRequest(`/rest/v1/franchise_applications?select=id,status,portal_access_revoked,submitted_at&id=eq.${id}&limit=1`))?.[0];
+  if (!application || application.portal_access_revoked || Date.now() >= Date.parse(application.submitted_at) + 90 * 86400000) throw Object.assign(new Error('Application access has expired or was revoked.'), { status: 401 });
+  const correction = (await supabaseRequest(`/rest/v1/franchise_corrections?application_id=eq.${id}&id=eq.${correctionId}&limit=1`))?.[0];
+  if (!correction) throw Object.assign(new Error('Replacement request not found.'), { status: 404 });
+  if (correction.status !== 'received' && (correction.status !== 'open' || application.status !== 'more_information_requested')) throw Object.assign(new Error('This replacement request is no longer open. Refresh the status.'), { status: 409 });
+  return correction;
+};
+const handleDirectUpload = createDirectUploadHandler({
+  repository: uploadRepository, storage: uploadStorage, access: uploadAccess, json,
+  receiptDetails: access.receipt, scanDocument, allowUnscanned: scanDisabled,
+  verify: verifyPublic('application'),
+  corrections: {
+    check: checkCorrectionAccess,
+    authorize: (req, id, correctionId) => {
+      access.verify(id, req.headers.authorization?.replace(/^Bearer /, ''));
+      return checkCorrectionAccess(id, correctionId);
+    },
+  },
+  rate: (req, scope, limit) => applicationRate(clientIP(req, trustedProxies), scope, limit),
+  verifyStorage: async () => {
+    await verifyApplicationStorage();
+    uploadAccess.token({ id: 'configuration-check', request_hash: '', expires_at: '' });
+    if (!scanDisabled && !process.env.CLAMD_HOST) throw Object.assign(new Error('Document scanning is not configured.'), { status: 503 });
+    await supabaseRequest('/rest/v1/franchise_upload_sessions?select=id&limit=0');
+  },
+});
+const handleReviewerDocument = createReviewerDocumentHandler({
+  url: supabaseUrl, serviceKey, request: supabaseRequest, json,
   allowUnscannedDocuments: scanDisabled,
-  verifyStorage: verifyApplicationStorage,
-  reportCleanupFailure: event => console.error('Application orphan cleanup required:', JSON.stringify(event)),
-  repository: {
-    find: async id => (await supabaseRequest('/rest/v1/franchise_applications?select=id,request_hash,submitted_at,document_paths&id=eq.' + id + '&limit=1'))?.[0] || null,
-    insert: async row => (await supabaseRequest('/rest/v1/franchise_applications', {
-      method: 'POST', headers: { prefer: 'return=representation' }, body: JSON.stringify(row),
-    }))?.[0],
-  },
+  rate: req => applicationRate(clientIP(req, trustedProxies), 'staff-documents', 100),
 });
+let cleaningUploads = false;
+const cleanUploads = async () => {
+  if (cleaningUploads) return 0;
+  cleaningUploads = true;
+  try { return await cleanupExpiredUploads({ repository: uploadRepository, storage: uploadStorage }); }
+  finally { cleaningUploads = false; }
+};
 
-const apiServer = createServer(async (req, res) => {
+export const handleRequest = async (req, res) => {
   res.setHeader('x-content-type-options', 'nosniff');
   res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
   res.setHeader('x-frame-options', 'DENY');
   const origin = req.headers.origin;
-  if (origin && ['http://localhost:5173', 'http://127.0.0.1:5173'].includes(origin)) {
+  if (origin && ['http://localhost:5173', 'http://127.0.0.1:5173', ...(process.env.STAFF_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean)].includes(origin)) {
     res.setHeader('access-control-allow-origin', origin);
     res.setHeader('vary', 'Origin');
     res.setHeader('access-control-allow-headers', 'content-type, authorization, x-turnstile-token');
@@ -272,9 +305,9 @@ const apiServer = createServer(async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
     if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });
-    if (url.pathname === '/api/webhooks/resend' && req.method === 'POST') return await handleEmailWebhook(req,res);
+    if (url.pathname === '/api/webhooks/resend' && req.method === 'POST') return await handleEmailWebhook(req, res);
     if (url.pathname === '/api/health' && req.method === 'GET') {
-      return json(res, 200, { ok: true, configured: Boolean(supabaseUrl && serviceKey) });
+      return json(res, 200, { ok: true, configured: Boolean(supabaseUrl && serviceKey), runtime: serverless ? 'serverless' : 'node', demo: schoolDemo, documentScanning: scanDisabled ? 'disabled' : 'required' });
     }
     if (url.pathname === '/api/branches' && req.method === 'GET') return await handleBranchesGet(req, res);
     if (url.pathname === '/api/contact-options' && req.method === 'GET') return json(res, 200, publicContactConfiguration(contactConfig));
@@ -296,12 +329,23 @@ const apiServer = createServer(async (req, res) => {
       return json(res, 200, { helpful: result });
     }
     const portalMatch = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})(?:\/corrections\/([0-9a-f-]{36}))?$/i);
-    if (portalMatch && ((!portalMatch[2] && req.method === 'GET') || (portalMatch[2] && req.method === 'POST'))) return await handlePortal(req,res,portalMatch[1],portalMatch[2]);
-    if (url.pathname === '/api/franchise-applications' && req.method === 'POST') return await handleApplicationPost(req, res);
+    if (portalMatch && !portalMatch[2] && req.method === 'GET') return await handlePortal(req, res, portalMatch[1]);
+    if (portalMatch?.[2] && req.method === 'POST') return json(res, 410, { error: 'The document upload process has changed. Reload this page and select the replacement again.' });
+    const correctionUpload = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})\/corrections\/([0-9a-f-]{36})\/uploads$/i);
+    if (correctionUpload && req.method === 'POST') return await handleDirectUpload(req, res, undefined, undefined, undefined, { applicationId: correctionUpload[1], correctionId: correctionUpload[2] });
+    const uploadMatch = url.pathname.match(/^\/api\/franchise-applications\/uploads(?:\/([0-9a-f-]{36})\/(finalize|authorize|check)(?:\/([A-Za-z]+))?)?$/i);
+    if (uploadMatch && req.method === 'POST') return await handleDirectUpload(req, res, uploadMatch[1], uploadMatch[2], uploadMatch[3]);
+    if (url.pathname === '/api/franchise-applications' && req.method === 'POST') return json(res, 410, { error: 'The upload process has been upgraded. Keep your draft, reload this page and submit again.' });
+    const reviewerMatch = url.pathname.match(/^\/api\/staff\/applications\/([0-9a-f-]{36})\/documents\/([A-Za-z]+)$/i);
+    if (reviewerMatch && req.method === 'POST') return await handleReviewerDocument(req, res, reviewerMatch[1], reviewerMatch[2]);
+    if (url.pathname === '/api/maintenance/application-uploads' && req.method === 'POST') {
+      if (!maintenanceAuthorized(req.headers.authorization, process.env.UPLOAD_CLEANUP_SECRET)) return json(res, 403, { error: 'Not authorized.' });
+      return json(res, 200, { cleaned: await cleanUploads() });
+    }
     if (url.pathname.startsWith('/api/')) return json(res, 404, { error: 'API route not found.' });
 
     // In production, serve the Vite build from this same origin as the API.
-    if (process.env.NODE_ENV === 'production' || process.env.SERVE_DIST === 'true') {
+    if (!serverless && (process.env.NODE_ENV === 'production' || process.env.SERVE_DIST === 'true')) {
       const requested = url.pathname === '/' ? 'index.html' : normalize(url.pathname).replace(/^([/\\]|\.\.(?:[/\\]|$))+/, '');
       const filePath = join(root, 'dist', requested);
       try {
@@ -324,18 +368,27 @@ const apiServer = createServer(async (req, res) => {
     return json(res, 404, { error: 'Not found.' });
   } catch (error) {
     const status = Number.isInteger(error.status) ? error.status : 500;
-    if (status >= 500) console.error('API request failed:', error.message, error.detail || '');
+    // Provider responses can contain private paths or tokens; do not log their bodies.
+    if (status >= 500) console.error('API request failed:', error.message);
     return json(res, status, { error: status >= 500 ? 'The request could not be completed. Retry with the same application.' : error.message, ...(error.validationErrors ? { validationErrors: error.validationErrors } : {}) });
   }
-});
+};
 
+const apiServer = createServer(handleRequest);
 apiServer.requestTimeout = 120000;
 apiServer.headersTimeout = 15000;
 apiServer.setTimeout(30000, socket => socket.destroy());
-apiServer.listen(port, () => console.log(`Siomai Street API listening on port ${port}`));
+if (!serverless) apiServer.listen(port, () => console.log(`Siomai Street API listening on port ${port}`));
 
-if (process.env.EMAIL_WORKER_ENABLED === 'true') {
- if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.RESEND_WEBHOOK_SECRET) throw new Error('Email worker configuration is incomplete.');
- const stopNotifications = startNotificationWorker({ request: supabaseRequest, send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }) });
- apiServer.on('close', stopNotifications);
+if (!serverless && process.env.UPLOAD_CLEANUP_WORKER_ENABLED === 'true') {
+  const timer = setInterval(() => cleanUploads().catch(() => console.error('Upload cleanup failed; the next run will retry.')), 60 * 60 * 1000);
+  timer.unref();
+  apiServer.on('close', () => clearInterval(timer));
+  void cleanUploads().catch(() => console.error('Upload cleanup failed; the next run will retry.'));
+}
+
+if (!serverless && process.env.EMAIL_WORKER_ENABLED === 'true') {
+  if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.RESEND_WEBHOOK_SECRET) throw new Error('Email worker configuration is incomplete.');
+  const stopNotifications = startNotificationWorker({ request: supabaseRequest, send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }) });
+  apiServer.on('close', stopNotifications);
 }

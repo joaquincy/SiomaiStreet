@@ -9,7 +9,7 @@ const Navbar = () => {
   const panelRef = useRef(null);
   const closeRef = useRef(null);
   const location = useLocation();
-  const hasDarkPageNav = ['/application', '/reviews'].includes(location.pathname);
+  const hasDarkPageNav = ['/reviews'].includes(location.pathname);
 
   useEffect(() => {
     const handleScroll = () => {

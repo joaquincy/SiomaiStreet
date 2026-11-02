@@ -40,7 +40,7 @@ export async function readContactJson(req) {
   } finally { req.setTimeout?.(0); }
 }
 
-export function createContactHandler({ configuration, rate, repository, json, allowedOrigins = [], readJson = readContactJson, verify = async () => {} }) {
+export function createContactHandler({ configuration, rate, repository, json, allowedOrigins = [], readJson = readContactJson, verify = async () => { } }) {
   return async (req, res) => {
     let writing = false;
     res.setHeader('Connection', 'close');

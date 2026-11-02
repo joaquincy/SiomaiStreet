@@ -1,0 +1,269 @@
+/* ═══════════════════════════════════════════════════════════════════
+   SKELETON LOADING SYSTEM — Siomai Street
+   Unified with Soft Steamed Wrapper Cream (#f0e9da) & Obsidian themes.
+   High-performance GPU shimmer animation with reduced-motion support.
+   ═══════════════════════════════════════════════════════════════════ */
+
+/* ─── Base Skeleton Primitive ─── */
+.skeleton-box {
+  display: block;
+  position: relative;
+  overflow: hidden;
+  background-color: rgba(41, 29, 25, 0.07);
+  background-image: linear-gradient(
+    105deg,
+    rgba(41, 29, 25, 0.05) 0%,
+    rgba(41, 29, 25, 0.05) 30%,
+    rgba(255, 255, 255, 0.55) 50%,
+    rgba(41, 29, 25, 0.05) 70%,
+    rgba(41, 29, 25, 0.05) 100%
+  );
+  background-size: 200% 100%;
+  animation: skeletonShimmer 1.8s cubic-bezier(0.4, 0, 0.2, 1) infinite;
+  border-radius: var(--radius-sm, 8px);
+  user-select: none;
+  pointer-events: none;
+}
+
+/* ─── Dark Theme (for Hero banners & dark sections) ─── */
+.skeleton-box--dark {
+  background-color: rgba(255, 255, 255, 0.06);
+  background-image: linear-gradient(
+    105deg,
+    rgba(255, 255, 255, 0.04) 0%,
+    rgba(255, 255, 255, 0.04) 30%,
+    rgba(255, 255, 255, 0.16) 50%,
+    rgba(255, 255, 255, 0.04) 70%,
+    rgba(255, 255, 255, 0.04) 100%
+  );
+}
+
+/* ─── Shimmer Animation Keyframe ─── */
+@keyframes skeletonShimmer {
+  0% {
+    background-position: 150% 0;
+  }
+  100% {
+    background-position: -50% 0;
+  }
+}
+
+/* ─── Variants ─── */
+.skeleton-box--text {
+  height: 0.95em;
+  border-radius: 4px;
+  margin-top: 0.2em;
+  margin-bottom: 0.2em;
+}
+
+.skeleton-box--title {
+  height: 1.6em;
+  border-radius: 6px;
+}
+
+.skeleton-box--circular {
+  border-radius: 50% !important;
+  aspect-ratio: 1 / 1;
+}
+
+.skeleton-box--pill {
+  border-radius: 999px !important;
+}
+
+.skeleton-box--card {
+  border-radius: 16px;
+}
+
+/* ─── Accessible Reduced Motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .skeleton-box {
+    animation: skeletonPulse 1.8s ease-in-out infinite;
+    background-image: none !important;
+  }
+  @keyframes skeletonPulse {
+    0%, 100% {
+      opacity: 0.55;
+    }
+    50% {
+      opacity: 0.9;
+    }
+  }
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   PAGE SKELETON LAYOUTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+.page-skeleton {
+  min-height: 80vh;
+  width: 100%;
+  position: relative;
+  background-color: #f0e9da;
+}
+
+/* ─── Hero Banner Skeleton ─── */
+.page-skeleton__hero {
+  min-height: clamp(380px, 50vh, 540px);
+  background: #17100c;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--nav-height, 80px) + 2rem) 2rem 3rem;
+  gap: 16px;
+  text-align: center;
+}
+
+/* ─── Intro Center Skeleton ─── */
+.page-skeleton__intro {
+  max-width: 680px;
+  margin: 0 auto;
+  padding: clamp(3rem, 5vw, 5rem) 1.5rem 2rem;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 16px;
+}
+
+.page-skeleton__pills {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: center;
+  gap: 10px;
+  margin-top: 8px;
+}
+
+/* ─── Grid / Carousel Rows Skeleton ─── */
+.page-skeleton__sections {
+  max-width: 1240px;
+  margin: 0 auto;
+  padding: 0 2rem 5rem;
+  display: flex;
+  flex-direction: column;
+  gap: 4rem;
+}
+
+.page-skeleton__section-head {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+  margin-bottom: 2rem;
+}
+
+.page-skeleton__carousel-row {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 2rem;
+  align-items: start;
+}
+
+.page-skeleton__plate-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 12px;
+}
+
+.page-skeleton__plate-disc {
+  width: 100%;
+  max-width: 240px;
+  aspect-ratio: 1 / 1;
+  border-radius: 50%;
+  background: #faf6f0;
+  border: 2px solid rgba(41, 29, 25, 0.08);
+  box-shadow: 0 8px 24px rgba(41, 29, 25, 0.05);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 12px;
+}
+
+/* ─── Review Card Skeletons ─── */
+.review-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+  width: 100%;
+}
+
+.review-skeleton-card {
+  background: #faf6f0;
+  border: 1.5px solid rgba(41, 29, 25, 0.1);
+  border-radius: 16px;
+  padding: 1.8rem;
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  box-shadow: 0 4px 14px rgba(41, 29, 25, 0.04);
+}
+
+.review-skeleton-user {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ─── Store Finder Card Skeletons ─── */
+.store-skeleton-list {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  width: 100%;
+}
+
+.store-skeleton-card {
+  background: #faf6f0;
+  border: 1.5px solid rgba(41, 29, 25, 0.1);
+  border-radius: 14px;
+  padding: 1rem 1.25rem;
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+/* ─── Application Portal Skeleton ─── */
+.app-skeleton-shell {
+  min-height: 80vh;
+  background-color: #faf6f0;
+  padding: calc(var(--nav-height, 80px) + 2rem) 1.5rem 4rem;
+}
+
+.app-skeleton-container {
+  max-width: 880px;
+  margin: 0 auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.app-skeleton-card {
+  background: #ffffff;
+  border: 1.5px solid rgba(41, 29, 25, 0.1);
+  border-radius: 18px;
+  padding: clamp(1.8rem, 4vw, 3rem);
+  box-shadow: 0 10px 30px rgba(0, 0, 0, 0.04);
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
+}
+
+/* ─── Responsive Media Queries ─── */
+@media (max-width: 900px) {
+  .page-skeleton__carousel-row {
+    grid-template-columns: repeat(2, 1fr);
+  }
+}
+
+@media (max-width: 600px) {
+  .page-skeleton__carousel-row {
+    grid-template-columns: 1fr;
+    max-width: 280px;
+    margin: 0 auto;
+  }
+
+  .page-skeleton__plate-disc {
+    max-width: 200px;
+  }
+}
+

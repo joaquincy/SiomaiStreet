@@ -1,8 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
+import { MAX_REVIEW_PHOTO_BYTES, REVIEW_PHOTO_TYPES } from '../../../shared/reviewUpload.js';
 import { BiLike, BiCamera, BiChevronDown } from 'react-icons/bi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
 import PageMeta from '../../components/PageMeta';
+import { ReviewCardsSkeleton } from '../../components/Skeleton';
 import './Reviews.css';
 
 
@@ -29,6 +31,7 @@ const ReviewsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
+  const [loading, setLoading] = useState(true);
 
   // Track object URLs so they can be revoked to prevent memory leaks
   const objectUrlsRef = useRef([]);
@@ -49,6 +52,8 @@ const ReviewsPage = () => {
       }),
     ]).catch(() => {
       if (active) setLoadError('Live reviews or branch locations are temporarily unavailable.');
+    }).finally(() => {
+      if (active) setLoading(false);
     });
     return () => { active = false; };
   }, []);
@@ -100,6 +105,7 @@ const ReviewsPage = () => {
     setSubmitting(true);
     setSubmitError('');
     try {
+      if (form.photo && (form.photo.size > MAX_REVIEW_PHOTO_BYTES || !REVIEW_PHOTO_TYPES.includes(form.photo.type))) throw new Error('Choose a JPG, PNG or WebP review photo up to 3 MiB. Your review text has been kept.');
       const body = new FormData();
       body.append('displayName', form.name.trim());
       body.append('text', form.text.trim());
@@ -252,7 +258,7 @@ const ReviewsPage = () => {
 
               <label className="cfb-photo-upload" htmlFor="cfb-photo-input">
                 <BiCamera className="cfb-photo-icon" />
-                <span>{form.photo ? form.photo.name : 'Add a photo (Optional)'}</span>
+                <span>{form.photo ? form.photo.name : 'Add a photo (Optional · JPG, PNG or WebP · Up to 3 MiB)'}</span>
                 <input
                   id="cfb-photo-input"
                   type="file"
@@ -293,8 +299,12 @@ const ReviewsPage = () => {
           </div>
 
           <div className="cfb-reviews-list">
-            {sortedReviews.length === 0 && <p className="cfb-empty-reviews">No published reviews yet. Be the first to share your experience.</p>}
-            {sortedReviews.map((review) => (
+            {loading ? (
+              <ReviewCardsSkeleton count={3} />
+            ) : sortedReviews.length === 0 ? (
+              <p className="cfb-empty-reviews">No published reviews yet. Be the first to share your experience.</p>
+            ) : (
+              sortedReviews.map((review) => (
               <div className="cfb-review-card" key={review.id}>
                 <div className="cfb-review-top">
                   <div className="cfb-review-user">
@@ -346,7 +356,8 @@ const ReviewsPage = () => {
                   </button>
                 </div>
               </div>
-            ))}
+            ))
+            )}
           </div>
         </section>
       </div>

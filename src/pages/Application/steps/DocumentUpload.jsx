@@ -34,7 +34,7 @@ const FileUploadCard = ({ docKey, label, required, file, onFileSelect, onFileRem
       <div className="file-card-top"><div className="file-card-title-group"><span className="document-type-icon"><Icon aria-hidden="true"/></span><h4 className="file-upload-label">{label}</h4></div><RequirementBadge required={required}/></div>
       <p className="file-upload-description">{DOCUMENT_HINTS[docKey]}</p>
       <DocumentPicker docKey={docKey} label={label} file={file} onConfirm={selected=>onFileSelect(docKey,selected)} onRemove={()=>onFileRemove(docKey)} onError={message=>onError(docKey,message)}
-        status={saveStatus==='Saved on this device'?'Selected on this device · Saved in this browser · Not uploaded':saveStatus?.startsWith('Save failed')?'Selected on this device · Save failed; keep this page open · Not uploaded':'Selected on this device · Saving not yet confirmed · Not uploaded'} />
+        status={saveStatus==='Saved on this device'?'Selected on this device · Saved in this browser · Submit to upload or retry':saveStatus?.startsWith('Save failed')?'Selected on this device · Save failed; keep this page open · Submit to upload or retry':'Selected on this device · Saving not yet confirmed · Submit to upload or retry'} />
     </div><FieldErrorList id={cardId} errors={errors}/>
   </div>;
 };
@@ -78,7 +78,7 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
             Supporting <span className="title-highlight">Documents</span>
           </h2>
           <p className="step-intro-subtitle">
-            Accepted formats: <strong>PDF, JPG, or PNG (ID photo: JPG/PNG only)</strong> (up to <strong>10 MiB</strong> per file). Files selected here are stored locally in your browser draft and are transmitted to the server only when you submit your application.
+            Accepted formats: <strong>PDF, JPG, or PNG (ID photo: JPG/PNG only)</strong> (up to <strong>10 MiB</strong> per file). File transfer starts when you submit your application. Interrupted uploads may remain temporarily in private storage for safe retry; submission is confirmed only when you receive a receipt.
           </p>
         </div>
       </header>

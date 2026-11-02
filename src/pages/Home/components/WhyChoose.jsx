@@ -4,7 +4,8 @@ import './WhyChoose.css';
 
 function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 function ease(p, start, end) { return clamp01((p - start) / (end - start)); }
-function easeOut(t) { return 1 - (1 - t) * (1 - t) * (1 - t); }
+// Zero velocity and acceleration at both ends avoids abrupt phase changes.
+function easeOut(t) { return t * t * t * (t * (t * 6 - 15) + 10); }
 function lerp(a, b, t) { return a + (b - a) * t; }
 
 const FOOD_IMAGES = [
@@ -60,39 +61,66 @@ const WhyChoose = () => {
   // Animation state
   const isActive = useRef(false);
   const rafId = useRef(null);
-  const targetP = useRef(0);
-  const currentP = useRef(0);
-  const isSettled = useRef(false);
+  const visualProgress = useRef(null);
+  const lastFrameTime = useRef(null);
 
   // Whether the marquee carousel is in its "running" phase (p > 0.82)
   const marqueeRunning = useRef(false);
 
-  const onFrame = useCallback(() => {
+  const onFrame = useCallback((timestamp = performance.now()) => {
+    rafId.current = null;
     if (!isActive.current || !sectionRef.current || !stageRef.current) return;
 
     // 1. Calculate normalized scroll progress (0–1) — batched reads
     const rect = sectionRef.current.getBoundingClientRect();
     const sectionH = sectionRef.current.offsetHeight;
-    const vh = window.innerHeight;
+    const vh = stageRef.current.offsetHeight;
     const scrolled = -rect.top;
-    const total = sectionH - vh;
-    targetP.current = clamp01(scrolled / total);
-
-    // 2. Lerp for smoothness
-    const diff = targetP.current - currentP.current;
-    const scrollChanging = Math.abs(diff) > 0.0005;
-    if (scrollChanging) {
-      currentP.current += diff * 0.09;
-      isSettled.current = false;
+    // Exactly 100vh is reserved at the end for the curtain overlap reveal
+    const animDistance = Math.max(1, sectionH - 2 * vh);
+    const target = clamp01(scrolled / animDistance);
+    const dt = lastFrameTime.current === null ? 1000 / 60 : Math.min(50, Math.max(0, timestamp - lastFrameTime.current));
+    lastFrameTime.current = timestamp;
+    // Brief time-based damping absorbs wheel steps without changing scroll geometry.
+    // Snap on re-entry, large jumps and at the curtain boundary to prevent stale frames.
+    if (visualProgress.current === null || target === 0 || target === 1 || Math.abs(target - visualProgress.current) > .4) {
+      visualProgress.current = target;
     } else {
-      currentP.current = targetP.current;
+      visualProgress.current += (target - visualProgress.current) * (1 - Math.exp(-dt / 85));
+      if (Math.abs(target - visualProgress.current) < .0001) visualProgress.current = target;
     }
-
-    const p = currentP.current;
+    const p = visualProgress.current;
+    const scrollChanging = p !== target;
     marqueeRunning.current = p > 0.82;
 
+    // ── CURTAIN OVERLAP & UNFOCUS EFFECT ──
+    // Journey (with margin-top: -100vh) scrolls up over WhyChoose while
+    // WhyChoose remains pinned at top: 0.
+    const rawOverlap = clamp01((scrolled - animDistance) / vh);
+    // Smoothstep easing (3x^2 - 2x^3) for zero-derivative gradual start
+    const overlapRatio = rawOverlap * rawOverlap * (3 - 2 * rawOverlap);
+
+    if (stageRef.current) {
+      if (rawOverlap > 0.001) {
+        // Refined 3D depth recession: scale down ~7.5% and drift back into the distance
+        const coverScale = (1 - overlapRatio * 0.075).toFixed(4);
+        const coverY = (-overlapRatio * 28).toFixed(1);
+        const coverBlur = (overlapRatio * 3.8).toFixed(2);
+        const coverDim = (1 - overlapRatio * 0.18).toFixed(3);
+        const coverOpacity = (1 - overlapRatio * 0.22).toFixed(3);
+
+        stageRef.current.style.filter = `blur(${coverBlur}px) brightness(${coverDim})`;
+        stageRef.current.style.transform = `scale(${coverScale}) translate3d(0, ${coverY}px, 0)`;
+        stageRef.current.style.opacity = coverOpacity;
+      } else {
+        stageRef.current.style.filter = '';
+        stageRef.current.style.transform = '';
+        stageRef.current.style.opacity = '';
+      }
+    }
+
     // ── TITLE FADE ──
-    const titleFade = 1 - easeOut(ease(p, 0.50, 0.78));
+    const titleFade = 1 - easeOut(ease(p, 0.48, 0.82));
 
     // ── PHASE 1: Typography assembly (0.00–0.35) + PHASE 3: Title breakaway (0.45–0.80) ──
 
@@ -101,7 +129,7 @@ const WhyChoose = () => {
       const tA = easeOut(ease(p, 0.0, 0.32));
       const xA = lerp(-55, 0, tA);
       const yA = lerp(-15, 0, tA);
-      const tB = easeOut(ease(p, 0.45, 0.78));
+      const tB = easeOut(ease(p, 0.48, 0.82));
       const xB = lerp(0, -180, tB);
       const yB = lerp(0, -100, tB);
       const rB = lerp(0, -6, tB);
@@ -115,7 +143,7 @@ const WhyChoose = () => {
       const tA = easeOut(ease(p, 0.05, 0.36));
       const xA = lerp(60, 0, tA);
       const yA = lerp(10, 0, tA);
-      const tB = easeOut(ease(p, 0.47, 0.80));
+      const tB = easeOut(ease(p, 0.50, 0.84));
       const xB = lerp(0, 160, tB);
       const yB = lerp(0, -80, tB);
       const rB = lerp(0, 5, tB);
@@ -128,7 +156,7 @@ const WhyChoose = () => {
     if (lineRefs.current[2]) {
       const tA = easeOut(ease(p, 0.08, 0.38));
       const yA = lerp(40, 0, tA);
-      const tB = easeOut(ease(p, 0.49, 0.82));
+      const tB = easeOut(ease(p, 0.52, 0.86));
       const xB = lerp(0, 60, tB);
       const yB = lerp(0, 120, tB);
       const rB = lerp(0, 3, tB);
@@ -168,17 +196,17 @@ const WhyChoose = () => {
 
     // ── IMAGE STRIP ──
     if (imgStripRef.current) {
-      const tStrip = easeOut(ease(p, 0.40, 0.85));
-      const stripScale = lerp(0.08, 1, tStrip);
+      const tStrip = easeOut(ease(p, 0.48, 0.88));
+      const stripScale = lerp(0.78, 1, tStrip);
       imgStripRef.current.style.transform =
         `translate(-50%, -50%) scale(${stripScale})`;
-      imgStripRef.current.style.opacity = clamp01(ease(p, 0.38, 0.52));
+      imgStripRef.current.style.opacity = easeOut(ease(p, 0.48, 0.68));
       imgStripRef.current.style.pointerEvents = p > 0.82 ? 'auto' : 'none';
     }
 
     // Animate container clip-path (from tiny sliver to full concave panorama)
     if (imgStripRef.current) {
-      const tClip = easeOut(ease(p, 0.42, 0.82));
+      const tClip = easeOut(ease(p, 0.48, 0.88));
       // Re-use pre-allocated arrays to avoid GC pressure
       for (let i = 0; i < 5; i++) {
         _polyTop[i][0] = lerp(START_POLY.top[i][0], TARGET_POLY.top[i][0], tClip);
@@ -201,7 +229,7 @@ const WhyChoose = () => {
 
     // Continuous Marquee Logic — uses cached halfWidth (no layout read per frame)
     if (marqueeRunning.current && trackRef.current) {
-      marqueeOffset.current -= marqueeSpeed.current;
+      marqueeOffset.current -= marqueeSpeed.current * (dt / (1000 / 60)) * easeOut(ease(p, .82, .96));
 
       const hw = cachedHalfWidth.current;
       if (hw > 0) {
@@ -215,7 +243,7 @@ const WhyChoose = () => {
       trackRef.current.style.transform = `translate3d(${marqueeOffset.current}px, 0, 0)`;
 
       // Friction for manual speed changes via buttons
-      if (marqueeSpeed.current > 1.5) marqueeSpeed.current *= 0.95;
+      if (marqueeSpeed.current > 1.5) marqueeSpeed.current *= Math.pow(0.95, dt / (1000 / 60));
       if (marqueeSpeed.current < -1.5) marqueeSpeed.current *= 0.95;
       if (Math.abs(marqueeSpeed.current - 1.5) < 0.1) marqueeSpeed.current = 1.5;
     }
@@ -232,20 +260,19 @@ const WhyChoose = () => {
     // Decide whether to keep looping:
     // - If the marquee is running, we always need frames (it's continuous motion)
     // - Otherwise, stop when settled
-    if (marqueeRunning.current) {
+    if (marqueeRunning.current || scrollChanging) {
       rafId.current = requestAnimationFrame(onFrame);
-    } else if (scrollChanging) {
-      rafId.current = requestAnimationFrame(onFrame);
+
     } else {
-      isSettled.current = true;
+
       rafId.current = null;
     }
   }, []);
 
   // Kick the rAF loop when the user scrolls (restarts after settling)
   const onScroll = useCallback(() => {
-    if (isActive.current && !rafId.current) {
-      isSettled.current = false;
+    if (isActive.current && !document.hidden && rafId.current === null) {
+
       rafId.current = requestAnimationFrame(onFrame);
     }
   }, [onFrame]);
@@ -282,6 +309,7 @@ const WhyChoose = () => {
     const cacheHalfWidth = () => {
       if (trackRef.current) {
         cachedHalfWidth.current = trackRef.current.scrollWidth / 2;
+        onScroll();
       }
     };
     // Delay slightly to ensure images have loaded and track has width
@@ -297,8 +325,9 @@ const WhyChoose = () => {
           rafId.current = null;
         }
       } else if (isActive.current) {
-        isSettled.current = false;
-        rafId.current = requestAnimationFrame(onFrame);
+        visualProgress.current = null;
+        lastFrameTime.current = null;
+        onScroll();
       }
     };
     document.addEventListener('visibilitychange', onVisibility);
@@ -307,8 +336,12 @@ const WhyChoose = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           isActive.current = true;
-          isSettled.current = false;
-          rafId.current = requestAnimationFrame(onFrame);
+
+          visualProgress.current = null;
+          lastFrameTime.current = null;
+          // Cancel before synchronizing so only one loop owns the next frame.
+          if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+          onFrame();
         } else {
           isActive.current = false;
           if (rafId.current) {
@@ -327,14 +360,18 @@ const WhyChoose = () => {
       window.removeEventListener('resize', cacheHalfWidth);
       window.removeEventListener('scroll', onScroll);
       document.removeEventListener('visibilitychange', onVisibility);
-      if (rafId.current) cancelAnimationFrame(rafId.current);
+      if (rafId.current !== null) cancelAnimationFrame(rafId.current);
+      rafId.current = null;
+      isActive.current = false;
+      visualProgress.current = null;
+      lastFrameTime.current = null;
     };
   }, [onFrame, onScroll]);
 
   return (
     <section className="wc-section" id="why-choose" ref={sectionRef}>
-      <div className="wc-section__sticky" ref={stageRef}>
-        <div className="wc-stage">
+      <div className="wc-section__sticky">
+        <div className="wc-stage" ref={stageRef}>
 
           {/* ─── Decorative crosshairs ─── */}
           <div className="wc-crosshair wc-crosshair--tl" aria-hidden="true" />

@@ -1,4 +1,6 @@
-import { useState, useRef } from 'react';
+import { useState, useRef, useEffect } from 'react';
+import { submitFranchiseApplication } from '../../api';
+import { clearUploadTransfers } from '../../api/resumableDocuments';
 import { Link } from 'react-router-dom';
 import { APPLICATION_DOCUMENTS, UUID_PATTERN } from '../../../shared/application.js';
 import ApplicationSupport from './ApplicationSupport';
@@ -14,7 +16,9 @@ export default function ApplicationStatus() {
   const [message,setMessage]=useState(''); const [error,setError]=useState(''); const [busy,setBusy]=useState(false);
   const [showCode,setShowCode]=useState(false);
   const lock=useRef(false); const retries=useRef({});
-  const run=async action=>{if(lock.current)return;lock.current=true;setBusy(true);setError('');setMessage('');try{await action();}catch(e){setError(e.message);}finally{lock.current=false;setBusy(false);}};
+  const pending=useRef(null); const mounted=useRef(true);
+  useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;pending.current?.abort();clearUploadTransfers();};},[]);
+  const run=async action=>{if(lock.current)return;lock.current=true;setBusy(true);setError('');setMessage('');try{await action();}catch(e){if(mounted.current)setError(e.message);}finally{lock.current=false;if(mounted.current)setBusy(false);}};
   const call=async (suffix='',body)=>{
     let response; try { response=await fetch(`/api/application-status/${reference.trim()}${suffix}`,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${code.trim()}`},body,cache:'no-store'}); } catch {throw new Error('Connection failed. Keep this page open and retry with the same file.');}
     let data; try{data=await response.json();}catch{throw new Error('The service returned an unreadable response. Keep this page open and retry.');}
@@ -31,8 +35,13 @@ export default function ApplicationStatus() {
     const file=files[request.id]; if(!file)throw new Error('Choose the requested replacement document.');
     if(!file.size || file.size>10*1024*1024 || !documentTypes(request.documentKey).includes(file.type))throw new Error(`Choose a nonempty ${documentFormatLabel(request.documentKey)} no larger than 10 MiB.`);
     const retryId=retries.current[request.id] ||= crypto.randomUUID();
-    const body=new FormData();body.append('requestId',retryId);body.append('document',file);
-    const result=await call(`/corrections/${request.id}`,body);
+    const controller=new AbortController();pending.current=controller;
+    let result;
+    try {
+      result=await submitFranchiseApplication({formData:{documents:{[request.documentKey]:file}},requestId:retryId,signal:controller.signal,
+        correction:{applicationId:reference.trim(),id:request.id,accessCode:code.trim()},onProgress:setMessage});
+    } finally { if(pending.current===controller)pending.current=null; }
+    if(!mounted.current)return;
     if(result.id!==request.id || result.requestId!==retryId || result.status!=='received')throw new Error('Replacement receipt could not be confirmed. Retry with the same file.');
     setFiles(previous=>{const next={...previous};delete next[request.id];return next;});
     setRecord(previous=>({...previous,corrections:previous.corrections.map(r=>r.id===request.id?{...r,status:'received'}:r)}));
@@ -61,7 +70,7 @@ export default function ApplicationStatus() {
         {!record.corrections.length && <div className="portal-empty"><BiCheckCircle aria-hidden="true"/><div><h3>Nothing to replace right now.</h3><p>No replacement documents are currently requested. Check back for updates.</p></div></div>}
         <div className="portal-request-grid">{record.corrections.map(request=><section key={request.id} className="portal-request-card"><div className="portal-request-heading"><BiFile aria-hidden="true"/><h3>{APPLICATION_DOCUMENTS.find(d=>d.key===request.documentKey)?.label || 'Document'}</h3></div><span className={'portal-request-state '+(request.status==='open'?'needs-action':'')}>{request.status==='received'?'Replacement received — awaiting review':request.status==='open'?'Action required':'Request closed'}</span><p className="portal-reviewer-note">{request.reason}</p>
           {request.status==='open' && <>
-            <DocumentPicker docKey={request.documentKey} label={APPLICATION_DOCUMENTS.find(d=>d.key===request.documentKey)?.label || 'Requested document'} file={files[request.id]} disabled={busy} status="Selected on this device · Not saved in browser · Not uploaded" onError={setError}
+            <DocumentPicker docKey={request.documentKey} label={APPLICATION_DOCUMENTS.find(d=>d.key===request.documentKey)?.label || 'Requested document'} file={files[request.id]} disabled={busy} status="Selected on this device · Not saved in browser · Send to upload or retry" onError={setError}
               onConfirm={file=>{setFiles(p=>({...p,[request.id]:file}));delete retries.current[request.id];}}
               onRemove={()=>{setFiles(p=>{const next={...p};delete next[request.id];return next;});delete retries.current[request.id];}} />
             <p className="portal-small-note">Replacements stay in memory until sent; they are not saved as a local draft.</p><button className="portal-primary step-nav-continue" disabled={busy||!files[request.id]} onClick={()=>run(()=>replace(request))}>{busy?'Processing…':'Send replacement'}<BiArrowToRight aria-hidden="true"/></button>

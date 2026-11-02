@@ -222,9 +222,12 @@ const choices = {
 for (const key of ['ownedBusiness','hasCoApplicant','priorBusinessOwned','foodIndustryExperience','activeIncome','existingDebts','neverBankruptcy','noPendingCases','hasSpecificLocation','openToAlternative']) choices[key] = ['yes','no'];
 const label = key => key.replace(/([A-Z])/g, ' $1').replaceAll('_', ' ');
 
-export function validateStep(step, input) {
+export function validateStep(step, input, { documentMetadata = false } = {}) {
   if (!fieldsByStep[step] || !object(input)) return ['Application data is invalid.'];
   const data = sanitizeApplication(input);
+  // Only the upload-session API opts into descriptors. Actual bytes are checked
+  // independently before a descriptor can become a submitted document.
+  if (documentMetadata && object(input.documents)) data.documents = input.documents;
   const errors = [];
   for (const key of fieldsByStep[step]) {
     const value = input[key];
@@ -257,14 +260,14 @@ export function validateStep(step, input) {
   }
   if (step === 6) {
     for (const [key,file] of Object.entries(input.documents || {})) {
-      if (!DOCUMENT_KEYS.includes(key) || !(file instanceof File) || file.size === 0 || file.size > MAX_DOCUMENT_BYTES || !documentTypes(key).includes(file.type)) errors.push(`Invalid document: ${key}. Use a nonempty ${documentFormatLabel(key)} up to 10 MiB.`);
+      if (!DOCUMENT_KEYS.includes(key) || !(documentMetadata ? object(file) : file instanceof File) || !Number.isSafeInteger(file?.size) || file.size <= 0 || file.size > MAX_DOCUMENT_BYTES || !documentTypes(key).includes(file.type)) errors.push(`Invalid document: ${key}. Use a nonempty ${documentFormatLabel(key)} up to 10 MiB.`);
     }
   }
   return [...new Set([...errors, ...validateExistingStep(step, data)])];
 }
 
-export function validateApplication(input) {
-  return fieldsByStep.flatMap((_, step) => validateStep(step, input).map(message => ({step, message})));
+export function validateApplication(input, options) {
+  return fieldsByStep.flatMap((_, step) => validateStep(step, input, options).map(message => ({step, message})));
 }
 
 export function isValidReceipt(receipt, requestId) {

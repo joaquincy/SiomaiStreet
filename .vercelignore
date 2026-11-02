@@ -1,0 +1,12 @@
+.git
+.env
+.env.*
+!.env.example
+docs
+tests
+supabase
+.phase1-local-test
+.agents
+.codex
+*.log
+wireframe.*

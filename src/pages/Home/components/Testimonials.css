@@ -1,7 +1,7 @@
 /* ═══════════════════════════════════════════════════════════════════════════
    SIOMAI STREET — TESTIMONIALS & STREET CREDIBILITY
    Harmonized with Requirements (#110F0D + Film Grain + The Last Shuriken)
-   Awwwards & Editorial Graphic Design Standards
+   Awwwards & Editorial Graphic Design Standards — Plus Ultra Edition
    ═══════════════════════════════════════════════════════════════════════════ */
 
 /* ─── SECTION CANVAS ─── */
@@ -14,7 +14,20 @@
   background-color: #110F0D; /* Exact Night Market Obsidian */
   color: #FFFDF5;
   padding: clamp(5.5rem, 9vh, 8.5rem) 0;
-  z-index: 1;
+  z-index: 2;
+}
+
+/* ─── Accessibility: Screen reader only live region ─── */
+.reviews__sr-live {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  padding: 0;
+  margin: -1px;
+  overflow: hidden;
+  clip: rect(0, 0, 0, 0);
+  white-space: nowrap;
+  border: 0;
 }
 
 /* ─── FILM GRAIN OVERLAY (Identical to Requirements, Packages & CTA) ─── */
@@ -28,6 +41,28 @@
   opacity: 0.08;
   pointer-events: none;
   z-index: 0;
+}
+
+/* ─── AMBIENT GLOW (Reactive to drag) ─── */
+.reviews__ambient-glow {
+  position: absolute;
+  top: 50%;
+  left: 35%;
+  transform: translate(-50%, -50%);
+  width: 700px;
+  height: 500px;
+  border-radius: 50%;
+  background: radial-gradient(
+    ellipse at center,
+    rgba(214, 27, 34, 0.1) 0%,
+    rgba(245, 166, 35, 0.06) 30%,
+    transparent 70%
+  );
+  pointer-events: none;
+  z-index: 0;
+  filter: blur(60px);
+  opacity: 0.5;
+  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
 }
 
 /* ─── GIANT FAINT BACKGROUND TYPOGRAPHY (Harmonized with START & FORMATS) ─── */
@@ -71,8 +106,9 @@
   z-index: 2;
   margin-bottom: clamp(3.25rem, 6vw, 4.75rem);
   opacity: 0;
-  transform: translateY(20px);
-  transition: opacity 0.75s cubic-bezier(0.16, 1, 0.3, 1), transform 0.75s cubic-bezier(0.16, 1, 0.3, 1);
+  transform: translateY(30px);
+  transition: opacity 0.85s cubic-bezier(0.16, 1, 0.3, 1),
+              transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reviews.reviews--visible .reviews__header {
@@ -106,6 +142,12 @@
   border-radius: 50%;
   background: #D61B22;
   box-shadow: 0 0 10px rgba(214, 27, 34, 0.8);
+  animation: dotPulse 2s ease-in-out infinite;
+}
+
+@keyframes dotPulse {
+  0%, 100% { box-shadow: 0 0 10px rgba(214, 27, 34, 0.8); }
+  50% { box-shadow: 0 0 18px rgba(214, 27, 34, 1), 0 0 6px rgba(214, 27, 34, 0.6); }
 }
 
 .reviews__badge-title {
@@ -215,6 +257,16 @@
   align-items: center;
   position: relative;
   z-index: 2;
+  /* Staggered entrance */
+  opacity: 0;
+  transform: translateY(40px);
+  transition: opacity 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s,
+              transform 1s cubic-bezier(0.16, 1, 0.3, 1) 0.2s;
+}
+
+.reviews.reviews--visible .reviews__showcase {
+  opacity: 1;
+  transform: translateY(0);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -225,6 +277,16 @@
   flex-direction: column;
   width: 100%;
   max-width: 530px;
+  /* Stagger entrance for deck column */
+  opacity: 0;
+  transform: translateX(-30px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s,
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.35s;
+}
+
+.reviews.reviews--visible .reviews__deck-col {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 /* Minimalist Top Control Bar (High-Contrast & Tactile) */
@@ -267,6 +329,40 @@
   text-transform: uppercase;
 }
 
+.reviews__deck-controls {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+}
+
+/* ─── Auto-play toggle button ─── */
+.reviews__autoplay-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 50%;
+  border: 1px solid rgba(255, 255, 255, 0.15);
+  background: rgba(255, 255, 255, 0.04);
+  color: rgba(255, 253, 245, 0.5);
+  cursor: pointer;
+  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  backdrop-filter: blur(8px);
+}
+
+.reviews__autoplay-btn:hover {
+  background: rgba(255, 255, 255, 0.1);
+  color: #FFFDF5;
+  border-color: rgba(255, 255, 255, 0.3);
+}
+
+.reviews__autoplay-btn--active {
+  color: #F5A623;
+  border-color: rgba(245, 166, 35, 0.4);
+  background: rgba(245, 166, 35, 0.08);
+}
+
 .reviews__deck-arrows {
   display: flex;
   align-items: center;
@@ -285,37 +381,94 @@
   color: #FFFDF5;
   font-size: 1.35rem;
   cursor: pointer;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
   backdrop-filter: blur(8px);
+  position: relative;
+  overflow: hidden;
+}
+
+.reviews__chevron-btn::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(245, 166, 35, 0.3), transparent);
+  opacity: 0;
+  transform: scale(0);
+  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reviews__chevron-btn:hover {
   background: #F5A623;
   color: #110F0D;
   border-color: #F5A623;
-  transform: scale(1.08);
-  box-shadow: 0 6px 18px rgba(245, 166, 35, 0.38);
+  transform: scale(1.12);
+  box-shadow: 0 8px 24px rgba(245, 166, 35, 0.4), 0 0 0 4px rgba(245, 166, 35, 0.1);
+}
+
+.reviews__chevron-btn:hover::before {
+  opacity: 1;
+  transform: scale(2);
 }
 
 .reviews__chevron-btn:active {
-  transform: scale(0.95);
+  transform: scale(0.92);
+  transition-duration: 0.1s;
 }
 
 /* ─── The Staggered Card Deck Stage ─── */
 .reviews__deck {
   position: relative;
   width: 100%;
-  min-height: 335px;
+  min-height: 400px;
   touch-action: pan-y;
   cursor: grab;
   user-select: none;
   -webkit-user-select: none;
   outline: none;
   perspective: 1200px;
+  transform-style: preserve-3d;
+  /* Ensure footer never gets covered */
+  margin-bottom: 0.5rem;
+}
+
+.reviews__deck:focus-visible {
+  outline: 2px solid #F5A623;
+  outline-offset: 8px;
+  border-radius: 12px;
 }
 
 .reviews__deck--dragging {
   cursor: grabbing;
+}
+
+/* ─── Swipe Direction Indicators ─── */
+.reviews__swipe-indicator {
+  position: absolute;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 44px;
+  height: 44px;
+  border-radius: 50%;
+  background: rgba(245, 166, 35, 0.2);
+  color: #F5A623;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 1.6rem;
+  z-index: 10;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+  backdrop-filter: blur(12px);
+  border: 1px solid rgba(245, 166, 35, 0.3);
+}
+
+.reviews__swipe-indicator--left {
+  right: -56px;
+}
+
+.reviews__swipe-indicator--right {
+  left: -56px;
 }
 
 /* ─── Individual Card Shell ─── */
@@ -324,15 +477,19 @@
   top: 0;
   left: 0;
   width: 100%;
-  min-height: 315px;
-  border-radius: 22px;
-  padding: clamp(1.85rem, 3.2vw, 2.45rem);
+  min-height: 360px;
+  border-radius: 24px;
+  padding: clamp(2rem, 3.5vw, 2.8rem);
+  padding-top: clamp(2.2rem, 3.8vw, 3rem);
   display: flex;
   flex-direction: column;
   justify-content: space-between;
   will-change: transform, opacity;
   transform-style: preserve-3d;
-  transition: transform 0.35s cubic-bezier(0.34, 1.56, 0.64, 1), box-shadow 0.35s ease;
+  transition: transform 0.45s cubic-bezier(0.34, 1.56, 0.64, 1),
+              box-shadow 0.4s ease,
+              opacity 0.35s ease,
+              filter 0.4s ease;
 }
 
 /* ─── Masking Tape Clip Element (Harmonized with Requirements & Packages) ─── */
@@ -341,64 +498,153 @@
   top: -13px;
   left: 50%;
   transform: translateX(-50%) rotate(-2.5deg);
-  width: 76px;
-  height: 26px;
-  background: rgba(255, 255, 255, 0.38);
-  backdrop-filter: blur(4px);
-  -webkit-backdrop-filter: blur(4px);
+  width: 82px;
+  height: 28px;
+  background: linear-gradient(135deg, rgba(255, 255, 255, 0.45), rgba(255, 255, 255, 0.28));
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
   border-radius: 2px;
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.16);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.14), inset 0 0 0 0.5px rgba(255, 255, 255, 0.3);
   z-index: 15;
   pointer-events: none;
 }
 
+/* ─── Glassmorphism shimmer overlay on front card ─── */
+.reviews__card-shimmer {
+  position: absolute;
+  inset: 0;
+  border-radius: 22px;
+  background: linear-gradient(
+    135deg,
+    rgba(255, 255, 255, 0) 0%,
+    rgba(255, 255, 255, 0.04) 40%,
+    rgba(255, 255, 255, 0.12) 50%,
+    rgba(255, 255, 255, 0.04) 60%,
+    rgba(255, 255, 255, 0) 100%
+  );
+  background-size: 200% 200%;
+  animation: shimmerSlide 4s ease-in-out infinite;
+  pointer-events: none;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+@keyframes shimmerSlide {
+  0% { background-position: -100% -100%; }
+  50% { background-position: 200% 200%; }
+  100% { background-position: -100% -100%; }
+}
+
+/* ─── Quote mark ornament ─── */
+.reviews__card-quote {
+  position: absolute;
+  top: 18px;
+  right: 24px;
+  font-family: Georgia, 'Times New Roman', serif;
+  font-size: 4.5rem;
+  line-height: 1;
+  color: rgba(214, 27, 34, 0.08);
+  pointer-events: none;
+  z-index: 1;
+  font-weight: 700;
+}
+
 /* Card 3: Back Right Layer (Clockwise Tilt) */
 .reviews__card--back-right {
-  background-color: #ECE5D6;
+  background-color: #E8E1D2;
   border: 1px solid #C5BC9F;
   color: #1A1614;
   z-index: 1;
-  box-shadow: 0 12px 30px -10px rgba(0, 0, 0, 0.38);
+  box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.4);
   pointer-events: none;
+  filter: blur(0.6px) brightness(0.96);
 }
 
 /* Card 2: Back Left Layer (Counter-Clockwise Tilt — Left Peek like Reference) */
 .reviews__card--back-left {
-  background-color: #F6F1E7;
+  background-color: #F2EDE3;
   border: 1px solid #D5CCB8;
   color: #1A1614;
   z-index: 2;
-  box-shadow: 0 16px 40px -10px rgba(0, 0, 0, 0.48);
+  box-shadow: 0 18px 45px -10px rgba(0, 0, 0, 0.5);
   pointer-events: none;
+  filter: blur(0.3px) brightness(0.98);
 }
 
 /* Card 1: Front Active Layer */
 .reviews__card--front {
   background-color: #FFFFFF;
-  border: 1px solid rgba(0, 0, 0, 0.08);
+  background-image:
+    linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(252, 250, 246, 1) 100%);
+  border: none;
   color: #181512;
   z-index: 3;
-  box-shadow:
-    0 24px 55px -14px rgba(0, 0, 0, 0.65),
-    0 2px 8px rgba(0, 0, 0, 0.12),
-    0 0 0 1px rgba(0, 0, 0, 0.04);
+  cursor: grab;
+  /* Gradient border via pseudo-element */
+  outline: none;
 }
 
-.reviews__card--front:hover {
+.reviews__card--front::before {
+  content: '';
+  position: absolute;
+  inset: -1px;
+  border-radius: 25px;
+  padding: 1px;
+  background: linear-gradient(
+    145deg,
+    rgba(214, 27, 34, 0.15) 0%,
+    rgba(245, 166, 35, 0.12) 30%,
+    rgba(255, 255, 255, 0.2) 60%,
+    rgba(214, 27, 34, 0.08) 100%
+  );
+  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  pointer-events: none;
+  z-index: -1;
+  transition: opacity 0.4s ease;
+  opacity: 0.6;
+}
+
+.reviews__card--front::after {
+  content: '';
+  position: absolute;
+  inset: 0;
+  border-radius: 24px;
   box-shadow:
-    0 32px 70px -16px rgba(0, 0, 0, 0.75),
-    0 4px 12px rgba(0, 0, 0, 0.16);
+    0 28px 60px -14px rgba(0, 0, 0, 0.6),
+    0 4px 12px rgba(0, 0, 0, 0.1),
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 0 70px -20px rgba(214, 27, 34, 0.1);
+  pointer-events: none;
+  z-index: -1;
+  transition: box-shadow 0.4s ease;
+}
+
+.reviews__card--front:hover::before {
+  opacity: 1;
+}
+
+.reviews__card--front:hover::after {
+  box-shadow:
+    0 36px 80px -16px rgba(0, 0, 0, 0.7),
+    0 6px 16px rgba(0, 0, 0, 0.14),
+    0 0 0 1px rgba(0, 0, 0, 0.04),
+    0 0 90px -20px rgba(214, 27, 34, 0.18),
+    0 0 40px -10px rgba(245, 166, 35, 0.08);
 }
 
 /* ─── Card Interior Typography & Layout ─── */
 .reviews__card-text {
   font-family: var(--font-body, 'Inter', sans-serif);
-  font-size: clamp(1.05rem, 1.25vw, 1.2rem);
-  line-height: 1.62;
+  font-size: clamp(1.08rem, 1.3vw, 1.25rem);
+  line-height: 1.68;
   font-weight: 500;
   color: #181512;
-  margin: 0 0 1.85rem;
+  margin: 0 0 2rem;
   letter-spacing: -0.01em;
+  position: relative;
+  z-index: 2;
 }
 
 .reviews__card-author {
@@ -406,8 +652,16 @@
   align-items: center;
   gap: 1.15rem;
   margin-top: auto;
-  padding-top: 1.25rem;
-  border-top: 1px solid rgba(0, 0, 0, 0.07);
+  padding-top: 1.35rem;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  position: relative;
+  z-index: 2;
+}
+
+/* ─── Avatar with ring ─── */
+.reviews__avatar-wrap {
+  position: relative;
+  flex-shrink: 0;
 }
 
 .reviews__avatar {
@@ -416,9 +670,23 @@
   border-radius: 50%;
   object-fit: cover;
   flex-shrink: 0;
-  border: 1.5px solid rgba(0, 0, 0, 0.12);
+  border: 2px solid #fff;
   background-color: #ECE7DC;
-  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.12);
+  position: relative;
+  z-index: 1;
+}
+
+.reviews__avatar-ring {
+  position: absolute;
+  inset: -3px;
+  border-radius: 50%;
+  border: 2px solid transparent;
+  background: linear-gradient(135deg, #D61B22, #F5A623) border-box;
+  -webkit-mask: linear-gradient(#fff 0 0) padding-box, linear-gradient(#fff 0 0);
+  -webkit-mask-composite: xor;
+  mask-composite: exclude;
+  z-index: 0;
 }
 
 .reviews__author-meta {
@@ -446,8 +714,12 @@
 .reviews__card-stars {
   display: inline-flex;
   gap: 1px;
-  color: #E29B24;
+  color: #D4D0C8;
   font-size: 0.92rem;
+}
+
+.reviews__star--filled {
+  color: #E29B24;
 }
 
 .reviews__author-location {
@@ -472,15 +744,16 @@
   font-weight: 600;
   color: #374151;
   line-height: 1.3;
-  transition: background-color 0.2s ease, border-color 0.2s ease;
+  transition: background-color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
 }
 
 .reviews__card--front:hover .reviews__card-pill {
   background-color: #F3F4F6;
   border-color: #6B7280;
+  transform: translateY(-1px);
 }
 
-/* ─── Deck Footer (Counter, Dots, Action Link) ─── */
+/* ─── Deck Footer (Counter, Progress, Dots, Action Link) ─── */
 .reviews__deck-footer {
   display: flex;
   align-items: center;
@@ -488,16 +761,90 @@
   flex-wrap: wrap;
   gap: 1rem;
   margin-top: 1.75rem;
-  padding: 0 0.35rem;
+  padding: 0.5rem 0.35rem 0;
+  position: relative;
+  z-index: 5;
+  /* Ensure it's always visible above cards */
+  clear: both;
 }
 
+.reviews__footer-left {
+  display: flex;
+  align-items: center;
+  gap: 0.85rem;
+  min-width: 120px;
+}
+
+/* ─── Animated morphing counter ─── */
 .reviews__deck-count {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.78rem;
+  font-size: 0.8rem;
   font-weight: 700;
   letter-spacing: 0.14em;
-  color: rgba(255, 253, 245, 0.5);
-  min-width: 50px;
+  color: rgba(255, 253, 245, 0.55);
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+}
+
+.reviews__count-current {
+  display: inline-block;
+  color: #FFFDF5;
+  font-weight: 800;
+  min-width: 1.4em;
+  text-align: right;
+  animation: counterMorph 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+}
+
+@keyframes counterMorph {
+  0% {
+    opacity: 0;
+    transform: translateY(8px) scale(0.8);
+    filter: blur(2px);
+  }
+  100% {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+    filter: blur(0);
+  }
+}
+
+.reviews__count-sep {
+  color: rgba(255, 253, 245, 0.3);
+  margin: 0 2px;
+}
+
+.reviews__count-total {
+  color: rgba(255, 253, 245, 0.4);
+}
+
+/* ─── Progress bar ─── */
+.reviews__progress-track {
+  flex: 1;
+  max-width: 80px;
+  height: 2px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 2px;
+  overflow: hidden;
+}
+
+.reviews__progress-fill {
+  height: 100%;
+  width: 0%;
+  background: linear-gradient(90deg, #D61B22, #F5A623);
+  border-radius: 2px;
+  transform-origin: left;
+}
+
+@keyframes progressFill {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+/* ─── Dot navigation ─── */
+.reviews__footer-center {
+  display: flex;
+  align-items: center;
 }
 
 .reviews__deck-dots {
@@ -514,18 +861,19 @@
   background: rgba(255, 255, 255, 0.2);
   cursor: pointer;
   padding: 0;
-  transition: all 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: all 0.35s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .reviews__deck-dot:hover {
   background: rgba(255, 255, 255, 0.45);
+  transform: scale(1.3);
 }
 
 .reviews__deck-dot--active {
-  width: 22px;
+  width: 24px;
   border-radius: 9999px;
-  background: #D61B22;
-  box-shadow: 0 0 10px rgba(214, 27, 34, 0.65);
+  background: linear-gradient(90deg, #D61B22, #E63946);
+  box-shadow: 0 0 12px rgba(214, 27, 34, 0.65), 0 0 4px rgba(214, 27, 34, 0.3);
 }
 
 .reviews__leave-link {
@@ -535,12 +883,24 @@
   letter-spacing: 0.06em;
   text-transform: uppercase;
   color: #F5A623;
-  transition: color 0.2s ease, transform 0.2s ease;
+  transition: color 0.25s ease, transform 0.25s ease, gap 0.25s ease;
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+
+.reviews__leave-arrow {
+  display: inline-block;
+  transition: transform 0.25s cubic-bezier(0.34, 1.56, 0.64, 1);
 }
 
 .reviews__leave-link:hover {
   color: #FFFDF5;
   transform: translateX(3px);
+}
+
+.reviews__leave-link:hover .reviews__leave-arrow {
+  transform: translateX(4px);
 }
 
 /* ═══════════════════════════════════════════════════════════════════════════
@@ -551,6 +911,16 @@
   justify-content: center;
   align-items: center;
   position: relative;
+  /* Stagger entrance for mascot column */
+  opacity: 0;
+  transform: translateX(30px);
+  transition: opacity 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.55s,
+              transform 0.9s cubic-bezier(0.16, 1, 0.3, 1) 0.55s;
+}
+
+.reviews.reviews--visible .reviews__mascot-col {
+  opacity: 1;
+  transform: translateX(0);
 }
 
 .reviews__mascot-poster {
@@ -582,6 +952,12 @@
   inset: 0;
   border-radius: 50%;
   border: 1px dashed rgba(245, 166, 35, 0.22);
+  animation: ringPulse 6s ease-in-out infinite;
+}
+
+@keyframes ringPulse {
+  0%, 100% { opacity: 1; transform: scale(1); }
+  50% { opacity: 0.6; transform: scale(1.03); }
 }
 
 .reviews__mascot-ring-inner {
@@ -652,11 +1028,14 @@
   max-height: 380px;
   object-fit: contain;
   filter: drop-shadow(0 20px 32px rgba(0, 0, 0, 0.75));
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  transition: transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1),
+              filter 0.5s ease;
 }
 
 .reviews__mascot-poster:hover .reviews__mascot-img {
-  transform: translateY(-6px) scale(1.02);
+  transform: translateY(-8px) scale(1.03) rotate(-1deg);
+  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.8))
+          drop-shadow(0 0 30px rgba(245, 166, 35, 0.15));
 }
 
 /* ─── Asian Dim Sum Signboard Banner (Inspired by Lunar & Traditional Street Plaque) ─── */
@@ -676,6 +1055,16 @@
     0 16px 36px rgba(0, 0, 0, 0.65),
     0 0 25px rgba(214, 27, 34, 0.15),
     inset 0 1px 0 rgba(255, 255, 255, 0.08);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.4s ease;
+}
+
+.reviews__mascot-banner:hover {
+  transform: translateY(-3px);
+  box-shadow:
+    0 22px 44px rgba(0, 0, 0, 0.7),
+    0 0 35px rgba(214, 27, 34, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
 }
 
 /* Traditional Asian Meander / Fret Corner Ornaments */
@@ -852,6 +1241,14 @@
   .reviews__mascot-poster {
     margin: 0 auto;
   }
+
+  .reviews__swipe-indicator--left {
+    right: -10px;
+  }
+
+  .reviews__swipe-indicator--right {
+    left: -10px;
+  }
 }
 
 @media (max-width: 640px) {
@@ -868,19 +1265,20 @@
   }
 
   .reviews__deck {
-    min-height: 350px;
+    min-height: 380px;
   }
 
   .reviews__card {
-    min-height: 330px;
-    padding: 1.5rem;
-    border-radius: 18px;
+    min-height: 360px;
+    padding: 1.6rem;
+    padding-top: 1.8rem;
+    border-radius: 20px;
   }
 
   .reviews__card-text {
-    font-size: 0.98rem;
-    line-height: 1.55;
-    margin-bottom: 1.4rem;
+    font-size: 1rem;
+    line-height: 1.58;
+    margin-bottom: 1.5rem;
   }
 
   .reviews__card-author {
@@ -912,15 +1310,65 @@
   .reviews__mascot-banner {
     padding: 1.15rem 1.25rem;
   }
+
+  .reviews__swipe-indicator {
+    display: none;
+  }
+
+  .reviews__card-quote {
+    font-size: 3rem;
+    top: 12px;
+    right: 16px;
+  }
+
+  .reviews__ambient-glow {
+    width: 400px;
+    height: 300px;
+  }
 }
 
+/* ═══════════════════════════════════════════════════════════════════════════
+   REDUCED MOTION (Accessibility)
+   ═══════════════════════════════════════════════════════════════════════════ */
 @media (prefers-reduced-motion: reduce) {
   .reviews__ink-stamp-svg {
     animation: none;
   }
 
   .reviews__card,
-  .reviews__mascot-img {
+  .reviews__mascot-img,
+  .reviews__mascot-banner {
+    transition: none !important;
+    filter: none !important;
+  }
+
+  .reviews__card-shimmer {
+    animation: none;
+    opacity: 0;
+  }
+
+  .reviews__badge-dot {
+    animation: none;
+  }
+
+  .reviews__mascot-ring-outer {
+    animation: none;
+  }
+
+  .reviews__count-current {
+    animation: none;
+  }
+
+  .reviews__header,
+  .reviews__showcase,
+  .reviews__deck-col,
+  .reviews__mascot-col {
+    opacity: 1;
+    transform: none;
     transition: none;
+  }
+
+  .reviews__progress-fill {
+    animation: none !important;
   }
 }

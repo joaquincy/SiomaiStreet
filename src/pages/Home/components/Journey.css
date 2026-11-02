@@ -12,10 +12,21 @@
 
   position: relative;
   height: 420vh;
+  height: 420svh;
   background: var(--journey-bg);
   z-index: 2;
-  /* clip-path instead of overflow:hidden — sticky breaks inside overflow:hidden */
-  clip-path: inset(0);
+  /* Sticky cover reveal: Journey scrolls up and covers WhyChoose's
+     pinned last frame. The -100vh pulls Journey up so it overlaps
+     the last 100vh of WhyChoose. WhyChoose's internal sticky keeps
+     its content pinned during this overlap zone. */
+  margin-top: -100vh;
+  margin-top: -100svh;
+  /* clip-path instead of overflow:hidden — sticky breaks inside overflow:hidden.
+     Top extended by 60px to allow the cover shadow to render above the section edge. */
+  clip-path: inset(-60px 0 0 0);
+  /* Cinematic top-edge shadow: Journey "rolls over" WhyChoose */
+  box-shadow: 0 -30px 60px -10px rgba(0, 0, 0, 0.45),
+              0 -8px 20px -4px rgba(0, 0, 0, 0.25);
 }
 
 /* Grain texture overlay */
@@ -69,10 +80,24 @@
   position: sticky;
   top: 0;
   height: 100vh;
+  height: 100svh;
   width: 100%;
   overflow: hidden;
   contain: layout style paint;
   z-index: 2;
+}
+
+/* Subtle top edge curtain shadow when Journey scrolls over WhyChoose */
+.journey-sticky::before {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 48px;
+  background: linear-gradient(to bottom, rgba(17, 15, 13, 0.45) 0%, rgba(17, 15, 13, 0.15) 50%, transparent 100%);
+  pointer-events: none;
+  z-index: 50;
 }
 
 /* ═══════════════════════════════════════════════════
@@ -667,6 +692,9 @@
 @media (prefers-reduced-motion: reduce) {
   .journey-section {
     height: auto;
+    margin-top: 0 !important;
+    box-shadow: none !important;
+    clip-path: none !important;
   }
 
   .journey-sticky {

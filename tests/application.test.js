@@ -9,7 +9,7 @@ import { join } from 'node:path';
 import { createApplicationHandler } from '../server/applications.js';
 import { readMultipart } from '../server/multipart.js';
 import { validateApplication, validateStep, sanitizeApplication, parseAmount, validDate, REQUIRED_DOC_KEYS } from '../shared/application.js';
-import { submitFranchiseApplication } from '../src/api/index.js';
+import { submitFranchiseApplication } from './helpers/legacyApplicationClient.js';
 import { loadApplicationDraft, saveApplicationDraft } from '../src/utils/applicationDraft.js';
 import { personalFeedback, stepFeedback } from '../src/utils/personalFeedback.js';
 

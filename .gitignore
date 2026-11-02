@@ -38,3 +38,5 @@ wireframe.*
 *.sw?
 Thumbs.db
 .phase1-local-test/
+.vercel/
+.vercel

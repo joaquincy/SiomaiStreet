@@ -1,4 +1,4 @@
-import { useState, useEffect, useRef, useCallback } from 'react';
+import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BiChevronLeft, BiChevronRight, BiStar } from 'react-icons/bi';
 import './Testimonials.css';
 
@@ -57,17 +57,36 @@ const FALLBACK_AVATARS = [
   '/images/wc-siomai-7.jpg',
 ];
 
+/* ─── Tiny spring-interpolation helper (no external library) ─── */
+const springCurve = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
+const smoothCurve = 'cubic-bezier(0.16, 1, 0.3, 1)';
+
+/* ─── Auto-play interval in ms ─── */
+const AUTOPLAY_INTERVAL = 5500;
+
 const Testimonials = () => {
   const [apiReviews, setApiReviews] = useState([]);
   const [activeIndex, setActiveIndex] = useState(0);
   const [dragOffset, setDragOffset] = useState({ x: 0, y: 0 });
   const [isDragging, setIsDragging] = useState(false);
   const [exitDirection, setExitDirection] = useState(null);
+  const [isAutoPlaying, setIsAutoPlaying] = useState(true);
+  const [isHovered, setIsHovered] = useState(false);
+  const [isFocused, setIsFocused] = useState(false);
+  const [cardTilt, setCardTilt] = useState({ x: 0, y: 0 });
+  const [liveText, setLiveText] = useState('');
 
   const sectionRef = useRef(null);
+  const deckRef = useRef(null);
+  const frontCardRef = useRef(null);
   const dragStartRef = useRef({ x: 0, y: 0, time: 0 });
   const isDraggingRef = useRef(false);
+  const autoPlayTimerRef = useRef(null);
+  const progressRef = useRef(null);
+  const velocityHistoryRef = useRef([]);
+  const [deckHeight, setDeckHeight] = useState(400);
 
+  /* ─── Fetch reviews from API ─── */
   useEffect(() => {
     let active = true;
     fetch('/api/reviews')
@@ -86,6 +105,7 @@ const Testimonials = () => {
     };
   }, []);
 
+  /* ─── Intersection Observer for scroll-triggered entrance ─── */
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
@@ -102,32 +122,106 @@ const Testimonials = () => {
     return () => observer.disconnect();
   }, []);
 
-  const allReviews =
-    apiReviews.length > 0
-      ? [
-          ...apiReviews.map((r, i) => ({
-            id: r.id || `api-${i}`,
-            name: r.name || 'Verified Customer',
-            location: r.branchName || 'Siomai Street Branch',
-            badge: r.branchName ? `Verified at ${r.branchName}` : 'Verified Customer Review',
-            rating: Number(r.rating) || 5,
-            avatarImg: r.image || FALLBACK_AVATARS[i % FALLBACK_AVATARS.length],
-            text: r.text,
-          })),
-          ...DEFAULT_REVIEWS,
-        ]
-      : DEFAULT_REVIEWS;
+  /* ─── Merge API + default reviews ─── */
+  const allReviews = useMemo(() => {
+    if (apiReviews.length > 0) {
+      return [
+        ...apiReviews.map((r, i) => ({
+          id: r.id || `api-${i}`,
+          name: r.name || 'Verified Customer',
+          location: r.branchName || 'Siomai Street Branch',
+          badge: r.branchName ? `Verified at ${r.branchName}` : 'Verified Customer Review',
+          rating: Number(r.rating) || 5,
+          avatarImg: r.image || FALLBACK_AVATARS[i % FALLBACK_AVATARS.length],
+          text: r.text,
+        })),
+        ...DEFAULT_REVIEWS,
+      ];
+    }
+    return DEFAULT_REVIEWS;
+  }, [apiReviews]);
 
   const count = allReviews.length;
-  const currentCard = allReviews[activeIndex % count];
-  const nextCard = allReviews[(activeIndex + 1) % count];
-  const thirdCard = allReviews[(activeIndex + 2) % count];
+  const safeIndex = activeIndex % count;
+  const currentCard = allReviews[safeIndex];
+  const nextCard = allReviews[(safeIndex + 1) % count];
+  const thirdCard = allReviews[(safeIndex + 2) % count];
 
+  /* ─── Dynamically measure front card to size the deck ─── */
+  useEffect(() => {
+    const measure = () => {
+      if (frontCardRef.current) {
+        const h = frontCardRef.current.scrollHeight;
+        if (h > 0) {
+          setDeckHeight(Math.max(h + 30, 400)); // 30px breathing room for tape clip + back card offset
+        }
+      }
+    };
+    measure();
+    // Re-measure when active card changes
+    const raf = requestAnimationFrame(measure);
+    return () => cancelAnimationFrame(raf);
+  }, [safeIndex, allReviews]);
+
+  /* ─── Auto-play logic ─── */
+  useEffect(() => {
+    if (autoPlayTimerRef.current) {
+      clearInterval(autoPlayTimerRef.current);
+      autoPlayTimerRef.current = null;
+    }
+
+    const shouldPlay = isAutoPlaying && !isHovered && !isFocused && !isDragging && !exitDirection;
+
+    if (shouldPlay) {
+      autoPlayTimerRef.current = setInterval(() => {
+        setExitDirection('left');
+        setDragOffset({ x: 0, y: 0 });
+        setTimeout(() => {
+          setActiveIndex((prev) => (prev + 1) % count);
+          setExitDirection(null);
+        }, 380);
+      }, AUTOPLAY_INTERVAL);
+    }
+
+    return () => {
+      if (autoPlayTimerRef.current) {
+        clearInterval(autoPlayTimerRef.current);
+      }
+    };
+  }, [isAutoPlaying, isHovered, isFocused, isDragging, exitDirection, count]);
+
+  /* ─── Progress bar animation sync ─── */
+  useEffect(() => {
+    const bar = progressRef.current;
+    if (!bar) return;
+    // Reset animation
+    bar.style.animation = 'none';
+    // Force reflow
+    void bar.offsetHeight;
+    const shouldAnimate = isAutoPlaying && !isHovered && !isFocused && !isDragging && !exitDirection;
+    if (shouldAnimate) {
+      bar.style.animation = `progressFill ${AUTOPLAY_INTERVAL}ms linear forwards`;
+    } else {
+      bar.style.animation = 'none';
+    }
+  }, [activeIndex, isAutoPlaying, isHovered, isFocused, isDragging, exitDirection]);
+
+  /* ─── Live region announcement ─── */
+  useEffect(() => {
+    if (currentCard) {
+      setLiveText(
+        `Review ${safeIndex + 1} of ${count}: ${currentCard.name} from ${currentCard.location} says: ${currentCard.text}`
+      );
+    }
+  }, [safeIndex, count, currentCard]);
+
+  /* ─── Card transition triggers ─── */
   const triggerExit = useCallback(
     (direction) => {
       if (exitDirection) return;
       setExitDirection(direction);
       setDragOffset({ x: 0, y: 0 });
+      setCardTilt({ x: 0, y: 0 });
 
       setTimeout(() => {
         setActiveIndex((prev) => {
@@ -137,7 +231,7 @@ const Testimonials = () => {
           return (prev - 1 + count) % count;
         });
         setExitDirection(null);
-      }, 240);
+      }, 380);
     },
     [exitDirection, count]
   );
@@ -145,10 +239,12 @@ const Testimonials = () => {
   const handleNext = () => triggerExit('left');
   const handlePrev = () => triggerExit('right');
 
+  /* ─── Drag / swipe handlers with velocity tracking ─── */
   const handlePointerDown = (e) => {
     if (e.button !== undefined && e.button !== 0) return;
     isDraggingRef.current = true;
     setIsDragging(true);
+    velocityHistoryRef.current = [];
     dragStartRef.current = {
       x: e.clientX,
       y: e.clientY,
@@ -168,6 +264,13 @@ const Testimonials = () => {
     const dx = e.clientX - dragStartRef.current.x;
     const dy = e.clientY - dragStartRef.current.y;
     setDragOffset({ x: dx, y: dy });
+
+    // Track velocity samples (last 5 frames)
+    const now = Date.now();
+    velocityHistoryRef.current.push({ x: dx, time: now });
+    if (velocityHistoryRef.current.length > 5) {
+      velocityHistoryRef.current.shift();
+    }
   };
 
   const finishDrag = (e) => {
@@ -184,83 +287,164 @@ const Testimonials = () => {
     }
 
     const dx = dragOffset.x;
-    const dt = Date.now() - dragStartRef.current.time;
-    const velocity = Math.abs(dx) / Math.max(dt, 1);
-    const threshold = 55;
+    // Calculate velocity from recent samples
+    const history = velocityHistoryRef.current;
+    let velocity = 0;
+    if (history.length >= 2) {
+      const first = history[0];
+      const last = history[history.length - 1];
+      const dt = last.time - first.time;
+      velocity = dt > 0 ? Math.abs(last.x - first.x) / dt : 0;
+    }
 
-    if (dx < -threshold || (dx < -25 && velocity > 0.35)) {
+    const threshold = 55;
+    const velocityThreshold = 0.35;
+
+    if (dx < -threshold || (dx < -25 && velocity > velocityThreshold)) {
       triggerExit('left');
-    } else if (dx > threshold || (dx > 25 && velocity > 0.35)) {
+    } else if (dx > threshold || (dx > 25 && velocity > velocityThreshold)) {
       triggerExit('right');
     } else {
       setDragOffset({ x: 0, y: 0 });
     }
   };
 
+  /* ─── Keyboard navigation ─── */
   const handleKeyDown = (e) => {
     if (e.key === 'ArrowLeft') {
+      e.preventDefault();
       triggerExit('right');
     } else if (e.key === 'ArrowRight') {
+      e.preventDefault();
       triggerExit('left');
+    } else if (e.key === ' ' || e.key === 'Enter') {
+      e.preventDefault();
+      setIsAutoPlaying((prev) => !prev);
     }
   };
 
+  /* ─── Card mouse-follow tilt (only on non-touch, non-drag) ─── */
+  const handleCardMouseMove = (e) => {
+    if (isDragging || exitDirection) return;
+    const card = e.currentTarget;
+    const rect = card.getBoundingClientRect();
+    const x = (e.clientX - rect.left) / rect.width - 0.5;
+    const y = (e.clientY - rect.top) / rect.height - 0.5;
+    setCardTilt({ x: x * 8, y: y * -6 });
+  };
+
+  const handleCardMouseLeave = () => {
+    setCardTilt({ x: 0, y: 0 });
+  };
+
+  /* ─── Dynamic card styles with spring physics ─── */
   const getFrontCardStyle = () => {
     if (exitDirection === 'left') {
       return {
-        transform: 'translate3d(-120%, 12px, 0) rotate(-12deg)',
+        transform: 'translate3d(-150%, 40px, -20px) rotate(-20deg) scale(0.88)',
         opacity: 0,
+        transition: `transform 0.42s cubic-bezier(0.55, 0, 0.15, 1), opacity 0.3s ease-out`,
+        filter: 'blur(2px)',
       };
     }
     if (exitDirection === 'right') {
       return {
-        transform: 'translate3d(120%, 12px, 0) rotate(12deg)',
+        transform: 'translate3d(150%, 40px, -20px) rotate(20deg) scale(0.88)',
         opacity: 0,
+        transition: `transform 0.42s cubic-bezier(0.55, 0, 0.15, 1), opacity 0.3s ease-out`,
+        filter: 'blur(2px)',
       };
     }
     if (isDragging) {
+      const rotationDeg = dragOffset.x * 0.06;
+      const liftY = Math.abs(dragOffset.x) * -0.1;
+      const dragScale = 1.02 + Math.min(Math.abs(dragOffset.x) / 800, 0.02);
       return {
-        transform: `translate3d(${dragOffset.x}px, ${dragOffset.y * 0.12}px, 0) rotate(${dragOffset.x * 0.04}deg)`,
+        transform: `translate3d(${dragOffset.x}px, ${liftY}px, 25px) rotateY(${dragOffset.x * 0.035}deg) rotateZ(${rotationDeg}deg) scale(${dragScale})`,
         transition: 'none',
+        filter: 'none',
       };
     }
+    // Resting + subtle tilt
     return {
-      transform: 'translate3d(0, 0, 0) rotate(0deg)',
+      transform: `translate3d(0, 0, 0) rotateX(${cardTilt.y}deg) rotateY(${cardTilt.x}deg)`,
+      transition: `transform 0.5s ${smoothCurve}, filter 0.5s ease`,
+      filter: 'none',
     };
   };
 
   const getLeftBackCardStyle = () => {
-    const dragRatio = isDragging ? Math.min(Math.abs(dragOffset.x) / 120, 1) : exitDirection ? 1 : 0;
-    const scale = 0.96 + 0.04 * dragRatio;
-    const rot = -5.5 * (1 - dragRatio);
-    const x = -26 * (1 - dragRatio);
-    const y = 12 * (1 - dragRatio);
+    const dragRatio = isDragging
+      ? Math.min(Math.abs(dragOffset.x) / 120, 1)
+      : exitDirection
+        ? 1
+        : 0;
+    const scale = 0.93 + 0.07 * dragRatio;
+    const rot = -6.5 * (1 - dragRatio);
+    const x = -30 * (1 - dragRatio);
+    const y = 16 * (1 - dragRatio);
+    const z = -35 * (1 - dragRatio);
 
     return {
-      transform: `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg) scale(${scale})`,
-      transition: isDragging ? 'none' : undefined,
+      transform: `translate3d(${x}px, ${y}px, ${z}px) rotate(${rot}deg) scale(${scale})`,
+      transition: isDragging ? 'none' : `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)`,
     };
   };
 
   const getRightBackCardStyle = () => {
-    const dragRatio = isDragging ? Math.min(Math.abs(dragOffset.x) / 120, 1) : exitDirection ? 1 : 0;
-    const scale = 0.95 + 0.02 * dragRatio;
-    const rot = 4.8 * (1 - dragRatio);
-    const x = 22 * (1 - dragRatio);
-    const y = -10 * (1 - dragRatio);
+    const dragRatio = isDragging
+      ? Math.min(Math.abs(dragOffset.x) / 120, 1)
+      : exitDirection
+        ? 1
+        : 0;
+    const scale = 0.88 + 0.05 * dragRatio;
+    const rot = 5.5 * (1 - dragRatio);
+    const x = 26 * (1 - dragRatio);
+    const y = -14 * (1 - dragRatio);
+    const z = -60 * (1 - dragRatio);
 
     return {
-      transform: `translate3d(${x}px, ${y}px, 0) rotate(${rot}deg) scale(${scale})`,
-      transition: isDragging ? 'none' : undefined,
+      transform: `translate3d(${x}px, ${y}px, ${z}px) rotate(${rot}deg) scale(${scale})`,
+      transition: isDragging ? 'none' : `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)`,
     };
   };
 
+  /* ─── Swipe indicator opacity based on drag distance ─── */
+  const swipeIndicatorOpacity = isDragging ? Math.min(Math.abs(dragOffset.x) / 80, 1) : 0;
+  const swipeDirection = dragOffset.x < 0 ? 'left' : 'right';
+
+  /* ─── Ambient glow position based on drag ─── */
+  const getAmbientGlowStyle = () => {
+    if (isDragging) {
+      const shift = dragOffset.x * 0.15;
+      return {
+        transform: `translate(calc(-50% + ${shift}px), -50%)`,
+        opacity: 0.7 + Math.min(Math.abs(dragOffset.x) / 200, 0.3),
+      };
+    }
+    return {};
+  };
+
   return (
-    <section className="reviews" id="reviews" ref={sectionRef}>
+    <section
+      className="reviews"
+      id="reviews"
+      ref={sectionRef}
+      onMouseEnter={() => setIsHovered(true)}
+      onMouseLeave={() => setIsHovered(false)}
+    >
+      {/* ─── Accessibility: Live region for screen readers ─── */}
+      <div className="reviews__sr-live" aria-live="polite" aria-atomic="true">
+        {liveText}
+      </div>
+
       {/* ─── Giant Ghost Typography (Harmonized with Requirements & Packages) ─── */}
       <div className="reviews__bg-type" aria-hidden="true">
         <span className="reviews__bg-word">VOICES</span>
       </div>
+
+      {/* ─── Ambient Glow ─── */}
+      <div className="reviews__ambient-glow" aria-hidden="true" style={getAmbientGlowStyle()} />
 
       <div className="reviews__container">
         {/* ─── Editorial Header (Aligned with Requirements & Packages) ─── */}
@@ -288,7 +472,12 @@ const Testimonials = () => {
         </header>
 
         {/* ─── Horizontally Aligned Two-Column Showcase ─── */}
-        <div className="reviews__showcase">
+        <div
+          className="reviews__showcase"
+          role="region"
+          aria-roledescription="carousel"
+          aria-label="Customer and franchisee testimonials"
+        >
           {/* LEFT SIDE: Staggered Review Deck */}
           <div className="reviews__deck-col">
             <div className="reviews__deck-topbar">
@@ -298,37 +487,79 @@ const Testimonials = () => {
                 <span className="reviews__deck-sublabel">// Field Log</span>
               </div>
 
-              <div className="reviews__deck-arrows">
+              <div className="reviews__deck-controls">
+                {/* Auto-play toggle */}
                 <button
                   type="button"
-                  className="reviews__chevron-btn"
-                  onClick={handlePrev}
-                  aria-label="Previous review"
+                  className={`reviews__autoplay-btn ${isAutoPlaying ? 'reviews__autoplay-btn--active' : ''}`}
+                  onClick={() => setIsAutoPlaying((prev) => !prev)}
+                  aria-label={isAutoPlaying ? 'Pause auto-play' : 'Resume auto-play'}
+                  title={isAutoPlaying ? 'Pause' : 'Play'}
                 >
-                  <BiChevronLeft />
+                  {isAutoPlaying ? (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                      <rect x="2" y="1" width="3.5" height="12" rx="1" />
+                      <rect x="8.5" y="1" width="3.5" height="12" rx="1" />
+                    </svg>
+                  ) : (
+                    <svg width="14" height="14" viewBox="0 0 14 14" fill="currentColor">
+                      <polygon points="2,1 12,7 2,13" />
+                    </svg>
+                  )}
                 </button>
-                <button
-                  type="button"
-                  className="reviews__chevron-btn"
-                  onClick={handleNext}
-                  aria-label="Next review"
-                >
-                  <BiChevronRight />
-                </button>
+
+                <div className="reviews__deck-arrows">
+                  <button
+                    type="button"
+                    className="reviews__chevron-btn"
+                    onClick={handlePrev}
+                    aria-label="Previous review"
+                  >
+                    <BiChevronLeft />
+                  </button>
+                  <button
+                    type="button"
+                    className="reviews__chevron-btn"
+                    onClick={handleNext}
+                    aria-label="Next review"
+                  >
+                    <BiChevronRight />
+                  </button>
+                </div>
               </div>
             </div>
 
             <div
               className={`reviews__deck ${isDragging ? 'reviews__deck--dragging' : ''}`}
+              ref={deckRef}
+              style={{ minHeight: `${deckHeight}px` }}
               onPointerDown={handlePointerDown}
               onPointerMove={handlePointerMove}
               onPointerUp={finishDrag}
               onPointerCancel={finishDrag}
               onKeyDown={handleKeyDown}
+              onFocus={() => setIsFocused(true)}
+              onBlur={() => setIsFocused(false)}
               tabIndex={0}
-              role="region"
-              aria-label="Customer and franchisee reviews. Drag horizontally or use arrow buttons to switch cards."
+              role="group"
+              aria-label="Review cards. Drag horizontally or use arrow keys to navigate. Press space to toggle auto-play."
             >
+              {/* Swipe direction indicators */}
+              <div
+                className={`reviews__swipe-indicator reviews__swipe-indicator--left ${swipeDirection === 'left' ? 'reviews__swipe-indicator--active' : ''}`}
+                style={{ opacity: swipeDirection === 'left' ? swipeIndicatorOpacity : 0 }}
+                aria-hidden="true"
+              >
+                <BiChevronRight />
+              </div>
+              <div
+                className={`reviews__swipe-indicator reviews__swipe-indicator--right ${swipeDirection === 'right' ? 'reviews__swipe-indicator--active' : ''}`}
+                style={{ opacity: swipeDirection === 'right' ? swipeIndicatorOpacity : 0 }}
+                aria-hidden="true"
+              >
+                <BiChevronLeft />
+              </div>
+
               {/* Back Layer B (Tilted Clockwise — Top/Right Peek) */}
               {thirdCard && (
                 <div
@@ -395,26 +626,39 @@ const Testimonials = () => {
               {currentCard && (
                 <article
                   className="reviews__card reviews__card--front"
+                  ref={frontCardRef}
                   style={getFrontCardStyle()}
+                  onMouseMove={handleCardMouseMove}
+                  onMouseLeave={handleCardMouseLeave}
+                  aria-label={`Review by ${currentCard.name}: ${currentCard.text}`}
                 >
+                  {/* Glassmorphism shimmer overlay */}
+                  <div className="reviews__card-shimmer" aria-hidden="true" />
+
                   {/* Masking Tape Element (Exact match to Requirements & Packages) */}
                   <div className="reviews__card-clip" aria-hidden="true" />
+
+                  {/* Quote mark ornament */}
+                  <div className="reviews__card-quote" aria-hidden="true">"</div>
 
                   <p className="reviews__card-text">{currentCard.text}</p>
 
                   <div className="reviews__card-author">
-                    <img
-                      src={currentCard.avatarImg}
-                      alt={currentCard.name}
-                      className="reviews__avatar"
-                      loading="lazy"
-                    />
+                    <div className="reviews__avatar-wrap">
+                      <img
+                        src={currentCard.avatarImg}
+                        alt={currentCard.name}
+                        className="reviews__avatar"
+                        loading="lazy"
+                      />
+                      <span className="reviews__avatar-ring" aria-hidden="true" />
+                    </div>
                     <div className="reviews__author-meta">
                       <div className="reviews__author-name-row">
                         <span className="reviews__author-name">{currentCard.name}</span>
-                        <div className="reviews__card-stars" aria-label="5 out of 5 stars">
+                        <div className="reviews__card-stars" aria-label={`${currentCard.rating} out of 5 stars`}>
                           {[...Array(5)].map((_, i) => (
-                            <BiStar key={i} />
+                            <BiStar key={i} className={i < currentCard.rating ? 'reviews__star--filled' : ''} />
                           ))}
                         </div>
                       </div>
@@ -426,23 +670,43 @@ const Testimonials = () => {
               )}
             </div>
 
+            {/* ─── Deck Footer (Progress bar, counter, nav dots, action link) ─── */}
             <div className="reviews__deck-footer">
-              <span className="reviews__deck-count">
-                {String((activeIndex % count) + 1).padStart(2, '0')} / {String(count).padStart(2, '0')}
-              </span>
-              <div className="reviews__deck-dots" aria-hidden="true">
-                {allReviews.map((_, i) => (
-                  <button
-                    key={i}
-                    type="button"
-                    className={`reviews__deck-dot ${i === activeIndex % count ? 'reviews__deck-dot--active' : ''}`}
-                    onClick={() => setActiveIndex(i)}
-                    aria-label={`Go to review ${i + 1}`}
-                  />
-                ))}
+              <div className="reviews__footer-left">
+                {/* Animated morphing counter */}
+                <span className="reviews__deck-count" aria-label={`Review ${safeIndex + 1} of ${count}`}>
+                  <span className="reviews__count-current" key={safeIndex}>
+                    {String(safeIndex + 1).padStart(2, '0')}
+                  </span>
+                  <span className="reviews__count-sep">/</span>
+                  <span className="reviews__count-total">{String(count).padStart(2, '0')}</span>
+                </span>
+
+                {/* Smooth progress bar */}
+                <div className="reviews__progress-track" aria-hidden="true">
+                  <div className="reviews__progress-fill" ref={progressRef} />
+                </div>
               </div>
+
+              <div className="reviews__footer-center">
+                <div className="reviews__deck-dots" aria-hidden="true">
+                  {allReviews.map((_, i) => (
+                    <button
+                      key={i}
+                      type="button"
+                      className={`reviews__deck-dot ${i === safeIndex ? 'reviews__deck-dot--active' : ''}`}
+                      onClick={() => {
+                        setActiveIndex(i);
+                        setIsAutoPlaying(false);
+                      }}
+                      aria-label={`Go to review ${i + 1}`}
+                    />
+                  ))}
+                </div>
+              </div>
+
               <a href="/reviews" className="reviews__leave-link">
-                Write a review →
+                Write a review <span className="reviews__leave-arrow">→</span>
               </a>
             </div>
           </div>

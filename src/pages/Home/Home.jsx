@@ -26,8 +26,11 @@ const Home = () => {
       <Hero />
       <AboutUs />
       <Marquee />
+
+      {/* ─── Sticky Curtain Reveal: WhyChoose stays pinned while Journey scrolls over it ─── */}
       <WhyChoose />
       <Journey />
+
       <Requirements />
       <Packages />
       <FeaturedMenu />

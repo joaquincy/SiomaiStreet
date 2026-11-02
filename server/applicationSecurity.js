@@ -5,6 +5,13 @@ const fail = (message, status) => Object.assign(new Error(message), { status });
 const normalizeIP = ip => ip?.startsWith('::ffff:') ? ip.slice(7) : ip;
 
 export function clientIP(req, trustedProxies = []) {
+  // Vercel overwrites this header at its edge. Trust it only inside Vercel.
+  if (process.env.VERCEL === '1') {
+    const forwarded = req.headers['x-vercel-forwarded-for'];
+    const candidate = typeof forwarded === 'string' ? normalizeIP(forwarded.split(',')[0].trim()) : null;
+    if (candidate && isIP(candidate)) return candidate;
+    return 'unknown-vercel-client';
+  }
   let ip = normalizeIP(req.socket.remoteAddress) || 'unknown';
   const chain = String(req.headers['x-forwarded-for'] || '').split(',').map(value => normalizeIP(value.trim()));
   // Ignore forwarded headers unless each intervening hop is explicitly trusted.
