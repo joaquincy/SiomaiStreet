@@ -9,7 +9,7 @@ export default function StoreMap({ stores, selectedId, focusId, focusVersion = 0
   const [controller, setController] = useState(null);
   const [ready, setReady] = useState(false);
   const [interactive, setInteractive] = useState(true);
-  const [wheel,setWheel]=useState(false);
+  const [wheel, setWheel] = useState(false);
   useEffect(() => {
     let cancelled = false, instance;
     // Split Leaflet AND its stylesheet out of the homepage's initial bundle.
@@ -40,7 +40,7 @@ export default function StoreMap({ stores, selectedId, focusId, focusVersion = 0
   return <>
     <div className={`store-finder__leaflet-map${picking ? ' is-picking' : ''}`} ref={host} role="region" aria-label="Explore the map. Numbered pins mark Siomai Street branches." />
     {ready && picking && <><span className="store-finder__map-crosshair" aria-hidden="true">+</span><div className="store-finder__point-picker"><p role="status">Tap a road or place. Or move the map with arrow keys and select the center crosshair.</p><button type="button" onClick={() => controller?.chooseCenter()}>Use map center</button><button type="button" onClick={onCancelPick}>Cancel selection</button></div></>}
-    {ready && <div className="store-finder__gesture-tools"><button type="button" className="store-finder__map-interact" aria-pressed={interactive} aria-label="Map gestures" onClick={() => setInteractive(value => !value)}>{interactive ? 'Pause gestures' : 'Enable gestures'}<span>{interactive ? 'Drag · pinch · double-click' : 'Scroll the page freely'}</span></button><button type="button" className="store-finder__wheel" aria-pressed={interactive && wheel} disabled={!interactive} onClick={()=>setWheel(value=>!value)}>Wheel zoom {interactive && wheel?'on':'off'}</button></div>}
+    {ready && <div className="store-finder__gesture-tools"><button type="button" className="store-finder__map-interact" aria-pressed={interactive} aria-label="Map gestures" onClick={() => setInteractive(value => !value)}>{interactive ? 'Pause gestures' : 'Enable gestures'}<span>{interactive ? 'Drag · pinch · double-click' : 'Scroll the page freely'}</span></button><button type="button" className="store-finder__wheel" aria-pressed={interactive && wheel} disabled={!interactive} onClick={() => setWheel(value => !value)}>Wheel zoom {interactive && wheel ? 'on' : 'off'}</button></div>}
     {!ready && <div className="store-finder__map-loading" role="status"><span aria-hidden="true" />Loading street map…</div>}
   </>;
 }

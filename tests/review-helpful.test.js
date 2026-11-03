@@ -11,10 +11,14 @@ test('Helpful SQL preserves existing totals, deduplicates retries and hides unpu
   try {
     await db.exec(`create role anon; create role authenticated; create role service_role;
       create table public.reviews(id uuid primary key, status text, helpful_count integer not null default 0);
-      create function public.increment_review_helpful(uuid) returns integer language sql as 'select 1';
       insert into reviews values ('${id}', 'published', 7);`);
     const sql = await readFile(new URL('../supabase/migrations/20261103000000_review_helpful_votes.sql', import.meta.url), 'utf8');
     await db.exec(sql); await db.exec(sql);
+    // Some shared databases never installed the legacy function. Also verify
+    // rerunning on older databases revokes its grants without losing votes.
+    await db.exec("create function public.increment_review_helpful(uuid) returns integer language sql as 'select 1'; grant execute on function public.increment_review_helpful(uuid) to service_role;");
+    await db.exec(sql);
+    assert.equal((await db.query("select has_function_privilege('service_role', 'public.increment_review_helpful(uuid)', 'EXECUTE') as allowed")).rows[0].allowed, false);
     const vote = hash => db.query('select record_review_helpful($1,$2) as count', [id, hash]);
     assert.equal((await vote('a'.repeat(64))).rows[0].count, 8);
     assert.equal((await vote('a'.repeat(64))).rows[0].count, 8);

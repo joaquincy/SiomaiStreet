@@ -58,7 +58,7 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
   const [view, setView] = useState('map');
   const [searchMode, setSearchMode] = useState('places');
   const [route, setRoute] = useState(null);
-  const [routeOpen,setRouteOpen]=useState(false);
+  const [routeOpen, setRouteOpen] = useState(false);
   const [routeSeed, setRouteSeed] = useState(null);
   const [pickingFor, setPickingFor] = useState(null);
   const [mobile, setMobile] = useState(true);
@@ -233,7 +233,7 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
           <div className="store-finder__map-stage">
             {mapActive && mapVisible ? <StoreMap picking={!!pickingFor} onPoint={selectMapPoint} onCancelPick={() => { setPickingFor(null); }} route={route} searchOrigin={searchedPlace} stores={mapped} selectedId={selected?.id} focusId={focusId} focusVersion={focusVersion} onSelect={id => { choose(id); if (mobile) showDetails(); }} fitVersion={fitVersion} onError={failMap} /> : <MapInvitation available={mapsAvailable} failed={mapError} count={mapped.length || (searchedPlace ? 1 : 0)} loading={data.status === 'loading'} onLoad={openMap} />}
           </div>
-          {route && <div className="store-finder__route-summary" role="status"><strong>{route.mode === 'walk' ? 'Walking' : 'Driving'} · {(route.distance/1000).toFixed(1)} km · ~{Math.max(1,Math.round(route.seconds/60))} min</strong><span className="store-finder__route-endpoints">A: {route.from}<br />B: {route.to}</span><button type="button" onClick={()=>setRoute(null)}>Clear route</button></div>}
+          {route && <div className="store-finder__route-summary" role="status"><strong>{route.mode === 'walk' ? 'Walking' : 'Driving'} · {(route.distance / 1000).toFixed(1)} km · ~{Math.max(1, Math.round(route.seconds / 60))} min</strong><span className="store-finder__route-endpoints">A: {route.from}<br />B: {route.to}</span><button type="button" onClick={() => setRoute(null)}>Clear route</button></div>}
           {mapActive && (mapped.length > 0 || streetView) && <div className="store-finder__map-links">{mapped.length > 0 && <button type="button" onClick={() => { setFocusId(null); setFitVersion(value => value + 1); }}><BiMap aria-hidden="true" />Show All Branches</button>}{streetView && <a href={streetView} target="_blank" rel="noopener noreferrer"><BiMap aria-hidden="true" />Street View (Google)</a>}</div>}
           {hasPins && filtered.length > mapped.length && <p className="store-finder__map-note">{filtered.length - mapped.length} {filtered.length - mapped.length === 1 ? 'store has' : 'stores have'} no published pin.</p>}
         </div>

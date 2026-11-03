@@ -34,5 +34,11 @@ $$;
 revoke all on function public.record_review_helpful(uuid, text) from public, anon, authenticated;
 grant execute on function public.record_review_helpful(uuid, text) to service_role;
 -- Disable the old non-idempotent write path. Existing totals are preserved.
-revoke all on function public.increment_review_helpful(uuid) from public, anon, authenticated, service_role;
+do $$
+begin
+  if to_regprocedure('public.increment_review_helpful(uuid)') is not null then
+    execute 'revoke all on function public.increment_review_helpful(uuid) from public, anon, authenticated, service_role';
+  end if;
+end;
+$$;
 commit;
