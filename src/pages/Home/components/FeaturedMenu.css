@@ -959,22 +959,24 @@
   }
 
   /* Story 2 Mobile Collage */
-  .fm-imagery--story2 {
-    height: 380px;
+  .featured-menu .fm-imagery--story2 {
+    /* Compact the collage and lift the following map with it. */
+    height: clamp(240px, 62vw, 320px);
     width: 100%;
     overflow: visible;
   }
 
   .fm-bilao-wrap--back {
-    width: clamp(220px, 54vw, 280px);
-    top: -25px;
-    left: clamp(-70px, -13vw, -52px);
+    width: clamp(230px, 62vw, 300px);
+    top: -18px;
+    left: clamp(-55px, -10vw, -32px);
   }
 
-  .fm-bilao-wrap--front {
-    width: clamp(250px, 66vw, 320px);
-    bottom: -35px;
-    left: clamp(35px, 10vw, 70px);
+  .featured-menu .fm-bilao-wrap--front {
+    /* Match the bowl's visual scale without covering the map heading. */
+    width: clamp(260px, 74vw, 355px);
+    bottom: -36px;
+    left: clamp(24px, 7vw, 48px);
     pointer-events: none;
   }
 
@@ -1014,10 +1016,6 @@
     height: clamp(370px, 94vw, 430px);
   }
 
-  .fm-imagery--story2 {
-    height: 330px;
-  }
-
   .fm-stamp-wrap--chicken-feet {
     width: clamp(190px, 54vw, 230px);
     top: clamp(55px, 15vw, 75px);
@@ -1034,18 +1032,6 @@
     width: clamp(270px, 74vw, 315px);
     bottom: -6px;
     right: -10px;
-  }
-
-  .fm-bilao-wrap--back {
-    width: 195px;
-    left: -48px;
-    top: -18px;
-  }
-
-  .fm-bilao-wrap--front {
-    width: 225px;
-    left: 28px;
-    bottom: -28px;
   }
 
   .fm-bilao-wrap--front::after {

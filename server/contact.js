@@ -75,7 +75,7 @@ export function createContactHandler({ configuration, rate, repository, json, al
       writing = true;
       let row;
       try {
-        row = await repository.insert({ id: body.requestId, request_hash: hash, channel: data.channel, topic: data.topic, name: data.name, email: data.email, branch: data.branch, order_reference: data.orderReference, message: data.message, privacy_notice_version: '2026-10-31', assigned_queue: configuration[data.channel].queue });
+        row = await repository.insert({ id: body.requestId, request_hash: hash, channel: data.channel, topic: data.topic, name: data.name, email: data.email, branch: data.branch, order_reference: data.orderReference, message: data.message, privacy_notice_version: '2026-11-03', assigned_queue: configuration[data.channel].queue });
       } catch (error) {
         // Recover unique-key races and a successful insert whose response was lost.
         row = await repository.find(body.requestId);

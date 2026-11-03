@@ -1,11 +1,11 @@
-// Contact acknowledgements only; application delivery belongs to the admin app.
+// Contact acknowledgements and staff alerts; application delivery belongs to the admin app.
 export async function processContactNotification({ request, send, signal }) {
       const [job] = await request('/rest/v1/rpc/claim_contact_notification', { method: 'POST', body: '{}' });
       if (job) {
-        if (job.kind !== 'inquiry_received') throw new Error('Unexpected notification kind.');
+        if (!['inquiry_received', 'inquiry_staff'].includes(job.kind)) throw new Error('Unexpected notification kind.');
         const path = `/rest/v1/notification_outbox?id=eq.${job.id}&lease=eq.${job.lease}`;
         let result;
-        try { result = await send({ eventId: job.id, to: job.recipient, kind: job.kind, reference: job.reference, signal }); }
+        try { result = await send({ eventId: job.id, to: job.recipient, kind: job.kind, reference: job.reference, inquiry: job.staff_payload, signal }); }
         catch (error) {
           await request(path, { method: 'PATCH', body: JSON.stringify({ state: error.retryable === false ? 'needs_review' : 'pending', next_attempt_at: new Date(Date.now() + Math.min(3600000, 30000 * 2 ** job.attempts)).toISOString() }) });
         }

@@ -12,7 +12,7 @@ const PrivacyPolicy = () => (
       <div className="legal-header">
         <span className="legal-badge">Legal</span>
         <h1>Privacy Policy</h1>
-        <p className="legal-updated">Last updated: October 31, 2026</p>
+        <p className="legal-updated">Last updated: November 3, 2026</p>
       </div>
 
       <div className="legal-content">
@@ -28,7 +28,10 @@ const PrivacyPolicy = () => (
             Unsent answers are not saved as a browser draft. After submission, messages are
             stored in a private database queue with a receipt reference and the version of
             this notice you acknowledged. Access is reserved for authorized support staff
-            through the connected administration system. Please do not send identity documents,
+            through the connected administration system or private support tools. Your inquiry
+            details are also sent through Resend to the designated support email inbox so staff
+            can respond. A private email-queue copy supports reliable delivery and retries;
+            support emails are also retained by the receiving email provider. Please do not send identity documents,
             payment credentials or private application access codes through this form.
           </p>
           <p>

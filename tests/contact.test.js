@@ -97,7 +97,7 @@ test('a saved message gets a minimal receipt and retries return the same receipt
   assert.equal(validContactReceipt(first.body, data.requestId, 'customer'), true);
   assert.deepEqual(Object.keys(first.body), ['id', 'reference', 'channel', 'status', 'receivedAt']);
   const row = h.rows.get(data.requestId);
-  assert.equal(row.assigned_queue, 'test_customer'); assert.equal(row.privacy_notice_version, '2026-10-31');
+  assert.equal(row.assigned_queue, 'test_customer'); assert.equal(row.privacy_notice_version, '2026-11-03');
   assert.equal(row.privacyAcknowledged, undefined); assert.equal(row.website, undefined);
   assert.equal(h.rates.filter(call => call[1] === 'contact-new').length, 1);
   assert.equal(h.rates.filter(call => call[1] === 'contact-ingress').length, 2);
