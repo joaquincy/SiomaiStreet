@@ -227,7 +227,7 @@ const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
 const contactConfig = contactConfiguration(process.env);
 const handleContactPost = createContactHandler({
   configuration: contactConfig, json, verify: verifyPublic('inquiry'),
-  allowedOrigins: (process.env.CONTACT_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean),
+  allowedOrigins: [...mapDevOrigins, ...(process.env.CONTACT_ALLOWED_ORIGINS || '').split(',').map(value => value.trim()).filter(Boolean)],
   rate: (req, scope, limit, email) => applicationRate(email || clientIP(req, trustedProxies), scope, limit),
   repository: {
     find: async id => (await supabaseRequest(`/rest/v1/contact_inquiries?select=id,request_hash,received_at&id=eq.${id}&limit=1`))?.[0],
