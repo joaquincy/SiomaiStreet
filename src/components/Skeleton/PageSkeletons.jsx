@@ -70,9 +70,7 @@ export function ReviewsPageSkeleton() {
     <div className="page-skeleton" role="status" aria-busy="true" aria-label="Loading Reviews page…">
       {/* Hero Banner Skeleton */}
       <div className="page-skeleton__hero">
-        <Skeleton variant="pill" theme="dark" width={200} height={32} style={{ marginBottom: 10 }} />
         <Skeleton variant="title" theme="dark" width="min(500px, 85vw)" height={52} />
-        <Skeleton variant="text" theme="dark" width="min(400px, 70vw)" height={18} />
       </div>
 
       <div style={{ maxWidth: 1100, margin: '0 auto', padding: '3.5rem 1.5rem 5rem' }}>

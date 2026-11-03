@@ -70,7 +70,7 @@ const Footer = () => {
           </div>
           <img
             src="/images/siomai street logo.png"
-            srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w, /images/responsive/siomai street logo-400w.png 400w"
+            srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w, /images/responsive/siomai%20street%20logo-400w.png 400w"
             sizes="(max-width: 768px) 14vw, 10.5vw"
             alt="Siomai Street" className="footer-sign-logo"
           />

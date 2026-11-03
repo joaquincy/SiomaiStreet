@@ -1,347 +1,870 @@
-/* ══════════════════════════════════════════
-   COMMUNITY FEEDBACK PAGE
-   ══════════════════════════════════════════ */
+/* ═══════════════════════════════════════════════════════════════════
+   REVIEWS PAGE — Unified Cream Editorial System
+   Harmonized with Homepage Cream Sections (FeaturedMenu, FAQ, Testimonials)
+   and the Menu Page Design System.
+   Canvas: Soft Steamed Wrapper Cream (#f0e9da) + Authentic Paper Grain
+   Typography: Outfit 800–900 titles with #c62828 red accents, Inter body
+   Interactive: Rating breakdown, Feedback form, Tactile review cards, Franchise CTA
+   ═══════════════════════════════════════════════════════════════════ */
 
-/* ─── Page wrapper ─── */
 .cfb-page {
   min-height: 100vh;
-  background: #f7f7f7;
-  padding-top: var(--nav-height);
-  padding-bottom: clamp(12rem, 25vh, 20rem);
-  font-family: var(--font-body);
+  background-color: #f0e9da;
+  color: #291d19;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  padding-top: 0;
+  padding-bottom: clamp(6rem, 12vh, 10rem);
+  position: relative;
 }
 
-/* ─── Page Header ─── */
-.cfb-page-header {
+/* ═══════════════════════════════════════════════════════════════════
+   1. HERO PHOTOGRAPHY BANNER (Harmonized with Menu & Franchise Hero)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.reviews-banner {
+  position: relative;
+  min-height: clamp(460px, 62vh, 640px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: calc(var(--nav-height, 80px) + var(--space-2xl, 3rem)) var(--space-xl, 2rem) var(--space-2xl, 3rem);
+  overflow: hidden;
+  background-color: #17100c;
+}
+
+.reviews-banner__bg {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  object-fit: cover;
+  object-position: center center;
+  filter: contrast(1.06) saturate(1.08) brightness(0.92);
+  transform: scale(1.02);
+  transition: transform 12s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.reviews-banner:hover .reviews-banner__bg {
+  transform: scale(1.05);
+}
+
+.reviews-banner__scrim {
+  position: absolute;
+  inset: 0;
+  background:
+    radial-gradient(ellipse at 50% 40%, rgba(20, 15, 12, 0.42) 0%, rgba(20, 15, 12, 0.82) 80%),
+    linear-gradient(180deg, rgba(20, 15, 12, 0.65) 0%, rgba(20, 15, 12, 0.35) 45%, rgba(20, 15, 12, 0.92) 100%);
+  pointer-events: none;
+  z-index: 1;
+}
+
+.reviews-banner__content {
+  position: relative;
+  z-index: 2;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
   text-align: center;
-  padding: 3.5rem 1.5rem 2rem;
-  background: #fff;
-  border-bottom: 1px solid #efefef;
-}
-
-.cfb-page-title {
-  font-family: var(--font-heading);
-  font-size: clamp(2rem, 4vw, 2.8rem);
-  font-weight: 900;
-  color: var(--color-charcoal);
-  letter-spacing: -0.5px;
-  margin-bottom: 0.6rem;
-}
-
-.cfb-highlight {
-  color: var(--color-red);
-}
-
-.cfb-page-subtitle {
-  color: var(--color-gray-500);
-  font-size: 0.95rem;
-  line-height: 1.7;
-  max-width: 520px;
+  max-width: 820px;
   margin: 0 auto;
 }
 
-/* ─── Layout: sidebar + main ─── */
+.reviews-banner__title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2.8rem, 6.5vw, 4.8rem);
+  font-weight: 900;
+  color: var(--color-white, #ffffff);
+  line-height: 1.05;
+  letter-spacing: -1px;
+  text-shadow: 0 4px 30px rgba(0, 0, 0, 0.4);
+  margin: 0;
+  display: inline-flex;
+  align-items: baseline;
+  justify-content: center;
+  flex-wrap: wrap;
+  gap: 0.28em;
+}
+
+.reviews-banner__title em {
+  display: inline-block;
+  font-style: italic;
+  background: linear-gradient(135deg, #E63946 0%, #FF6B35 40%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  filter: drop-shadow(0 4px 20px rgba(230, 57, 70, 0.35));
+  padding-right: 0.08em;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   2. SOFT STEAMED CREAM CANVAS & BACKGROUND GRAIN TEXTURE
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cfb-canvas {
+  position: relative;
+  background-color: #f0e9da;
+  overflow: hidden;
+  isolation: isolate;
+  width: 100%;
+  padding-top: clamp(3rem, 5.5vw, 5rem);
+}
+
+/* Authentic Paper Grain Noise (Unified with Homepage & Menu Page) */
+.cfb-canvas::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image: url("data:image/svg+xml,%3Csvg viewBox='0 0 200 200' xmlns='http://www.w3.org/2000/svg'%3E%3Cfilter id='creamNoiseReviews'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='0.8' numOctaves='3' stitchTiles='stitch'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23creamNoiseReviews)'/%3E%3C/svg%3E");
+  background-repeat: repeat;
+  background-size: 160px 160px;
+  opacity: 0.035;
+  mix-blend-mode: multiply;
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cfb-canvas > * {
+  position: relative;
+  z-index: 1;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   3. SECTION INTRO HEADER (Unified with Homepage & Menu Headers)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.cfb-intro {
+  text-align: center;
+  max-width: 680px;
+  margin: 0 auto clamp(2rem, 4vw, 3.25rem);
+  padding: 0 var(--space-xl, 2rem);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.cfb-kicker {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1;
+  text-transform: uppercase;
+  letter-spacing: 2.2px;
+  color: var(--color-red, #E63946);
+  margin-bottom: 14px;
+}
+
+.cfb-kicker-line {
+  display: block;
+  width: 24px;
+  height: 3px;
+  background: var(--color-red, #E63946);
+  border-radius: 999px;
+  flex: none;
+}
+
+.cfb-intro-title {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(2rem, 3.6vw, 2.9rem);
+  font-weight: 850;
+  line-height: 1.15;
+  letter-spacing: -0.025em;
+  color: #291d19;
+  text-align: center;
+  margin: 0 auto 14px;
+}
+
+.cfb-intro-title em {
+  font-style: normal;
+  color: var(--color-red-dark, #c62828);
+}
+
+.cfb-intro-lead {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: clamp(0.92rem, 1.1vw, 1.02rem);
+  font-weight: 400;
+  line-height: 1.7;
+  color: #6b5c54;
+  max-width: 580px;
+  margin: 0 auto;
+  text-align: center;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   4. LAYOUT & SIDEBAR CONTAINER
+   ═══════════════════════════════════════════════════════════════════ */
+
 .cfb-layout {
   display: grid;
-  grid-template-columns: 310px 1fr;
-  gap: 1.5rem;
-  max-width: 1100px;
+  grid-template-columns: 340px 1fr;
+  gap: 2rem;
+  max-width: 1240px;
   margin: 0 auto;
-  padding: 2rem 1.5rem 4rem;
+  padding: 0 var(--space-xl, 2rem) clamp(3rem, 5vw, 4.5rem);
   align-items: start;
 }
 
-/* ─── Sidebar ─── */
 .cfb-sidebar {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.75rem;
   position: sticky;
-  top: calc(var(--nav-height) + 1.5rem);
+  top: calc(var(--nav-height, 80px) + 20px);
 }
 
-/* ─── Shared Card ─── */
+/* Glassmorphism Card Surface (Unified with Franchising Right Card, Subtle Ambient Glows) */
 .cfb-card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.07);
-  border: 1px solid #efefef;
+  background: linear-gradient(145deg,
+      rgba(255, 255, 255, 0.86) 0%,
+      rgba(255, 248, 246, 0.72) 35%,
+      rgba(255, 250, 244, 0.72) 65%,
+      rgba(255, 255, 255, 0.84) 100%);
+  backdrop-filter: blur(20px) saturate(1.35);
+  -webkit-backdrop-filter: blur(20px) saturate(1.35);
+  border: 1.5px solid rgba(255, 255, 255, 0.85);
+  border-radius: 24px;
+  padding: 1.75rem;
+  box-shadow:
+    0 1px 2px rgba(41, 29, 25, 0.02),
+    0 4px 14px rgba(41, 29, 25, 0.04),
+    0 14px 32px rgba(41, 29, 25, 0.035),
+    inset 0 1px 1px rgba(255, 255, 255, 0.95);
+  position: relative;
+  overflow: visible;
+  transition: transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
 }
 
-/* ─── Overall Rating Card ─── */
+.cfb-card::before {
+  content: '';
+  position: absolute;
+  top: -25px;
+  right: -20px;
+  width: 105px;
+  height: 105px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+      rgba(214, 40, 57, 0.045) 0%,
+      rgba(245, 166, 35, 0.03) 50%,
+      transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cfb-card::after {
+  content: '';
+  position: absolute;
+  bottom: -20px;
+  left: -16px;
+  width: 75px;
+  height: 75px;
+  border-radius: 50%;
+  background: radial-gradient(circle,
+      rgba(245, 166, 35, 0.045) 0%,
+      rgba(214, 40, 57, 0.02) 50%,
+      transparent 70%);
+  pointer-events: none;
+  z-index: 0;
+}
+
+.cfb-card > * {
+  position: relative;
+  z-index: 1;
+}
+
+.cfb-card:hover {
+  transform: translateY(-2px);
+  box-shadow:
+    0 2px 4px rgba(41, 29, 25, 0.03),
+    0 6px 18px rgba(41, 29, 25, 0.055),
+    0 18px 36px rgba(41, 29, 25, 0.045),
+    inset 0 1px 1px rgba(255, 255, 255, 0.98);
+  border-color: rgba(255, 255, 255, 0.98);
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   5. OVERALL RATING CARD
+   ═══════════════════════════════════════════════════════════════════ */
+
 .cfb-overall-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1rem;
+  gap: 0.6rem;
+  margin-bottom: 1.1rem;
 }
 
 .cfb-overall-star-icon {
-  color: var(--color-saffron);
-  font-size: 1.1rem;
+  color: #F5A623;
+  font-size: 1.25rem;
+  filter: drop-shadow(0 2px 4px rgba(245, 166, 35, 0.35));
 }
 
 .cfb-overall-label {
-  font-weight: 700;
-  font-size: 0.88rem;
-  color: var(--color-charcoal);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 0.82rem;
+  color: #6b5c54;
   text-transform: uppercase;
-  letter-spacing: 0.5px;
+  letter-spacing: 1.5px;
 }
 
 .cfb-overall-score {
   display: flex;
   align-items: center;
-  gap: 1rem;
-  margin-bottom: 1.25rem;
+  gap: 1.15rem;
+  margin-bottom: 1.5rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid rgba(41, 29, 25, 0.08);
 }
 
 .cfb-score-big {
-  font-family: var(--font-heading);
-  font-size: 3.2rem;
+  display: inline-block;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(3.4rem, 4.8vw, 4.4rem);
   font-weight: 900;
-  color: var(--color-charcoal);
+  background: linear-gradient(135deg, #DE0000 15%, #FF6B35 55%, #F5A623 100%);
+  -webkit-background-clip: text;
+  -webkit-text-fill-color: transparent;
+  background-clip: text;
+  letter-spacing: -0.015em;
   line-height: 1;
+  padding-right: 0.18em;
+  padding-bottom: 0.04em;
+  filter: drop-shadow(0 2px 6px rgba(222, 0, 0, 0.12));
+  margin: 0;
+  flex-shrink: 0;
 }
 
 .cfb-score-details {
   display: flex;
   flex-direction: column;
-  gap: 0.3rem;
+  gap: 0.35rem;
 }
 
 .cfb-star-row {
-  display: flex;
+  display: inline-flex;
   align-items: center;
-  gap: 2px;
+  gap: 3px;
 }
 
 .cfb-star.filled {
-  color: var(--color-saffron);
+  color: #F5A623;
+  filter: drop-shadow(0 1px 2px rgba(245, 166, 35, 0.3));
 }
 
 .cfb-star.empty {
-  color: #ddd;
+  color: rgba(41, 29, 25, 0.15);
 }
 
 .cfb-verified-count {
-  font-size: 0.7rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
   font-weight: 700;
-  color: var(--color-gray-400);
-  letter-spacing: 0.5px;
+  color: #8a7b73;
+  letter-spacing: 0.09em;
+  text-transform: uppercase;
 }
 
-/* ─── Rating Bars ─── */
+/* Rating bars */
 .cfb-breakdown {
   display: flex;
   flex-direction: column;
-  gap: 0.5rem;
+  gap: 0.65rem;
 }
 
 .cfb-bar-row {
   display: flex;
   align-items: center;
-  gap: 0.4rem;
+  gap: 0.55rem;
 }
 
 .cfb-bar-label {
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-charcoal);
-  width: 10px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: #291d19;
+  width: 12px;
   text-align: right;
 }
 
 .cfb-bar-star {
-  color: var(--color-saffron);
-  font-size: 0.7rem;
+  color: #F5A623;
+  font-size: 0.75rem;
   flex-shrink: 0;
 }
 
 .cfb-bar-track {
   flex: 1;
   height: 8px;
-  background: #f0f0f0;
-  border-radius: 99px;
+  background: rgba(41, 29, 25, 0.07);
+  border-radius: 999px;
   overflow: hidden;
 }
 
 .cfb-bar-fill {
   height: 100%;
-  background: var(--color-saffron);
-  border-radius: 99px;
-  transition: width 0.6s ease;
+  background: linear-gradient(90deg, #E63946 0%, #F5A623 100%);
+  border-radius: 999px;
+  transition: width 0.8s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cfb-bar-pct {
-  font-size: 0.72rem;
-  color: var(--color-gray-500);
-  width: 28px;
+  font-family: var(--font-mono, monospace);
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: #7a6b63;
+  width: 32px;
   text-align: right;
 }
 
-/* ─── Share Your Experience Form ─── */
+/* ═══════════════════════════════════════════════════════════════════
+   6. SHARE YOUR EXPERIENCE FORM CARD
+   ═══════════════════════════════════════════════════════════════════ */
+
 .cfb-form-header {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
-  margin-bottom: 1.1rem;
+  gap: 0.6rem;
+  margin-bottom: 0.4rem;
 }
 
 .cfb-form-icon {
-  font-size: 1.1rem;
+  font-size: 1.2rem;
 }
 
 .cfb-form-title {
-  font-size: 0.95rem;
-  font-weight: 700;
-  color: var(--color-charcoal);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 1.2rem;
+  font-weight: 850;
+  color: #291d19;
+  letter-spacing: -0.015em;
+  margin: 0;
+}
+
+.cfb-form-title em {
+  font-style: normal;
+  color: var(--color-red-dark, #c62828);
+}
+
+.cfb-form-subtitle {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.85rem;
+  line-height: 1.5;
+  color: #7a6b63;
+  margin: 0 0 1.25rem;
 }
 
 .cfb-success-msg {
-  background: #e6f9ed;
+  background: #eaf8ee;
   color: #1a7a3f;
-  border-radius: var(--radius-sm);
-  padding: 0.6rem 0.9rem;
-  font-size: 0.82rem;
+  border-radius: 12px;
+  padding: 0.75rem 1rem;
+  font-size: 0.85rem;
   font-weight: 600;
-  margin-bottom: 1rem;
-  border: 1px solid #b2e8c6;
+  margin-bottom: 1.1rem;
+  border: 1px solid #b7e8c4;
 }
 
 .cfb-error-msg {
-  margin-bottom: 0.75rem;
-  padding: 0.7rem 0.85rem;
-  border: 1px solid #f3c2c2;
-  border-radius: 8px;
-  color: #a32626;
-  background: #fff4f4;
+  margin-bottom: 1rem;
+  padding: 0.75rem 1rem;
+  border: 1px solid #f8c8c8;
+  border-radius: 12px;
+  color: #b51d2b;
+  background: #fdf2f2;
   font-size: 0.85rem;
+  font-weight: 500;
 }
 
 .cfb-form {
   display: flex;
   flex-direction: column;
-  gap: 0.9rem;
+  gap: 1rem;
 }
 
 .cfb-form-group {
   display: flex;
   flex-direction: column;
-  gap: 0.35rem;
+  gap: 0.45rem;
 }
 
 .cfb-form-label {
-  font-size: 0.7rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.72rem;
   font-weight: 700;
-  color: var(--color-gray-500);
-  letter-spacing: 0.6px;
+  color: #6b5c54;
+  letter-spacing: 0.9px;
   text-transform: uppercase;
 }
 
-/* Interactive star rating */
+/* Interactive star rating input */
 .cfb-rating-input {
   display: flex;
-  gap: 0.3rem;
+  gap: 0.4rem;
+  padding: 0.2rem 0;
 }
 
 .cfb-rating-star {
   background: none;
   border: none;
   cursor: pointer;
-  font-size: 1.4rem;
-  color: #ddd;
-  transition: color var(--transition-fast), transform var(--transition-fast);
+  font-size: 1.5rem;
+  color: rgba(41, 29, 25, 0.16);
+  transition: color 0.2s ease, transform 0.2s cubic-bezier(0.16, 1, 0.3, 1);
   padding: 0;
   line-height: 1;
 }
 
 .cfb-rating-star.active,
 .cfb-rating-star:hover {
-  color: var(--color-saffron);
-  transform: scale(1.15);
+  color: #F5A623;
+  transform: scale(1.18);
+  filter: drop-shadow(0 2px 6px rgba(245, 166, 35, 0.4));
 }
 
-/* Inputs */
+/* Form inputs & textarea */
 .cfb-input,
 .cfb-textarea {
   width: 100%;
-  padding: 0.65rem 0.85rem;
-  border: 1.5px solid #e5e5e5;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 0.85rem;
-  color: var(--color-charcoal);
-  background: #fafafa;
-  transition: border-color var(--transition-fast), box-shadow var(--transition-fast);
+  padding: 0.75rem 1rem;
+  border: 1.5px solid rgba(41, 29, 25, 0.14);
+  border-radius: 12px;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  color: #291d19;
+  background: #fbf9f5;
+  transition: border-color 0.2s ease, box-shadow 0.2s ease, background-color 0.2s ease;
   resize: none;
 }
 
 .cfb-input::placeholder,
 .cfb-textarea::placeholder {
-  color: #bbb;
+  color: #9d8e87;
 }
 
 .cfb-input:focus,
 .cfb-textarea:focus {
   outline: none;
-  border-color: var(--color-saffron);
-  box-shadow: 0 0 0 3px rgba(245, 166, 35, 0.12);
-  background: #fff;
+  background: #ffffff;
+  border-color: var(--color-red, #E63946);
+  box-shadow: 0 0 0 3.5px rgba(230, 57, 70, 0.14);
 }
 
 /* Photo upload */
 .cfb-photo-upload {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   cursor: pointer;
+  font-family: var(--font-body, 'Inter', sans-serif);
   font-size: 0.82rem;
-  color: var(--color-gray-500);
-  padding: 0.6rem 0;
-  border-top: 1px dashed #e5e5e5;
-  transition: color var(--transition-fast);
+  font-weight: 500;
+  color: #6b5c54;
+  padding: 0.75rem 0.5rem;
+  border-top: 1px dashed rgba(41, 29, 25, 0.16);
+  transition: color 0.2s ease;
 }
 
 .cfb-photo-upload:hover {
-  color: var(--color-saffron);
+  color: var(--color-red, #E63946);
 }
 
 .cfb-photo-icon {
-  font-size: 1rem;
+  font-size: 1.15rem;
+  color: var(--color-red, #E63946);
 }
 
 /* Submit button */
 .cfb-submit-btn {
   width: 100%;
-  padding: 0.8rem;
-  background: var(--color-red);
-  color: #fff;
+  padding: 0.85rem 1.5rem;
+  background: linear-gradient(135deg, #DE0000 0%, #B80000 100%);
+  color: #ffffff;
   border: none;
-  border-radius: var(--radius-sm);
-  font-family: var(--font-body);
-  font-size: 0.9rem;
-  font-weight: 700;
+  border-radius: 999px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.95rem;
+  font-weight: 750;
   cursor: pointer;
-  transition: background var(--transition-fast), transform var(--transition-fast);
-  letter-spacing: 0.3px;
+  letter-spacing: 0.5px;
+  box-shadow: 0 4px 16px rgba(222, 0, 0, 0.25);
+  transition: transform 0.25s cubic-bezier(0.16, 1, 0.3, 1), box-shadow 0.25s ease, background 0.2s ease;
 }
 
-.cfb-submit-btn:hover {
-  background: var(--color-red-dark);
-  transform: translateY(-1px);
+.cfb-submit-btn:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 24px rgba(222, 0, 0, 0.35);
+  background: linear-gradient(135deg, #E63946 0%, #C62828 100%);
 }
 
-.cfb-submit-btn:active {
+.cfb-submit-btn:active:not(:disabled) {
   transform: translateY(0);
 }
 
-/* ─── Right Main Panel ─── */
+.cfb-submit-btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+
+/* ═══════════════════════════════════════════════════════════════════
+   6b. MODERN BRANCH PICKER (Aligned with Franchising System)
+   ═══════════════════════════════════════════════════════════════════ */
+
+.branch-picker-wrapper {
+  position: relative;
+  width: 100%;
+}
+
+.branch-picker-trigger {
+  width: 100%;
+  min-height: 48px;
+  padding: 0.55rem 0.65rem 0.55rem 0.9rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 500;
+  letter-spacing: -0.015em;
+  color: #291d19;
+  background: rgba(255, 255, 255, 0.88);
+  border: 1.5px solid rgba(41, 29, 25, 0.14);
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.65rem;
+  text-align: left;
+  cursor: pointer;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.02);
+  transition: border-color 0.18s ease, box-shadow 0.18s ease, background-color 0.18s ease;
+}
+
+.branch-picker-trigger:hover:not(:disabled) {
+  border-color: rgba(214, 40, 57, 0.4);
+  background: #ffffff;
+}
+
+.branch-picker-trigger:focus,
+.branch-picker-trigger.is-active {
+  outline: none;
+  background: #ffffff;
+  border-color: #d62839;
+  box-shadow: 0 0 0 3.5px rgba(214, 40, 57, 0.14);
+}
+
+.branch-picker-trigger.is-placeholder .branch-picker-trigger-text {
+  color: #9d8e87;
+  font-weight: 400;
+}
+
+.branch-picker-trigger-icon {
+  font-size: 1.25rem;
+  color: #d62839;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+}
+
+.branch-picker-trigger-text {
+  flex: 1;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.branch-picker-selected-label {
+  display: flex;
+  flex-direction: column;
+  line-height: 1.25;
+}
+
+.branch-picker-selected-label strong {
+  font-weight: 700;
+  color: #291d19;
+  font-size: 0.88rem;
+}
+
+.branch-picker-selected-label small {
+  font-weight: 400;
+  color: #7a6b63;
+  font-size: 0.76rem;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.branch-picker-chevron-box {
+  width: 30px;
+  height: 30px;
+  border-radius: 8px;
+  background: rgba(41, 29, 25, 0.04);
+  border: 1px solid rgba(41, 29, 25, 0.08);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  transition: background-color 0.16s ease, border-color 0.16s ease, color 0.16s ease;
+}
+
+.branch-picker-trigger:hover .branch-picker-chevron-box,
+.branch-picker-trigger.is-active .branch-picker-chevron-box {
+  background: rgba(214, 40, 57, 0.08);
+  border-color: rgba(214, 40, 57, 0.25);
+  color: #d62839;
+}
+
+.branch-picker-chevron {
+  font-size: 1.15rem;
+  color: #7a6b63;
+  transition: transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), color 0.16s ease;
+}
+
+.branch-picker-chevron.open {
+  transform: rotate(180deg);
+  color: #d62839;
+}
+
+/* Popover Panel */
+.branch-picker-popover {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  z-index: 100;
+  background: #ffffff;
+  border: 1.5px solid rgba(41, 29, 25, 0.12);
+  border-radius: 14px;
+  box-shadow: 0 12px 32px rgba(24, 22, 21, 0.14), 0 2px 6px rgba(24, 22, 21, 0.04);
+  overflow: hidden;
+  animation: branchPopoverFade 0.16s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+@keyframes branchPopoverFade {
+  from {
+    opacity: 0;
+    transform: translateY(-4px) scale(0.99);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.branch-picker-search-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  padding: 0.65rem 0.85rem;
+  border-bottom: 1px solid rgba(41, 29, 25, 0.08);
+  background: #fdfcfb;
+}
+
+.branch-picker-search-icon {
+  color: #d62839;
+  font-size: 1.1rem;
+  flex-shrink: 0;
+}
+
+.branch-picker-search-input {
+  width: 100%;
+  border: none;
+  background: transparent;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 400;
+  color: #291d19;
+  outline: none;
+}
+
+.branch-picker-search-input::placeholder {
+  color: #9d8e87;
+}
+
+.branch-picker-options {
+  max-height: 220px;
+  overflow-y: auto;
+  padding: 0.4rem;
+  margin: 0;
+  list-style: none;
+}
+
+.branch-picker-options::-webkit-scrollbar {
+  width: 5px;
+}
+.branch-picker-options::-webkit-scrollbar-thumb {
+  background: rgba(41, 29, 25, 0.16);
+  border-radius: 999px;
+}
+
+.branch-picker-option {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.6rem;
+  padding: 0.6rem 0.8rem;
+  border-radius: 8px;
+  cursor: pointer;
+  transition: background-color 0.12s ease, color 0.12s ease;
+}
+
+.branch-picker-option:hover {
+  background: rgba(214, 40, 57, 0.06);
+}
+
+.branch-picker-option.is-selected {
+  background: linear-gradient(180deg, #fff7f7 0%, #ffedf0 100%);
+  border: 1px solid rgba(214, 40, 57, 0.18);
+}
+
+.branch-picker-option-details {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.branch-picker-option-name {
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.88rem;
+  font-weight: 700;
+  color: #291d19;
+}
+
+.branch-picker-option.is-selected .branch-picker-option-name {
+  color: #d62839;
+}
+
+.branch-picker-option-address {
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.75rem;
+  color: #7a6b63;
+}
+
+.branch-picker-check {
+  color: #d62839;
+  font-size: 1.2rem;
+  flex-shrink: 0;
+  display: inline-flex;
+}
+
+.branch-picker-empty {
+  padding: 1.25rem 1rem;
+  text-align: center;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  color: #9d8e87;
+}
+
+/* ═══════════════════════════════════════════════════════════════════
+   7. RIGHT MAIN REVIEWS PANEL
+   ═══════════════════════════════════════════════════════════════════ */
+
 .cfb-main {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
+  gap: 1.35rem;
 }
 
 /* Reviews header row */
@@ -349,25 +872,34 @@
   display: flex;
   align-items: flex-end;
   justify-content: space-between;
-  gap: 1rem;
-  background: #fff;
-  padding: 1.25rem 1.5rem;
-  border-radius: var(--radius-lg);
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #efefef;
+  gap: 1.25rem;
+  background: #ffffff;
+  padding: 1.35rem 1.75rem;
+  border-radius: 20px;
+  box-shadow: 0 4px 20px rgba(41, 29, 25, 0.05);
+  border: 1.5px solid rgba(41, 29, 25, 0.09);
 }
 
 .cfb-reviews-title {
-  font-family: var(--font-heading);
-  font-size: 1.15rem;
-  font-weight: 800;
-  color: var(--color-charcoal);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(1.3rem, 2vw, 1.6rem);
+  font-weight: 850;
+  color: #291d19;
+  letter-spacing: -0.02em;
+  margin: 0;
+  line-height: 1.2;
+}
+
+.cfb-reviews-title em {
+  font-style: normal;
+  color: var(--color-red-dark, #c62828);
 }
 
 .cfb-reviews-count {
-  font-size: 0.8rem;
-  color: var(--color-gray-500);
-  margin-top: 0.2rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.85rem;
+  color: #7a6b63;
+  margin-top: 0.25rem;
 }
 
 /* Sort dropdown */
@@ -379,160 +911,202 @@
 
 .cfb-sort-select {
   appearance: none;
-  border: 1.5px solid #e5e5e5;
-  border-radius: var(--radius-sm);
-  padding: 0.5rem 2.2rem 0.5rem 0.85rem;
-  font-family: var(--font-body);
+  border: 1.5px solid rgba(41, 29, 25, 0.14);
+  border-radius: 999px;
+  padding: 0.55rem 2.4rem 0.55rem 1.1rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 600;
   font-size: 0.82rem;
-  color: var(--color-charcoal);
-  background: #fafafa;
+  color: #291d19;
+  background: #fbf9f5;
   cursor: pointer;
-  transition: border-color var(--transition-fast);
+  transition: border-color 0.2s ease, box-shadow 0.2s ease;
 }
 
 .cfb-sort-select:focus {
   outline: none;
-  border-color: var(--color-saffron);
+  border-color: var(--color-red, #E63946);
+  box-shadow: 0 0 0 3px rgba(230, 57, 70, 0.12);
 }
 
 .cfb-sort-icon {
   position: absolute;
-  right: 0.6rem;
-  font-size: 1rem;
-  color: var(--color-gray-500);
+  right: 0.85rem;
+  font-size: 1.1rem;
+  color: #7a6b63;
   pointer-events: none;
 }
 
-/* ─── Review Cards List ─── */
+/* ═══════════════════════════════════════════════════════════════════
+   8. REVIEW CARDS LIST
+   ═══════════════════════════════════════════════════════════════════ */
+
 .cfb-reviews-list {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 1.2rem;
 }
 
 .cfb-review-card {
-  background: #fff;
-  border-radius: var(--radius-lg);
-  padding: 1.4rem 1.5rem;
-  box-shadow: 0 2px 12px rgba(0, 0, 0, 0.06);
-  border: 1px solid #efefef;
-  transition: box-shadow var(--transition-base), transform var(--transition-base);
+  background: #ffffff;
+  border-radius: 22px;
+  padding: 1.75rem;
+  box-shadow: 0 4px 20px rgba(41, 29, 25, 0.05);
+  border: 1.5px solid rgba(41, 29, 25, 0.09);
+  transition: box-shadow 0.28s cubic-bezier(0.16, 1, 0.3, 1), transform 0.28s cubic-bezier(0.16, 1, 0.3, 1), border-color 0.28s ease;
 }
 
 .cfb-review-card:hover {
-  box-shadow: 0 6px 24px rgba(0, 0, 0, 0.1);
-  transform: translateY(-2px);
+  box-shadow: 0 12px 32px rgba(41, 29, 25, 0.1);
+  transform: translateY(-3px);
+  border-color: rgba(230, 57, 70, 0.28);
 }
 
-/* Review top: avatar + name */
+.cfb-empty-reviews {
+  background: #ffffff;
+  border-radius: 20px;
+  padding: 3rem 2rem;
+  text-align: center;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  color: #7a6b63;
+  font-size: 0.95rem;
+  border: 1.5px dashed rgba(41, 29, 25, 0.15);
+}
+
+/* Review user header */
 .cfb-review-top {
-  margin-bottom: 0.8rem;
+  margin-bottom: 0.9rem;
 }
 
 .cfb-review-user {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.85rem;
 }
 
 .cfb-review-avatar {
-  width: 40px;
-  height: 40px;
+  width: 44px;
+  height: 44px;
   border-radius: 50%;
   display: flex;
   align-items: center;
   justify-content: center;
-  color: #fff;
-  font-weight: 800;
-  font-size: 0.9rem;
+  color: #ffffff;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 850;
+  font-size: 0.95rem;
   flex-shrink: 0;
+  box-shadow: 0 4px 10px rgba(0, 0, 0, 0.12);
 }
 
 .cfb-review-name-row {
   display: flex;
   align-items: center;
-  gap: 0.5rem;
+  gap: 0.6rem;
   flex-wrap: wrap;
 }
 
 .cfb-review-name {
-  font-weight: 700;
-  font-size: 0.95rem;
-  color: var(--color-charcoal);
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-weight: 800;
+  font-size: 1.05rem;
+  color: #291d19;
+  letter-spacing: -0.01em;
 }
 
 .cfb-verified-badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.25rem;
-  background: #eaf4ff;
-  color: #2979cc;
-  border-radius: 99px;
-  padding: 0.15rem 0.55rem;
-  font-size: 0.65rem;
-  font-weight: 700;
-  text-transform: lowercase;
-  letter-spacing: 0.3px;
+  gap: 0.3rem;
+  background: #ebfbee;
+  color: #1a7a3f;
+  border: 1px solid #b2e8c6;
+  border-radius: 999px;
+  padding: 0.18rem 0.65rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 750;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
 }
 
 .cfb-review-meta {
   display: flex;
   align-items: center;
-  gap: 0.6rem;
-  margin-top: 0.2rem;
+  gap: 0.65rem;
+  margin-top: 0.25rem;
 }
 
 .cfb-review-date {
-  font-size: 0.75rem;
-  color: var(--color-gray-400);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  color: #8a7b73;
 }
 
 /* Tags */
 .cfb-tags-row {
   display: flex;
   flex-wrap: wrap;
-  gap: 0.4rem;
-  margin-bottom: 0.75rem;
+  gap: 0.45rem;
+  margin-bottom: 0.85rem;
 }
 
 .cfb-tag {
-  background: #fff4e6;
-  color: #c47a1e;
-  border: 1px solid #fcd9a0;
-  border-radius: 99px;
-  padding: 0.18rem 0.65rem;
-  font-size: 0.62rem;
-  font-weight: 700;
+  background: #fbf3ea;
+  color: #a04918;
+  border: 1px solid rgba(224, 114, 38, 0.25);
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.68rem;
+  font-weight: 750;
   letter-spacing: 0.5px;
   text-transform: uppercase;
 }
 
+/* Branch pill */
+.cfb-review-branch {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  background: rgba(41, 29, 25, 0.05);
+  color: #6b5c54;
+  border-radius: 999px;
+  padding: 0.2rem 0.75rem;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.78rem;
+  font-weight: 600;
+  margin-bottom: 0.85rem;
+}
+
 /* Review text */
 .cfb-review-text {
-  font-size: 0.9rem;
-  color: #444;
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.95rem;
+  color: #382c28;
   line-height: 1.75;
-  margin-bottom: 0.85rem;
+  margin-bottom: 1rem;
 }
 
 /* Review image */
 .cfb-review-image-wrap {
-  margin-bottom: 1rem;
-  border-radius: var(--radius-md);
+  margin-bottom: 1.15rem;
+  border-radius: 16px;
   overflow: hidden;
-  max-width: 260px;
+  max-width: 280px;
+  border: 1.5px solid rgba(41, 29, 25, 0.1);
 }
 
 .cfb-review-image {
   width: 100%;
-  height: 180px;
+  height: 190px;
   object-fit: cover;
   display: block;
-  transition: transform var(--transition-slow);
+  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .cfb-review-image:hover {
-  transform: scale(1.03);
+  transform: scale(1.04);
 }
 
 /* Footer: helpful */
@@ -540,46 +1114,54 @@
   display: flex;
   align-items: center;
   gap: 1rem;
-  padding-top: 0.85rem;
-  border-top: 1px solid #f0f0f0;
+  padding-top: 1rem;
+  border-top: 1px solid rgba(41, 29, 25, 0.07);
 }
 
 .cfb-helpful-label {
-  font-size: 0.8rem;
-  color: var(--color-gray-500);
+  font-family: var(--font-body, 'Inter', sans-serif);
+  font-size: 0.82rem;
+  color: #7a6b63;
 }
 
 .cfb-helpful-btn {
   display: inline-flex;
   align-items: center;
-  gap: 0.35rem;
-  background: none;
-  border: 1.5px solid #e5e5e5;
-  border-radius: 99px;
-  padding: 0.3rem 0.85rem;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-gray-500);
+  gap: 0.4rem;
+  background: #faf7f2;
+  border: 1.5px solid rgba(41, 29, 25, 0.12);
+  border-radius: 999px;
+  padding: 0.35rem 0.95rem;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: 0.82rem;
+  font-weight: 650;
+  color: #6b5c54;
   cursor: pointer;
-  transition: all var(--transition-fast);
+  transition: all 0.2s ease;
 }
 
 .cfb-helpful-btn:hover {
-  border-color: var(--color-saffron);
-  color: var(--color-saffron);
-  background: rgba(245, 166, 35, 0.06);
+  border-color: var(--color-red, #E63946);
+  color: var(--color-red, #E63946);
+  background: #fff5f5;
+  transform: translateY(-1px);
 }
 
 .cfb-helpful-btn.voted {
-  border-color: var(--color-saffron);
-  color: var(--color-saffron);
-  background: rgba(245, 166, 35, 0.08);
+  border-color: var(--color-red, #E63946);
+  color: var(--color-red, #E63946);
+  background: #fff5f5;
+  box-shadow: 0 2px 8px rgba(230, 57, 70, 0.16);
 }
 
-/* ─── Responsive ─── */
-@media (max-width: 900px) {
+/* ═══════════════════════════════════════════════════════════════════
+   10. RESPONSIVE BREAKPOINTS
+   ═══════════════════════════════════════════════════════════════════ */
+
+@media (max-width: 960px) {
   .cfb-layout {
     grid-template-columns: 1fr;
+    gap: 2rem;
   }
 
   .cfb-sidebar {
@@ -587,21 +1169,34 @@
   }
 }
 
-@media (max-width: 600px) {
-  .cfb-page-header {
-    padding: 2.5rem 1rem 1.5rem;
+@media (max-width: 640px) {
+  .cfb-layout {
+    padding: 0 1rem clamp(2.5rem, 4vw, 3.5rem);
   }
 
-  .cfb-layout {
-    padding: 1.25rem 1rem 3rem;
+  .cfb-card,
+  .cfb-reviews-header,
+  .cfb-review-card {
+    padding: 1.35rem 1.25rem;
+    border-radius: 18px;
   }
 
   .cfb-reviews-header {
     flex-direction: column;
     align-items: flex-start;
+    gap: 1rem;
+  }
+
+  .cfb-sort-wrapper,
+  .cfb-sort-select {
+    width: 100%;
   }
 
   .cfb-review-image-wrap {
     max-width: 100%;
+  }
+
+  .cfb-score-big {
+    font-size: 3.2rem;
   }
 }

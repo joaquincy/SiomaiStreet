@@ -3,10 +3,13 @@ import { BiMap, BiSearch, BiCurrentLocation, BiNavigation, BiPhone, BiTime, BiAr
 import { coordinates, normalizeStore, directionsUrl, phoneUrl } from '../../../../shared/storeLocations';
 import { beginLocationLookup, distanceLabel, linkedStoreId, locationErrorMessage, storeResults, storeShareUrl } from '../../../utils/storeFinder';
 import StoreMap from './StoreMap';
+import PlaceSearch from './PlaceSearch';
+import RoutePlanner from './RoutePlanner';
+import RoutePlannerModal from './RoutePlannerModal';
 import { StoreCardsSkeleton } from '../../../components/Skeleton';
 import './StoreFinder.css';
 
-const mapsConfigured = Boolean(import.meta.env.VITE_GOOGLE_MAPS_API_KEY && import.meta.env.VITE_GOOGLE_MAPS_MAP_ID);
+// Browsing the map is independent of branch publishing and place-search availability.
 
 export default function StoreFinder() {
   const section = useRef(null);
@@ -40,7 +43,7 @@ export default function StoreFinder() {
   return <StoreFinderExperience sectionRef={section} data={data} onRetry={() => setAttempt(value => value + 1)} />;
 }
 
-export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable = mapsConfigured }) {
+export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable = true }) {
   const search = useRef(null);
   const details = useRef(null);
   const mapPanel = useRef(null);
@@ -52,9 +55,17 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
   const [selectedId, setSelectedId] = useState(sharedId);
   const [focusId, setFocusId] = useState(sharedId);
   const [focusVersion, setFocusVersion] = useState(0);
-  const [view, setView] = useState('list');
+  const [view, setView] = useState('map');
+  const [searchMode, setSearchMode] = useState('places');
+  const [originVersion, setOriginVersion] = useState(0);
+  const [expanded, setExpanded] = useState(false);
+  const [route, setRoute] = useState(null);
+  const [routeOpen,setRouteOpen]=useState(false);
+  const [routeSeed, setRouteSeed] = useState(null);
+  const [pickingFor, setPickingFor] = useState(null);
   const [mobile, setMobile] = useState(true);
   const [position, setPosition] = useState(null);
+  const [searchedPlace, setSearchedPlace] = useState(null);
   const [sort, setSort] = useState('name');
   const [locationStatus, setLocationStatus] = useState('');
   const [locating, setLocating] = useState(false);
@@ -91,15 +102,17 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
   const mapped = useMemo(() => filtered.filter(store => store.position), [filtered]);
   const hasPins = data.stores.some(store => store.position);
   const selected = filtered.find(store => store.id === selectedId) || filtered[0];
+  const streetPoint = searchedPlace?.position || selected?.position;
+  const streetView = streetPoint ? `https://www.google.com/maps/@?api=1&map_action=pano&viewpoint=${streetPoint.lat},${streetPoint.lng}` : null;
   const selectedIndex = selected ? filtered.findIndex(store => store.id === selected.id) : -1;
   const mapVisible = !mobile || view === 'map';
-  const mapActive = mapsAvailable && mapRequested && !mapError && mapped.length > 0;
+  const mapActive = mapsAvailable && mapRequested && !mapError;
   const choose = useCallback(id => { setSelectedId(id); setFocusId(id); setFocusVersion(value => value + 1); }, []);
   const reset = () => { setQuery(''); setRegion(''); setSelectedId(null); setFocusId(null); search.current?.focus(); };
   const showDetails = () => setDetailsFocusVersion(value => value + 1);
   const browse = () => { setView('list'); setDirectoryOpen(true); setListFocusVersion(value => value + 1); };
   const clearLocation = () => {
-    locationWork.current.cancel?.(); setLocating(false); setPosition(null); setSort('name');
+    locationWork.current.cancel?.(); setLocating(false); setPosition(null); setSearchedPlace(null); setSort('name');
     setLocationStatus('Location cleared. Stores are sorted by name.');
   };
   const locate = () => {
@@ -109,6 +122,7 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
     locationWork.current.cancel = beginLocationLookup(navigator.geolocation, {
       onSuccess: result => {
         const next = coordinates(result.coords.latitude, result.coords.longitude);
+        setSearchedPlace(null);
         setPosition(next); setLocating(false); setSort(next ? 'nearest' : 'name'); setSelectedId(null); setFocusId(null);
         setLocationStatus(next ? 'Sorted by approximate straight-line distance, not travel time. Search filters still apply.' : 'Location unavailable. Search by city instead.');
       },
@@ -116,6 +130,32 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
     });
   };
   const message = data.status === 'loading' ? 'Finding our stores…' : data.status === 'error' ? 'A little detour.' : !data.stores.length ? 'Our directory is being updated.' : !filtered.length ? 'No stops found here.' : '';
+  const openMap = () => { setMapRequested(true); setMapError(false); setView('map'); setMapFocusVersion(value => value + 1); };
+  const openPlanner = () => {
+    setPickingFor(null);
+    setMapRequested(true); setMapError(false); setView('map'); setRouteOpen(true);
+  };
+  const assignRoutePoint = (target, point) => {
+    setRoute(null); setRouteSeed({ target, point }); openPlanner();
+  };
+  const pickPoint = target => {
+    setRouteOpen(false); setPickingFor(target); openMap();
+  };
+  const selectMapPoint = point => {
+    if (pickingFor === 'start' || pickingFor === 'destination') assignRoutePoint(pickingFor, point);
+    else {
+      locationWork.current.cancel?.(); setLocating(false);
+      setSearchedPlace(point); setPosition(point.position); setSort('nearest'); setFocusId(null); setPickingFor(null);
+    }
+  };
+  const choosePlace = place => {
+    locationWork.current.cancel?.(); setLocating(false);
+    setSearchedPlace(place); setPosition(place.position); setSort('nearest');
+    setQuery(''); setRegion(''); setSelectedId(null); setFocusId(null); setDirectoryOpen(true);
+    openMap();
+    setLocationStatus('Search area selected. Branch filters cleared; distances are straight-line estimates, not travel times.');
+  };
+  const nearestDistance = position ? filtered.reduce((min, store) => Math.min(min, store.distance), Infinity) : Infinity;
 
   return <section className="store-finder" id="stores" aria-labelledby="store-finder-title" ref={sectionRef}>
     <div className="store-finder__poster">
@@ -131,14 +171,58 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
         <a className="store-finder__menu-link" href="#menu">Explore the menu <BiArrowToRight aria-hidden="true" /></a>
       </header>
 
-      <div className="store-finder__toolbar" role="search" aria-label="Search Siomai Street stores">
-        <div className="store-finder__search"><label htmlFor="store-search">Where are you headed?</label><div><BiSearch aria-hidden="true" /><input ref={search} id="store-search" type="search" value={query} maxLength={120} placeholder="City, area, landmark or branch" onChange={event => { setQuery(event.target.value); setDirectoryOpen(true); setView('list'); setSelectedId(null); setFocusId(null); }} />{query && <button type="button" aria-label="Clear store search" onClick={() => { setQuery(''); search.current?.focus(); }}><BiX aria-hidden="true" /></button>}</div></div>
-        {regions.length > 0 && <div className="store-finder__region"><label htmlFor="store-region">Narrow by region</label><select id="store-region" value={region} onChange={event => { setRegion(event.target.value); setDirectoryOpen(true); setView('list'); setSelectedId(null); setFocusId(null); }}><option value="">All regions</option>{regions.map(value => <option key={value}>{value}</option>)}</select></div>}
-        <button type="button" className="store-finder__locate" onClick={locating ? clearLocation : locate} aria-describedby="store-location-note" disabled={!hasPins}><BiCurrentLocation aria-hidden="true" />{locating ? 'Cancel locating' : position ? 'Update my location' : 'Find near me'}</button>
+      {/* ── Unified search area ── */}
+      <div className="store-finder__unified-search">
+        <div className="store-finder__search-tabs" role="tablist" aria-label="Search type">
+          <button type="button" role="tab" aria-selected={searchMode === 'places'} onClick={() => setSearchMode('places')}>
+            <BiSearch aria-hidden="true" />Search Places
+          </button>
+          <button type="button" role="tab" aria-selected={searchMode === 'stores'} onClick={() => setSearchMode('stores')}>
+            <BiMap aria-hidden="true" />Our Branches
+          </button>
+        </div>
+
+        {/* Place search panel */}
+        <PlaceSearch active={searchMode === 'places'} onChoose={choosePlace} onExplore={openMap} />
+
+        {/* Branch search panel */}
+        <div id="store-branch-search" hidden={searchMode !== 'stores'}>
+          <div className="store-finder__toolbar" role="search" aria-label="Search Siomai Street stores">
+            <div className="store-finder__search"><label htmlFor="store-search">Find a Siomai Street branch</label><div><BiSearch aria-hidden="true" /><input ref={search} id="store-search" type="search" value={query} maxLength={120} placeholder="Type a city, area, or branch name..." onChange={event => { setQuery(event.target.value); setDirectoryOpen(true); setView('list'); setSelectedId(null); setFocusId(null); }} />{query && <button type="button" aria-label="Clear store search" onClick={() => { setQuery(''); search.current?.focus(); }}><BiX aria-hidden="true" /></button>}</div></div>
+            {regions.length > 0 && <div className="store-finder__region"><label htmlFor="store-region">Narrow by region</label><select id="store-region" value={region} onChange={event => { setRegion(event.target.value); setDirectoryOpen(true); setView('list'); setSelectedId(null); setFocusId(null); }}><option value="">All regions</option>{regions.map(value => <option key={value}>{value}</option>)}</select></div>}
+            <button type="button" className="store-finder__locate" onClick={locating ? clearLocation : locate} aria-describedby="store-location-note" disabled={!hasPins}><BiCurrentLocation aria-hidden="true" />{locating ? 'Cancel locating' : position && !searchedPlace ? 'Update my location' : 'Find near me'}</button>
+          </div>
+          {!filtered.length && data.stores.length > 0 && <div className="store-finder__no-match-hint">
+            <p>No branches match "<strong>{query || region}</strong>"</p>
+            <div className="store-finder__no-match-actions">
+              <button type="button" onClick={reset}><BiRefresh aria-hidden="true" />Show all branches</button>
+              <button type="button" onClick={() => setSearchMode('places')}><BiSearch aria-hidden="true" />Search any place instead</button>
+            </div>
+          </div>}
+        </div>
       </div>
+
+      {searchedPlace && hasPins && <p className="store-finder__search-origin">{nearestDistance > 50 ? 'No matching Siomai Street branch pin is within 50 km of this place. You can still explore it and get directions.' : 'Siomai Street branches are sorted by distance from your selected place.'}</p>}
+
+      {/* ── Quick actions bar ── */}
+      <div className="store-finder__quick-bar">
+        <button type="button" className="store-finder__quick-action" onClick={openMap}>
+          <BiMap aria-hidden="true" />
+          <span>Explore Map</span>
+        </button>
+        <button type="button" className="store-finder__quick-action" onClick={openPlanner}>
+          <BiNavigation aria-hidden="true" />
+          <span>Get Directions</span>
+        </button>
+        <button type="button" className="store-finder__quick-action" onClick={locate} disabled={!hasPins}>
+          <BiCurrentLocation aria-hidden="true" />
+          <span>Near Me</span>
+        </button>
+      </div>
+
       <div className="store-finder__discovery">
         {cities.length > 0 && <div className="store-finder__cities" role="group" aria-label="Browse by city"><span>Or explore</span>{cities.map(city => <button type="button" key={city} aria-pressed={query === city && !region} onClick={() => { setDirectoryOpen(true); setView('list'); setQuery(query === city && !region ? '' : city); setRegion(''); setSelectedId(null); setFocusId(null); }}>{city}<span aria-hidden="true">↗</span></button>)}</div>}
-        <p className="store-finder__privacy" id="store-location-note">{data.status === 'ready' && !hasPins ? 'Nearby search will be available when branch map pins are published.' : 'Location stays in this visit. Never saved or sent to our directory.'}{position && <button type="button" onClick={clearLocation}>Clear my location</button>}</p>
+        <p className="store-finder__privacy" id="store-location-note">{data.status === 'ready' && !hasPins ? 'Explore and get directions to any place. Our branch pins are still being prepared.' : 'Numbered pins are Siomai Street branches. Other places can be searched or selected on the map.'}{position && !searchedPlace && <button type="button" onClick={clearLocation}>Clear my location</button>}</p>
       </div>
       <p className="store-finder__location-status" role="status" aria-live="polite">{locationStatus}</p>
       {sharedId && data.status === 'ready' && !data.stores.some(store => store.id === sharedId) && <p className="store-finder__notice">That shared store is no longer in this directory. Browse the current stores below.</p>}
@@ -153,14 +237,14 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
       <p className="store-finder__sr-only" role="status" aria-live="polite" aria-atomic="true">{selected ? `Selected store: ${selected.name}. Store details, hours and directions have been updated.` : ''}</p>
 
       <div className={`store-finder__workspace store-finder__workspace--${view}`}>
-        {selected ? <StoreDetails key={selected.id} store={selected} detailsRef={details} onBrowse={browse} onMap={mapsAvailable && selected.position ? () => { choose(selected.id); setView('map'); setMapFocusVersion(value => value + 1); } : null} /> : <div className="store-finder__unselected"><BiMap aria-hidden="true" /><h3>{message}</h3><p>{data.status === 'error' ? 'Please retry the directory below.' : 'Choose a store from the directory to see its address, hours and directions.'}</p></div>}
+        {selected ? <StoreDetails onRoute={selected.position ? () => assignRoutePoint('destination', { label: selected.name, position: selected.position }) : null} key={selected.id} store={selected} detailsRef={details} onBrowse={browse} onMap={mapsAvailable && selected.position ? () => { choose(selected.id); openMap(); } : null} /> : <div className="store-finder__unselected"><BiMap aria-hidden="true" /><h3>{message}</h3><p>{data.status === 'error' ? 'Please retry the directory below.' : 'Choose a store from the directory to see its address, hours and directions.'}</p></div>}
         <div className="store-finder__map-panel" id="store-map-panel" role="region" tabIndex={-1} ref={mapPanel} aria-label="Store map">
-          <div className="store-finder__map-top"><span><BiMap aria-hidden="true" /> {mapActive ? `${mapped.length} mapped ${mapped.length === 1 ? 'store' : 'stores'}` : 'A good place to start'}</span>{mapActive && <button type="button" onClick={() => { setMapRequested(false); setMapError(false); }}>Close map <BiX aria-hidden="true" /></button>}</div>
           <div className="store-finder__map-stage">
-            {mapActive && mapVisible ? <StoreMap stores={mapped} selectedId={selected?.id} focusId={focusId} focusVersion={focusVersion} onSelect={choose} fitVersion={fitVersion} onError={failMap} /> : <MapInvitation available={mapsAvailable} failed={mapError} count={mapped.length} loading={data.status === 'loading'} onLoad={() => { setMapError(false); setMapRequested(true); }} />}
+            {mapActive && mapVisible ? <StoreMap picking={!!pickingFor} onPoint={selectMapPoint} onCancelPick={() => { setPickingFor(null); }} route={route} originVersion={originVersion} searchOrigin={searchedPlace} stores={mapped} selectedId={selected?.id} focusId={focusId} focusVersion={focusVersion} onSelect={choose} fitVersion={fitVersion} onError={failMap} /> : <MapInvitation available={mapsAvailable} failed={mapError} count={mapped.length || (searchedPlace ? 1 : 0)} loading={data.status === 'loading'} onLoad={openMap} />}
           </div>
-          <div className="store-finder__map-bottom"><p>{mapActive ? 'Choose a numbered pin or a store in the list.' : 'Your store list works even without the map.'}{filtered.length > mapped.length && ` ${filtered.length - mapped.length} ${filtered.length - mapped.length === 1 ? 'store has' : 'stores have'} no published pin.`}</p>{mapActive && <button type="button" onClick={() => { setFocusId(null); setFitVersion(value => value + 1); }}>Fit all pins <BiNavigation aria-hidden="true" /></button>}</div>
-          {selected && <button type="button" className="store-finder__map-details" onClick={showDetails}>Hours & directions for {selected.name}<BiArrowToRight aria-hidden="true" /></button>}
+          {route && <div className="store-finder__route-summary" role="status"><strong>{route.mode === 'walk' ? 'Walking' : 'Driving'} · {(route.distance/1000).toFixed(1)} km · ~{Math.max(1,Math.round(route.seconds/60))} min</strong><span className="store-finder__route-endpoints">A: {route.from}<br />B: {route.to}</span><button type="button" onClick={()=>setRoute(null)}>Clear route</button></div>}
+          {mapActive && <div className="store-finder__map-links"><button type="button" aria-controls="store-route-dialog" aria-haspopup="dialog" onClick={openPlanner}><BiNavigation aria-hidden="true" />Get Directions</button>{mapped.length > 0 && <button type="button" onClick={() => { setFocusId(null); setFitVersion(value => value + 1); }}><BiMap aria-hidden="true" />Show All Branches</button>}{streetView && <a href={streetView} target="_blank" rel="noopener noreferrer"><BiMap aria-hidden="true" />Street View</a>}</div>}
+          {filtered.length > mapped.length && <p className="store-finder__map-note">{filtered.length - mapped.length} {filtered.length - mapped.length === 1 ? 'store has' : 'stores have'} no published pin.</p>}
         </div>
         <details className="store-finder__directory" open={!selected || directoryOpen} onToggle={event => { if (selected) setDirectoryOpen(event.currentTarget.open); }}>
           <summary className="store-finder__directory-heading" id="store-results" ref={directory}><BiListUl aria-hidden="true" /><span>Browse all matching stores</span><span className="store-finder__expand" aria-hidden="true">+</span></summary>
@@ -171,17 +255,20 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
         </details>
       </div>
     </div>
+    <RoutePlannerModal open={routeOpen} onClose={() => setRouteOpen(false)}>
+      <RoutePlanner active={routeOpen} seed={routeSeed} store={selected} searchPoint={searchedPlace} onRoute={setRoute} onExplore={() => { setRouteOpen(false); openMap(); }} />
+    </RoutePlannerModal>
   </section>;
 }
 
 export function MapInvitation({ available, failed, count, loading, onLoad }) {
   return <div className="store-finder__map-placeholder">
     <svg className="store-finder__map-art" viewBox="0 0 700 440" preserveAspectRatio="xMidYMid slice" aria-hidden="true"><defs><pattern id="sf-blocks" width="88" height="78" patternTransform="rotate(-16)" patternUnits="userSpaceOnUse"><path d="M9 8h24v19H9zM47 11h27v20H47zM12 43h20v23H12zM48 47h23v18H48z" fill="#f3d58b" stroke="#a74835" strokeWidth="1" /></pattern></defs><path fill="url(#sf-blocks)" d="M0 0h700v440H0z" /><path className="sf-road-edge" d="M-80 360 800 50M100-60 230 500M490-50 600 500M-50 90 760 370" /><path className="sf-road" d="M-80 360 800 50M100-60 230 500M490-50 600 500M-50 90 760 370" /><path className="sf-route" d="m110 312 97-35 49 204" /></svg>
-    <div className="store-finder__map-invite"><span className="store-finder__map-symbol" aria-hidden="true"><BiMap /></span><h3>{failed ? 'The map took a detour.' : 'Your next stop awaits.'}</h3><p>{failed ? 'Google Maps could not load. You can still use the store list and directions.' : !available ? 'Our interactive map is coming soon. Find store details and directions in the directory.' : loading ? 'Finding the stores to show on your map.' : !count ? 'No map pins are available for these results. Store details are still available.' : 'Find our locations and the streets around them.'}</p>{available && count > 0 && <><button type="button" onClick={onLoad}>{failed ? 'Retry Google Maps' : 'Explore Google Maps'} <BiArrowToRight aria-hidden="true" /></button><small>Loads Google Maps. <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google privacy policy<span className="store-finder__sr-only"> (opens in a new tab)</span></a></small></>}</div><span className="store-finder__illustration-note">Illustration · live map not loaded</span>
+    <div className="store-finder__map-invite"><span className="store-finder__map-symbol" aria-hidden="true"><BiMap /></span><h3>{failed ? 'The map took a detour.' : 'Explore the Street Map'}</h3><p>{failed ? 'The street map could not load. You can still use the store list and directions.' : !available ? 'Our interactive map is coming soon. Find store details and directions in the directory.' : loading ? 'Finding the stores to show on your map.' : !count ? 'Browse streets and places now. Search any location and get directions — store pins will appear when published.' : 'See our locations on the map and explore the streets around them.'}</p>{available && <><button type="button" onClick={onLoad}>{failed ? 'Retry map' : 'Explore the map'} <BiArrowToRight aria-hidden="true" /></button><small>Loads OpenStreetMap tiles. <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer">Map privacy policy<span className="store-finder__sr-only"> (opens in a new tab)</span></a></small></>}</div><span className="store-finder__illustration-note">Illustration · click the button above to load the live map</span>
   </div>;
 }
 
-export function StoreDetails({ store, detailsRef, onMap, onBrowse }) {
+export function StoreDetails({ store, detailsRef, onMap, onBrowse, onRoute }) {
   const [mode, setMode] = useState('driving');
   const [note, setNote] = useState('');
   const alive = useRef(false);
@@ -201,9 +288,9 @@ export function StoreDetails({ store, detailsRef, onMap, onBrowse }) {
   };
   return <section id="store-details" className="store-finder__details" aria-labelledby="store-details-title" tabIndex={-1} ref={detailsRef}>
     <div className="store-finder__details-main"><div className="store-finder__selection-label"><span className="store-finder__eyebrow"><BiMap aria-hidden="true" />YOUR SELECTED STOP</span>{onBrowse && <button type="button" onClick={onBrowse}>Change store <BiArrowToRight aria-hidden="true" /></button>}</div><h3 id="store-details-title">{store.name}</h3><address>{store.address || 'Address details coming soon'}</address>{store.landmark && <p className="store-finder__landmark">Landmark: {store.landmark}</p>}</div>
-    <div className="store-finder__route"><h4>Your way here</h4>{directions ? <><div className="store-finder__travel" role="group" aria-label="Travel mode">{[['driving', 'Drive', BiCar], ['walking', 'Walk', BiWalk], ['transit', 'Transit', BiBus]].map(([value, label, Icon]) => <button type="button" key={value} aria-pressed={mode === value} onClick={() => setMode(value)}><Icon aria-hidden="true" />{label}</button>)}</div><div className="store-finder__primary-actions"><a className="store-finder__directions" href={directions} target="_blank" rel="noopener noreferrer"><BiNavigation aria-hidden="true" />Get directions<span className="store-finder__sr-only"> to {store.name} (opens Google Maps)</span></a>{phone && <a className="store-finder__phone" href={phone}><BiPhone aria-hidden="true" />Call store<span className="store-finder__sr-only"> {store.phone} — {store.name}</span></a>}</div><small>{store.position ? 'Google Maps calculates your route and travel time.' : 'Directions use the published address. Confirm the destination before travelling.'}</small></> : <><p>Directions will be available once an address or map pin is published.</p>{phone && <a className="store-finder__phone" href={phone}><BiPhone aria-hidden="true" />Call store<span className="store-finder__sr-only"> {store.phone} — {store.name}</span></a>}</>}</div>
-    <details className="store-finder__visit"><summary><BiTime aria-hidden="true" />Hours &amp; visit information<span className="store-finder__expand" aria-hidden="true">+</span></summary><p>{store.hours || 'Opening hours have not been published.'}</p>{store.holidayNote && <p className="store-finder__holiday">{store.holidayNote}</p>}<small>Hours may change on holidays. Contact the store to confirm your visit.</small><p className="store-finder__contact-missing">{store.phone ? `Contact: ${store.phone}` : 'A store phone number hasn’t been published yet.'}</p></details>
-    <details className="store-finder__more"><summary>Share & save this stop <BiShareAlt aria-hidden="true" /></summary><div className="store-finder__quick-actions">{store.address && <button type="button" onClick={() => copy(store.address, 'Address copied. You’re one step closer.')}><BiCopy aria-hidden="true" />Copy address</button>}<button type="button" onClick={share}><BiShareAlt aria-hidden="true" />Share store</button><button type="button" onClick={() => copy(storeShareUrl(store, window.location.origin), 'Store link copied.')}><BiCopy aria-hidden="true" />Copy store link</button>{onMap && <button type="button" onClick={onMap}><BiMap aria-hidden="true" />View pin</button>}</div></details>
+    <div className="store-finder__route"><h4>Your way here</h4>{directions ? <><div className="store-finder__travel" role="group" aria-label="Travel mode">{[['driving', 'Drive', BiCar], ['walking', 'Walk', BiWalk], ['transit', 'Transit', BiBus]].map(([value, label, Icon]) => <button type="button" key={value} aria-pressed={mode === value} onClick={() => setMode(value)}><Icon aria-hidden="true" />{label}</button>)}</div><div className="store-finder__primary-actions">{onRoute && <button type="button" className="store-finder__directions" onClick={onRoute}><BiNavigation aria-hidden="true" />Directions on map</button>}<a className="store-finder__directions" href={directions} target="_blank" rel="noopener noreferrer"><BiNavigation aria-hidden="true" />Open Google Maps<span className="store-finder__sr-only"> to {store.name} (opens Google Maps)</span></a>{phone && <a className="store-finder__phone" href={phone}><BiPhone aria-hidden="true" />Call store<span className="store-finder__sr-only"> {store.phone} — {store.name}</span></a>}</div><small>{store.position ? 'Google Maps calculates your route and travel time.' : 'Directions use the published address. Confirm the destination before travelling.'}</small></> : <><p>Directions will be available once an address or map pin is published.</p>{phone && <a className="store-finder__phone" href={phone}><BiPhone aria-hidden="true" />Call store<span className="store-finder__sr-only"> {store.phone} — {store.name}</span></a>}</>}</div>
+    <details className="store-finder__visit"><summary><BiTime aria-hidden="true" />Hours &amp; visit information<span className="store-finder__expand" aria-hidden="true">+</span></summary><p>{store.hours || 'Opening hours have not been published.'}</p>{store.holidayNote && <p className="store-finder__holiday">{store.holidayNote}</p>}<small>Hours may change on holidays. Contact the store to confirm your visit.</small><p className="store-finder__contact-missing">{store.phone ? `Contact: ${store.phone}` : 'A store phone number hasn\'t been published yet.'}</p></details>
+    <details className="store-finder__more"><summary>Share & save this stop <BiShareAlt aria-hidden="true" /></summary><div className="store-finder__quick-actions">{store.address && <button type="button" onClick={() => copy(store.address, 'Address copied. You\'re one step closer.')}><BiCopy aria-hidden="true" />Copy address</button>}<button type="button" onClick={share}><BiShareAlt aria-hidden="true" />Share store</button><button type="button" onClick={() => copy(storeShareUrl(store, window.location.origin), 'Store link copied.')}><BiCopy aria-hidden="true" />Copy store link</button>{onMap && <button type="button" onClick={onMap}><BiMap aria-hidden="true" />View pin</button>}</div></details>
     <p className="store-finder__action-status" role="status" aria-live="polite" aria-atomic="true">{note}</p>
   </section>;
 }

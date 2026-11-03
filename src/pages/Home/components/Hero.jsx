@@ -111,11 +111,11 @@ const Hero = () => {
           <img
             src="/images/Group 1.png"
             srcSet="
-              /images/responsive/Group 1-480w.png 480w,
-              /images/responsive/Group 1-768w.png 768w,
-              /images/responsive/Group 1-1024w.png 1024w,
-              /images/responsive/Group 1-1440w.png 1440w,
-              /images/responsive/Group 1-1920w.png 1920w
+              /images/responsive/Group%201-480w.png 480w,
+              /images/responsive/Group%201-768w.png 768w,
+              /images/responsive/Group%201-1024w.png 1024w,
+              /images/responsive/Group%201-1440w.png 1440w,
+              /images/responsive/Group%201-1920w.png 1920w
             "
             sizes="100vw"
             alt="Siomai Street storefront"

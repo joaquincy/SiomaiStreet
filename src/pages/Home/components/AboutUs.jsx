@@ -287,9 +287,9 @@ const AboutUs = () => {
           <img
             src="/images/siomai front.png"
             srcSet="
-              /images/responsive/siomai front-320w.png 320w,
-              /images/responsive/siomai front-480w.png 480w,
-              /images/responsive/siomai front-640w.png 640w
+              /images/responsive/siomai%20front-320w.png 320w,
+              /images/responsive/siomai%20front-480w.png 480w,
+              /images/responsive/siomai%20front-640w.png 640w
             "
             sizes="(max-width: 768px) 90vw, 820px"
             alt="Siomai Street storefront illustration"
@@ -315,8 +315,8 @@ const AboutUs = () => {
           <img
             src="/images/siomai 1.png"
             srcSet="
-              /images/responsive/siomai 1-200w.png 200w,
-              /images/responsive/siomai 1-400w.png 400w
+              /images/responsive/siomai%201-200w.png 200w,
+              /images/responsive/siomai%201-400w.png 400w
             "
             sizes="(max-width: 768px) 200px, 400px"
             alt="Siomai Street signature siomai"

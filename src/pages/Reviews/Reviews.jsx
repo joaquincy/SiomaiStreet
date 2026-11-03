@@ -1,9 +1,10 @@
 import { useState, useEffect, useRef } from 'react';
 import { MAX_REVIEW_PHOTO_BYTES, REVIEW_PHOTO_TYPES } from '../../../shared/reviewUpload.js';
-import { BiLike, BiCamera, BiChevronDown } from 'react-icons/bi';
+import { BiLike, BiCamera, BiChevronDown, BiStoreAlt, BiCheck, BiSearch } from 'react-icons/bi';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
 import PageMeta from '../../components/PageMeta';
+import { getSrcSet } from '../../utils/responsiveImage';
 import { ReviewCardsSkeleton } from '../../components/Skeleton';
 import './Reviews.css';
 
@@ -17,6 +18,152 @@ const StarRating = ({ rating, size = 16 }) => (
     })}
   </span>
 );
+
+
+const BranchPicker = ({ branches, selectedBranchId, onSelect, disabled }) => {
+  const [open, setOpen] = useState(false);
+  const [search, setSearch] = useState('');
+  const wrapperRef = useRef(null);
+  const searchInputRef = useRef(null);
+
+  const selectedBranch = branches.find((b) => String(b.branch_id) === String(selectedBranchId));
+
+  useEffect(() => {
+    const handleClickOutside = (e) => {
+      if (wrapperRef.current && !wrapperRef.current.contains(e.target)) {
+        setOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handleClickOutside);
+    return () => document.removeEventListener('mousedown', handleClickOutside);
+  }, []);
+
+  useEffect(() => {
+    if (open && searchInputRef.current) {
+      searchInputRef.current.focus();
+    }
+  }, [open]);
+
+  const filtered = branches.filter((b) => {
+    if (!search.trim()) return true;
+    const q = search.toLowerCase();
+    return (
+      (b.branch_name && b.branch_name.toLowerCase().includes(q)) ||
+      (b.branch_address && b.branch_address.toLowerCase().includes(q))
+    );
+  });
+
+  return (
+    <div className={`branch-picker-wrapper ${open ? 'is-open' : ''}`} ref={wrapperRef}>
+      <button
+        type="button"
+        id="cfb-review-branch-btn"
+        className={`branch-picker-trigger ${!selectedBranch ? 'is-placeholder' : ''} ${open ? 'is-active' : ''}`}
+        onClick={() => !disabled && setOpen((prev) => !prev)}
+        disabled={disabled || branches.length === 0}
+        aria-haspopup="listbox"
+        aria-expanded={open}
+      >
+        <span className="branch-picker-trigger-icon" aria-hidden="true">
+          <BiStoreAlt />
+        </span>
+        <span className="branch-picker-trigger-text">
+          {selectedBranch ? (
+            <span className="branch-picker-selected-label">
+              <strong>{selectedBranch.branch_name}</strong>
+              {selectedBranch.branch_address ? <small> — {selectedBranch.branch_address}</small> : null}
+            </span>
+          ) : (
+            branches.length ? 'Choose an active branch' : 'No active branches available'
+          )}
+        </span>
+        <span className="branch-picker-chevron-box" aria-hidden="true">
+          <BiChevronDown className={`branch-picker-chevron ${open ? 'open' : ''}`} />
+        </span>
+      </button>
+
+      {/* Hidden native select for form validation, accessibility, and test compatibility */}
+      <select
+        id="cfb-review-branch"
+        name="branchId"
+        value={selectedBranchId}
+        onChange={(e) => onSelect(e.target.value)}
+        required
+        tabIndex={-1}
+        aria-hidden="true"
+        style={{
+          position: 'absolute',
+          opacity: 0,
+          pointerEvents: 'none',
+          height: 0,
+          width: 0,
+          margin: 0,
+          padding: 0,
+        }}
+      >
+        <option value="">Choose an active branch</option>
+        {branches.map((branch) => (
+          <option key={branch.branch_id} value={branch.branch_id}>
+            {branch.branch_name}{branch.branch_address ? ` — ${branch.branch_address}` : ''}
+          </option>
+        ))}
+      </select>
+
+      {open && (
+        <div className="branch-picker-popover" role="listbox">
+          {branches.length > 4 && (
+            <div className="branch-picker-search-bar">
+              <BiSearch className="branch-picker-search-icon" aria-hidden="true" />
+              <input
+                ref={searchInputRef}
+                type="text"
+                className="branch-picker-search-input"
+                placeholder="Search branch name or city…"
+                value={search}
+                onChange={(e) => setSearch(e.target.value)}
+                onClick={(e) => e.stopPropagation()}
+              />
+            </div>
+          )}
+          <ul className="branch-picker-options">
+            {filtered.length > 0 ? (
+              filtered.map((branch) => {
+                const isSelected = String(branch.branch_id) === String(selectedBranchId);
+                return (
+                  <li
+                    key={branch.branch_id}
+                    role="option"
+                    aria-selected={isSelected}
+                    className={`branch-picker-option ${isSelected ? 'is-selected' : ''}`}
+                    onClick={() => {
+                      onSelect(branch.branch_id);
+                      setOpen(false);
+                      setSearch('');
+                    }}
+                  >
+                    <div className="branch-picker-option-details">
+                      <span className="branch-picker-option-name">{branch.branch_name}</span>
+                      {branch.branch_address && (
+                        <span className="branch-picker-option-address">{branch.branch_address}</span>
+                      )}
+                    </div>
+                    {isSelected && (
+                      <span className="branch-picker-check" aria-hidden="true">
+                        <BiCheck />
+                      </span>
+                    )}
+                  </li>
+                );
+              })
+            ) : (
+              <li className="branch-picker-empty">No matching branches found</li>
+            )}
+          </ul>
+        </div>
+      )}
+    </div>
+  );
+};
 
 const ReviewsPage = () => {
   const [reviews, setReviews] = useState([]);
@@ -137,229 +284,254 @@ const ReviewsPage = () => {
         path="/reviews"
         description="Read real customer reviews of Siomai Street. See ratings, photos, and feedback from our community of siomai lovers."
       />
-      {/* Page Header */}
-      <div className="cfb-page-header">
-        <h1 className="cfb-page-title">
-          Community <span className="cfb-highlight">Feedback</span>
-        </h1>
-        <p className="cfb-page-subtitle">
-          Real stories from our beloved customers. We take pride in our service and our food,
-          but there&apos;s always room to grow. Share your experience!
-        </p>
-      </div>
+      {/* ── Hero Photography Banner (Matching Menu & Application Page Hero Style) ── */}
+      <section className="reviews-banner">
+        <img
+          className="reviews-banner__bg"
+          src="/images/reviews hero header.png"
+          srcSet={getSrcSet('/images/reviews hero header.png', [480, 768, 1024, 1440, 1920])}
+          sizes="100vw"
+          alt="Siomai Street customer reviews and dining experience"
+          width="2048"
+          height="768"
+          fetchPriority="high"
+        />
+        <div className="reviews-banner__scrim" aria-hidden="true" />
+        <div className="reviews-banner__content">
+          <h1 className="reviews-banner__title">
+            Customer <em>Reviews</em>
+          </h1>
+        </div>
+      </section>
 
-      <div className="cfb-layout">
-        {/* ── Left Sidebar ── */}
-        <aside className="cfb-sidebar">
+      {/* ── 2. Soft Steamed Cream Canvas with Authentic Paper Grain ── */}
+      <div className="cfb-canvas">
+        {/* Section Intro Header — Unified with Homepage & Menu Headers */}
+        <div className="cfb-intro">
+          <span className="cfb-kicker">
+            <span className="cfb-kicker-line" aria-hidden="true" />
+            COMMUNITY VOICES // REAL EXPERIENCES
+            <span className="cfb-kicker-line" aria-hidden="true" />
+          </span>
+          <h2 className="cfb-intro-title">
+            Loved Across Every <em>Neighborhood</em>
+          </h2>
+          <p className="cfb-intro-lead">
+            Authentic feedback from dim sum lovers across 45+ locations. Pure meat, zero extenders, slow-simmered chili garlic oil, and service that keeps regulars coming back daily.
+          </p>
+        </div>
 
-          {/* Overall Rating Card */}
-          <div className="cfb-card cfb-overall">
-            <div className="cfb-overall-header">
-              <FaStar className="cfb-overall-star-icon" />
-              <span className="cfb-overall-label">Overall Rating</span>
-            </div>
-            <div className="cfb-overall-score">
-              <span className="cfb-score-big">{avgRating}</span>
-              <div className="cfb-score-details">
-                <StarRating rating={parseFloat(avgRating)} size={18} />
-                <span className="cfb-verified-count">{reviews.length} PUBLISHED REVIEWS</span>
+        <div className="cfb-layout">
+          {/* ── Left Sidebar ── */}
+          <aside className="cfb-sidebar">
+
+            {/* Overall Rating Card */}
+            <div className="cfb-card cfb-overall">
+              <div className="cfb-overall-header">
+                <FaStar className="cfb-overall-star-icon" />
+                <span className="cfb-overall-label">Overall Rating</span>
               </div>
-            </div>
-            <div className="cfb-breakdown">
-              {ratingBreakdown.map(({ stars, percent }) => (
-                <div className="cfb-bar-row" key={stars}>
-                  <span className="cfb-bar-label">{stars}</span>
-                  <FaStar className="cfb-bar-star" />
-                  <div className="cfb-bar-track">
-                    <div
-                      className="cfb-bar-fill"
-                      style={{ width: `${percent}%`, opacity: percent === 0 ? 0.25 : 1 }}
-                    />
-                  </div>
-                  <span className="cfb-bar-pct">{percent}%</span>
-                </div>
-              ))}
-            </div>
-          </div>
-
-          {/* Share Your Experience Form */}
-          <div className="cfb-card cfb-form-card">
-            <div className="cfb-form-header">
-              <span className="cfb-form-icon">💬</span>
-              <h3 className="cfb-form-title">Share Your Experience</h3>
-            </div>
-
-            {submitted && (
-              <div className="cfb-success-msg">Thank you! Your review was submitted and will appear after moderation.</div>
-            )}
-            {submitError && <div className="cfb-error-msg" role="alert">{submitError}</div>}
-
-            <form onSubmit={handleSubmit} className="cfb-form">
-              <div className="cfb-form-group">
-                <label className="cfb-form-label" htmlFor="cfb-review-branch">BRANCH VISITED</label>
-                <select
-                  id="cfb-review-branch"
-                  className="cfb-input"
-                  value={selectedBranchId}
-                  onChange={(event) => setSelectedBranchId(event.target.value)}
-                  required
-                  disabled={branches.length === 0}
-                >
-                  <option value="">{branches.length ? 'Choose an active branch' : 'No active branches available'}</option>
-                  {branches.map((branch) => (
-                    <option key={branch.branch_id} value={branch.branch_id}>
-                      {branch.branch_name}{branch.branch_address ? ` — ${branch.branch_address}` : ''}
-                    </option>
-                  ))}
-                </select>
-              </div>
-              <div className="cfb-form-group">
-                <label className="cfb-form-label">YOUR RATING</label>
-                <div className="cfb-rating-input">
-                  {[1, 2, 3, 4, 5].map((s) => (
-                    <button
-                      key={s}
-                      type="button"
-                      className={`cfb-rating-star ${(hoverRating || selectedRating) >= s ? 'active' : ''}`}
-                      onMouseEnter={() => setHoverRating(s)}
-                      onMouseLeave={() => setHoverRating(0)}
-                      onClick={() => setSelectedRating(s)}
-                      aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
-                    >
-                      <FaStar />
-                    </button>
-                  ))}
+              <div className="cfb-overall-score">
+                <span className="cfb-score-big">{avgRating}</span>
+                <div className="cfb-score-details">
+                  <StarRating rating={parseFloat(avgRating)} size={18} />
+                  <span className="cfb-verified-count">{reviews.length} PUBLISHED REVIEWS</span>
                 </div>
               </div>
-
-              <div className="cfb-form-group">
-                <label className="cfb-form-label" htmlFor="cfb-display-name">Display Name</label>
-                <input
-                  id="cfb-display-name"
-                  type="text"
-                  className="cfb-input"
-                  placeholder="e.g. Juan Dela Cruz"
-                  value={form.name}
-                  onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
-                />
-              </div>
-
-              <div className="cfb-form-group">
-                <label className="cfb-form-label" htmlFor="cfb-review-text">Your Review</label>
-                <textarea
-                  id="cfb-review-text"
-                  className="cfb-textarea"
-                  placeholder="What do you think of the siomai rice? how was the service?"
-                  rows={4}
-                  value={form.text}
-                  onChange={(e) => setForm((p) => ({ ...p, text: e.target.value }))}
-                />
-              </div>
-
-              <label className="cfb-photo-upload" htmlFor="cfb-photo-input">
-                <BiCamera className="cfb-photo-icon" />
-                <span>{form.photo ? form.photo.name : 'Add a photo (Optional · JPG, PNG or WebP · Up to 3 MiB)'}</span>
-                <input
-                  id="cfb-photo-input"
-                  type="file"
-                  accept="image/*"
-                  hidden
-                  onChange={(e) => setForm((p) => ({ ...p, photo: e.target.files[0] || null }))}
-                />
-              </label>
-
-              <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn" disabled={submitting}>
-                {submitting ? 'Submitting…' : '✉ Post Feedback'}
-              </button>
-            </form>
-          </div>
-        </aside>
-
-        {/* ── Right Panel ── */}
-        <section className="cfb-main">
-          <div className="cfb-reviews-header">
-            <div>
-              <h2 className="cfb-reviews-title">Customer Reviews</h2>
-              <p className="cfb-reviews-count">Showing {sortedReviews.length} results{loadError ? ` · ${loadError}` : ''}</p>
-            </div>
-            <div className="cfb-sort-wrapper">
-              <select
-                className="cfb-sort-select"
-                value={sort}
-                onChange={(e) => setSort(e.target.value)}
-                id="cfb-sort-select"
-              >
-                <option>Newest First</option>
-                <option>Highest Rated</option>
-                <option>Lowest Rated</option>
-                <option>Most Helpful</option>
-              </select>
-              <BiChevronDown className="cfb-sort-icon" />
-            </div>
-          </div>
-
-          <div className="cfb-reviews-list">
-            {loading ? (
-              <ReviewCardsSkeleton count={3} />
-            ) : sortedReviews.length === 0 ? (
-              <p className="cfb-empty-reviews">No published reviews yet. Be the first to share your experience.</p>
-            ) : (
-              sortedReviews.map((review) => (
-              <div className="cfb-review-card" key={review.id}>
-                <div className="cfb-review-top">
-                  <div className="cfb-review-user">
-                    <div className="cfb-review-avatar" style={{ background: review.color }}>
-                      {review.initials}
+              <div className="cfb-breakdown">
+                {ratingBreakdown.map(({ stars, percent }) => (
+                  <div className="cfb-bar-row" key={stars}>
+                    <span className="cfb-bar-label">{stars}</span>
+                    <FaStar className="cfb-bar-star" />
+                    <div className="cfb-bar-track">
+                      <div
+                        className="cfb-bar-fill"
+                        style={{ width: `${percent}%`, opacity: percent === 0 ? 0.25 : 1 }}
+                      />
                     </div>
-                    <div>
-                      <div className="cfb-review-name-row">
-                        <span className="cfb-review-name">{review.name}</span>
-                        {review.verified && (
-                          <span className="cfb-verified-badge">
-                            <RiVerifiedBadgeFill /> verified
-                          </span>
-                        )}
-                      </div>
-                      <div className="cfb-review-meta">
-                        <StarRating rating={review.rating} size={13} />
-                        <span className="cfb-review-date">{review.date}</span>
-                      </div>
-                    </div>
+                    <span className="cfb-bar-pct">{percent}%</span>
                   </div>
-                </div>
+                ))}
+              </div>
+            </div>
 
-                {review.tags.length > 0 && (
-                  <div className="cfb-tags-row">
-                    {review.tags.map((tag) => (
-                      <span className="cfb-tag" key={tag}>{tag}</span>
+            {/* Share Your Experience Form */}
+            <div className="cfb-card cfb-form-card">
+              <div className="cfb-form-header">
+                <span className="cfb-form-icon">💬</span>
+                <h3 className="cfb-form-title">
+                  Share Your <em>Experience</em>
+                </h3>
+              </div>
+              <p className="cfb-form-subtitle">
+                Visited a cart recently? Help neighbors find their next favorite order.
+              </p>
+
+              {submitted && (
+                <div className="cfb-success-msg">Thank you! Your review was submitted and will appear after moderation.</div>
+              )}
+              {submitError && <div className="cfb-error-msg" role="alert">{submitError}</div>}
+
+              <form onSubmit={handleSubmit} className="cfb-form">
+                <div className="cfb-form-group">
+                  <label className="cfb-form-label" htmlFor="cfb-review-branch-btn">BRANCH VISITED</label>
+                  <BranchPicker
+                    branches={branches}
+                    selectedBranchId={selectedBranchId}
+                    onSelect={setSelectedBranchId}
+                    disabled={branches.length === 0}
+                  />
+                </div>
+                <div className="cfb-form-group">
+                  <label className="cfb-form-label">YOUR RATING</label>
+                  <div className="cfb-rating-input">
+                    {[1, 2, 3, 4, 5].map((s) => (
+                      <button
+                        key={s}
+                        type="button"
+                        className={`cfb-rating-star ${(hoverRating || selectedRating) >= s ? 'active' : ''}`}
+                        onMouseEnter={() => setHoverRating(s)}
+                        onMouseLeave={() => setHoverRating(0)}
+                        onClick={() => setSelectedRating(s)}
+                        aria-label={`Rate ${s} star${s > 1 ? 's' : ''}`}
+                      >
+                        <FaStar />
+                      </button>
                     ))}
                   </div>
-                )}
-
-                {review.branchName && <span className="cfb-review-branch">{review.branchName}</span>}
-                <p className="cfb-review-text">&ldquo;{review.text}&rdquo;</p>
-
-                {review.image && (
-                  <div className="cfb-review-image-wrap">
-                    <img src={review.image} alt="Review" className="cfb-review-image" loading="lazy" />
-                  </div>
-                )}
-
-                <div className="cfb-review-footer">
-                  <span className="cfb-helpful-label">Was this helpful?</span>
-                  <button
-                    className={`cfb-helpful-btn ${helpfulMap[review.id] ? 'voted' : ''}`}
-                    onClick={() => handleHelpful(review.id)}
-                    id={`cfb-helpful-btn-${review.id}`}
-                  >
-                    <BiLike /> Helpful ({review.helpful})
-                  </button>
                 </div>
+
+                <div className="cfb-form-group">
+                  <label className="cfb-form-label" htmlFor="cfb-display-name">Display Name</label>
+                  <input
+                    id="cfb-display-name"
+                    type="text"
+                    className="cfb-input"
+                    placeholder="e.g. Juan Dela Cruz"
+                    value={form.name}
+                    onChange={(e) => setForm((p) => ({ ...p, name: e.target.value }))}
+                  />
+                </div>
+
+                <div className="cfb-form-group">
+                  <label className="cfb-form-label" htmlFor="cfb-review-text">Your Review</label>
+                  <textarea
+                    id="cfb-review-text"
+                    className="cfb-textarea"
+                    placeholder="What do you think of the siomai rice? How was the service?"
+                    rows={4}
+                    value={form.text}
+                    onChange={(e) => setForm((p) => ({ ...p, text: e.target.value }))}
+                  />
+                </div>
+
+                <label className="cfb-photo-upload" htmlFor="cfb-photo-input">
+                  <BiCamera className="cfb-photo-icon" />
+                  <span>{form.photo ? form.photo.name : 'Add a photo (Optional · JPG, PNG or WebP · Up to 3 MiB)'}</span>
+                  <input
+                    id="cfb-photo-input"
+                    type="file"
+                    accept="image/*"
+                    hidden
+                    onChange={(e) => setForm((p) => ({ ...p, photo: e.target.files[0] || null }))}
+                  />
+                </label>
+
+                <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn" disabled={submitting}>
+                  {submitting ? 'Submitting…' : '✉ Post Feedback'}
+                </button>
+              </form>
+            </div>
+          </aside>
+
+          {/* ── Right Panel ── */}
+          <section className="cfb-main">
+            <div className="cfb-reviews-header">
+              <div>
+                <h2 className="cfb-reviews-title">
+                  Community <em>Reviews</em>
+                </h2>
+                <p className="cfb-reviews-count">Showing {sortedReviews.length} results{loadError ? ` · ${loadError}` : ''}</p>
               </div>
-            ))
-            )}
-          </div>
-        </section>
+              <div className="cfb-sort-wrapper">
+                <select
+                  className="cfb-sort-select"
+                  value={sort}
+                  onChange={(e) => setSort(e.target.value)}
+                  id="cfb-sort-select"
+                >
+                  <option>Newest First</option>
+                  <option>Highest Rated</option>
+                  <option>Lowest Rated</option>
+                  <option>Most Helpful</option>
+                </select>
+                <BiChevronDown className="cfb-sort-icon" />
+              </div>
+            </div>
+
+            <div className="cfb-reviews-list">
+              {loading ? (
+                <ReviewCardsSkeleton count={3} />
+              ) : sortedReviews.length === 0 ? (
+                <p className="cfb-empty-reviews">No published reviews yet. Be the first to share your experience.</p>
+              ) : (
+                sortedReviews.map((review) => (
+                <div className="cfb-review-card" key={review.id}>
+                  <div className="cfb-review-top">
+                    <div className="cfb-review-user">
+                      <div className="cfb-review-avatar" style={{ background: review.color }}>
+                        {review.initials}
+                      </div>
+                      <div>
+                        <div className="cfb-review-name-row">
+                          <span className="cfb-review-name">{review.name}</span>
+                          {review.verified && (
+                            <span className="cfb-verified-badge">
+                              <RiVerifiedBadgeFill /> verified
+                            </span>
+                          )}
+                        </div>
+                        <div className="cfb-review-meta">
+                          <StarRating rating={review.rating} size={13} />
+                          <span className="cfb-review-date">{review.date}</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+
+                  {review.tags.length > 0 && (
+                    <div className="cfb-tags-row">
+                      {review.tags.map((tag) => (
+                        <span className="cfb-tag" key={tag}>{tag}</span>
+                      ))}
+                    </div>
+                  )}
+
+                  {review.branchName && <span className="cfb-review-branch">{review.branchName}</span>}
+                  <p className="cfb-review-text">&ldquo;{review.text}&rdquo;</p>
+
+                  {review.image && (
+                    <div className="cfb-review-image-wrap">
+                      <img src={review.image} alt="Review" className="cfb-review-image" loading="lazy" />
+                    </div>
+                  )}
+
+                  <div className="cfb-review-footer">
+                    <span className="cfb-helpful-label">Was this helpful?</span>
+                    <button
+                      className={`cfb-helpful-btn ${helpfulMap[review.id] ? 'voted' : ''}`}
+                      onClick={() => handleHelpful(review.id)}
+                      id={`cfb-helpful-btn-${review.id}`}
+                    >
+                      <BiLike /> Helpful ({review.helpful})
+                    </button>
+                  </div>
+                </div>
+              ))
+              )}
+            </div>
+          </section>
+        </div>
       </div>
     </main>
   );

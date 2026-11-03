@@ -3,6 +3,9 @@ import { startNotificationWorker } from './notificationWorker.js';
 import { createNotificationWebhook } from './notificationWebhook.js';
 import { readMultipart } from './multipart.js';
 import { createStoreLocationsReader } from './storeLocations.js';
+import { createPlaceSearch } from './placeSearch.js';
+import { createStoreRoute } from './storeRoute.js';
+import { mapDevelopmentOrigins } from './mapOrigins.js';
 import { contactConfiguration, publicContactConfiguration, createContactHandler } from './contact.js';
 import { portalAccess, createPortalHandler } from './applicationPortal.js';
 import { createDirectUploadHandler, uploadSessionAccess, cleanupExpiredUploads } from './directUploads.js';
@@ -198,6 +201,15 @@ const applicationRate = createSharedApplicationRateLimit({
   rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
 });
 const turnstileEnabled = process.env.NODE_ENV === 'production' || process.env.TURNSTILE_ENABLED !== 'false';
+// Vite's local proxy may rewrite Host to the backend port; allow only known dev origins.
+const mapDevOrigins = mapDevelopmentOrigins({ serverless });
+const handlePlaceSearch = createPlaceSearch({
+  apiKey: process.env.GEOAPIFY_API_KEY, json, allowedOrigins: mapDevOrigins,
+  rate: (req, scope, limit) => applicationRate(req ? clientIP(req, trustedProxies) : 'all-visitors', scope, limit),
+});
+const handleStoreRoute = createStoreRoute({apiKey:process.env.GEOAPIFY_API_KEY,json,allowedOrigins: mapDevOrigins,
+  rate:(req,scope,limit)=>applicationRate(req?clientIP(req,trustedProxies):'all-visitors',scope,limit),
+});
 const turnstileHostnames = (process.env.TURNSTILE_HOSTNAMES || '').split(',').map(s => s.trim()).filter(Boolean);
 // Vercel supplies this exact deployment host; never trust the incoming Host header.
 if (process.env.VERCEL_ENV === 'preview' && process.env.VERCEL_URL) turnstileHostnames.push(process.env.VERCEL_URL);
@@ -310,6 +322,8 @@ export const handleRequest = async (req, res) => {
       return json(res, 200, { ok: true, configured: Boolean(supabaseUrl && serviceKey), runtime: serverless ? 'serverless' : 'node', demo: schoolDemo, documentScanning: scanDisabled ? 'disabled' : 'required' });
     }
     if (url.pathname === '/api/branches' && req.method === 'GET') return await handleBranchesGet(req, res);
+    if (url.pathname === '/api/place-search') return await handlePlaceSearch(req, res);
+    if (url.pathname === '/api/store-route') return await handleStoreRoute(req, res);
     if (url.pathname === '/api/contact-options' && req.method === 'GET') return json(res, 200, publicContactConfiguration(contactConfig));
     if (url.pathname === '/api/contact-inquiries' && req.method === 'POST') return await handleContactPost(req, res);
     if (url.pathname === '/api/store-locations' && req.method === 'GET') {

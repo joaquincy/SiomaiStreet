@@ -1,68 +1,47 @@
-# Store finder: activate the live feature
+# Store finder: Leaflet activation checklist
 
-The design and frontend controls are implemented. A live Google map still needs configuration and verified branch data. This uses the existing shared Supabase project; no second database is required for the feature.
+Updated 3 November 2026. This replaces the former Google Maps JavaScript setup. The homepage now uses Leaflet 1.9.4 with standard OpenStreetMap raster tiles. Google Maps is used only by the external directions links.
 
-## 1. Owner + classmate: publish accurate store information
+## What to configure
 
-- [ ] Confirm each public branch name, address, city/region and exact entrance coordinates.
-- [ ] Confirm public phone, hours, holiday exceptions and useful landmarks. Leave unavailable information blank.
-- [ ] Classmate reviews and applies `supabase/migrations/20261031000000_store_locator_profiles.sql` to the agreed integration project first.
-- [ ] Add each branch's metadata to `store_locator_profiles`, linked to its existing `branches.branch_id`. Publish reviewed profiles with `published=true` and keep the existing branch status `Active`.
-- [ ] Keep management writes behind authorized staff access. The migration deliberately grants no anonymous/browser write permissions.
-- [ ] Verify `GET /api/store-locations` exposes approved public data only. Remove test/junk branch records from the public directory before launch.
+No Google Cloud billing account, Maps API key, or map ID is needed. Existing VITE_GOOGLE_MAPS_API_KEY and VITE_GOOGLE_MAPS_MAP_ID values are unused and may be removed from local/Vercel configuration. No new migration or database is required for this switch.
 
-## 2. Google project administrator: configure Maps
+- Confirm the existing store_locator_profiles migration has been applied.
+- In the existing shared Supabase project, link each profile to its branches.branch_id.
+- Supply approved latitude/longitude, full address, city, region, landmark, hours, public phone and holiday exceptions. Never fabricate coordinates.
+- Publish approved profiles with published=true and keep the branch Active.
+- Verify /api/store-locations returns the intended public records. A missing pin remains in the directory and is excluded from the map and nearby calculations.
+- Build and redeploy the website after these code changes. Supabase service credentials remain server-only.
 
-- [ ] Create/select the Google Cloud project, enable billing for production and enable Maps JavaScript API.
-- [ ] Create a browser API key; restrict it to Maps JavaScript API and the permitted website referrers, such as `http://localhost:3000/*` for development and your actual HTTPS domain for production. Prefer separate development/production keys.
-- [ ] Create a JavaScript map ID. Keep Google attribution and built-in controls visible.
-- [ ] Configure quotas, budget alerts and billing ownership. Alerts-only budgets notify you; they do not automatically cap spending. See [Google budget guidance](https://docs.cloud.google.com/billing/docs/how-to/budgets).
+## Performance and provider behavior
 
-Official instructions: [Google Maps setup](https://developers.google.com/maps/documentation/javascript/get-api-key), [API key restrictions](https://developers.google.com/maps/api-security-best-practices).
+- The directory loads near the section. Leaflet JavaScript and CSS load only after Explore the map; there is no Google SDK request.
+- A single map instance is maintained while open. Markers are reconciled by ID. Closing, switching away on mobile, or leaving the homepage removes map listeners, tiles, timers and resize observers.
+- Map tiles come directly from tile.openstreetmap.org, not Supabase or Vercel Functions. The browser honors normal cache headers. No bulk downloads, offline tile caching, retina doubling or extra map plugins.
+- Dragging/pinch/double-click are enabled after the visitor opens the map. Wheel zoom is an explicit toggle and defaults off. Pause gestures restores normal touch scrolling and stops wheel zoom. Zoom buttons and keyboard operation remain available.
+- Reduced motion disables animated camera changes. Invalid coordinates are ignored. Failed tile batches return to the directory fallback with Retry map.
+- Attribution must remain visible. Provider settings are centralized in src/utils/storeMapController.js. Review URL, maximum zoom, attribution, invitation/privacy text and provider terms together if changing tile services.
 
-## 3. Website developer: add configuration and rebuild
+OpenStreetMap standard tiles are a best-effort community service with no uptime guarantee. Comply with https://operations.osmfoundation.org/policies/tiles/ . For larger traffic or contractual uptime, choose suitable tile hosting. Do not use the public servers for automated load testing or prefetching.
 
-Set these in the local `.env.local` and hosting build environment (replace placeholders locally; do not paste credentials in chat):
+## Acceptance checks
 
-```dotenv
-VITE_GOOGLE_MAPS_API_KEY=YOUR_RESTRICTED_BROWSER_KEY
-VITE_GOOGLE_MAPS_MAP_ID=YOUR_JAVASCRIPT_MAP_ID
-```
+- No Leaflet assets or tile requests before activation; only the requested map loads.
+- Every pin selects the matching details; numbers agree with the filtered directory even when some stores lack pins.
+- Search/filter, previous/next, fit all, close/reopen, shared branch links, phone and Google directions work.
+- Check narrow screens, touch scrolling, keyboard markers/zoom, reduced motion and visible attribution.
+- Test missing pins, directory failure and tile failure with retries. Never show invented open/closed status or travel time.
+- Check approved coordinates and directions at the actual branch entrances.
 
-- [ ] Restart local Vite after changing environment values. Rebuild/redeploy for hosting changes.
-- [ ] Ensure the deployed website forwards `/api/store-locations` to its backend.
-- [ ] Keep `SUPABASE_URL` and `SUPABASE_SERVICE_ROLE_KEY` on the backend. Never create a `VITE_` service-role key.
-- [ ] Deploy with HTTPS and test Google requests against the production CSP and referrer restrictions.
+Run npm run build, npm run lint, and the store-related Node tests. A repeatable synthetic preview is available through node tests/helpers/store-map-preview.mjs after building. It binds only to a random loopback port, serves synthetic branches and cannot write to the database. Browser checks with public tiles must be limited to ordinary map viewing; use local/mock tiles for repeated automation or load tests.
 
-The Google browser key is included in the built frontend by design; referrer/API restrictions protect its intended use. Supabase service-role credentials must remain private.
+## Verification recorded on 3 November 2026
 
-## 4. Optional visual finishing: style the real basemap
+Later usability update: see [place search and routing setup](place-search-setup.md). A map can now open without any branch pins; it starts at an unmarked Philippines overview. The current UI offers visible search modes, map expansion, wheel zoom, external Street View and embedded drive/walk route previews. The older browser observations below describe the earlier implementation, not validation of these newer controls.
 
-Create and publish a Google Cloud map style, then associate it with the JavaScript map ID used above. CSS cannot recolor Google's basemap tiles.
-
-Suggested brand brief:
-
-| Feature | Direction |
-| --- | --- |
-| Land/base | Warm cream, around `#FAF5E7` |
-| Roads | Pale cream/white, with readable contrasting road labels |
-| Buildings | Muted sand, around `#E9D8B1` |
-| Parks | Quiet sage, around `#CED4BD` |
-| Water | Muted blue-green, around `#AACCC8` |
-| Labels | Dark brown/green, around `#384238` |
-| Branch pins | Existing crimson numbered pins; selected state in dark green/yellow |
-
-Reduce unrelated commercial POI clutter, but retain useful street, transit and landmark context. Check contrast at different zoom levels. The screenshot's illustrative character is inspiration, not a promise of identical Google cartography.
-
-[Google Cloud map styling](https://developers.google.com/maps/documentation/javascript/cloud-customization).
-
-## 5. Joint acceptance check before launch
-
-- [ ] Each approved store appears once; every marker opens the matching store details.
-- [ ] Confirm directions land at the real entrance, phone links dial the correct number, and shared links select the right branch.
-- [ ] Test 320px/390px mobile, tablet and desktop, keyboard navigation, 200% zoom and reduced motion.
-- [ ] Test location allowed, denied, timed out and cancelled; no location is retained after clearing/leaving.
-- [ ] Test search with no matches, missing hours/phone/pins, API outage, Google load failure and retries.
-- [ ] Verify no Google script request before map activation; verify attribution, zoom/fullscreen, close/reopen and fit-all behavior.
-
-Current local checks: production build, targeted lint and 19 store-finder tests pass. Browser access is disabled, so visual/real-device and live Google-map checks above are not yet complete. Both Maps environment values were confirmed absent during this refresh.
+- Production build passes. Leaflet plus its controller and stylesheet is about 51 KB gzip, loaded separately on demand. This excludes map image tiles and the rest of the website.
+- Store-related tests: 21 pass, including reconciliation, invalid coordinates, keyboard selection, cleanup, tile failures/retry, filtering and directory fallback. Lint has no errors and three existing unused-variable warnings outside this change.
+- Final full regression run: 109 tests passed, zero failed or skipped, using node --test --test-concurrency=1 tests/*.test.js with loopback access for local API test servers.
+- Brave desktop and 390px viewport checks used synthetic branches, without database writes. Verified no Leaflet stylesheet or tile images before activation, actual OSM streets after activation, pointer selection, Enter/Space selection, pressed-state updates, mobile map view, the movement toggle and no horizontal page overflow at 390px.
+- Browser access became disabled before the remaining 320px, close/reopen and missing-pin browser checks and final screenshot capture. Those remain to be checked, along with physical-phone touch behavior, screen-reader testing and the deployed site's real branch data. The temporary 390px viewport override could not be reset once access was disabled.
+- No production deployment or live branch-data changes were made by this implementation.

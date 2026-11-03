@@ -95,14 +95,33 @@ const PrivacyPolicy = () => (
         <section className="legal-section">
           <h2>5. Data Sharing</h2>
           <p>
-            The homepage store finder requests device location only when you choose “Use my location”
+            The homepage store finder requests device location only when you choose “Find near me”
             and your browser permits it. Coordinates are used in browser memory to calculate approximate
             distances, are not sent to our store-directory server, and are cleared when you leave the
             homepage or choose “Clear my location”. Loading the optional interactive map connects your
-            browser to Google Maps, which receives technical information such as your IP address.
-            Our distance-sorting feature does not send your coordinates to Google. Opening directions
+            browser to OpenStreetMap’s tile service, which receives your IP address, website origin
+            and requests identifying the map areas you view. Our distance-sorting feature does not
+            send your device coordinates to the tile service. See the <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer">OpenStreetMap Foundation Privacy Policy</a>. Opening directions
             takes you to Google Maps, where Google’s own location settings and privacy policy apply.
             See <a href="https://policies.google.com/privacy" target="_blank" rel="noopener noreferrer">Google’s Privacy Policy</a>.
+          </p>
+          <p>
+            Worldwide place search sends the address, area or business name you enter to our server
+            and Geoapify only when you press Search. Do not enter confidential information. We do
+            not store these searches in the application database; a bounded server-memory cache
+            reuses matching results for five minutes. Expired entries are removed on the next search
+            or when the server process ends. Rate limiting uses pseudonymous identifiers.
+            Selecting a result uses its coordinates in this visit to estimate branch distances;
+            these are not driving distances. If you open the map, its tile provider receives requests
+            for the area displayed. See <a href="https://www.geoapify.com/privacy-policy/" target="_blank" rel="noopener noreferrer">Geoapify’s privacy policy</a>.
+          </p>
+          <p>
+            If you choose Show route, your chosen starting and destination coordinates are sent
+            through our server to Geoapify to calculate a driving or walking route. Using your
+            device location as the starting point requires your browser permission first; it is
+            sent for routing only when you press Show route. We do not save route coordinates in
+            our database. Estimates exclude live traffic. Street View opens Google Maps in a
+            separate tab and shares the chosen map coordinates with Google.
           </p>
           <p>We do not sell your personal data. We may share your data with:</p>
           <ul>

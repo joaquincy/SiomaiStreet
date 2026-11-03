@@ -89,8 +89,8 @@ test('store UI renders real-data details and safe loading, missing-data and map-
   assert.match(ready, /aria-label="Next store"/);
   assert.match(ready, /<details class="store-finder__directory">/);
   assert.match(ready, /Browse all matching stores/);
-  assert.match(ready, /Google privacy policy/);
-  assert.doesNotMatch(ready, /<script|<iframe|Open now|Verified|store-finder__google-map/);
+  assert.match(ready, /Map privacy policy/);
+  assert.doesNotMatch(ready, /<script|<iframe|Open now|Verified|store-finder__leaflet-map/);
   const detailed = render(StoreDetails, { store: stores[1], onMap() {} });
   for (const label of ['Copy address', 'Copy store link', 'Share store', 'View pin', 'Synthetic landmark', 'Synthetic hours', 'Synthetic holiday exception', 'Drive', 'Walk', 'Transit']) assert.ok(detailed.includes(label), label);
   assert.match(detailed, /href="tel:\+639120000000"/);
@@ -106,7 +106,7 @@ test('store UI renders real-data details and safe loading, missing-data and map-
   assert.match(failed, /<details class="store-finder__directory" open="">/);
   assert.doesNotMatch(failed, /id="store-details"/);
   const mapFailed = render(MapInvitation, { available: true, failed: true, count: 2, onLoad() {} });
-  assert.match(mapFailed, /Retry Google Maps/); assert.match(mapFailed, /still use the store list/);
+  assert.match(mapFailed, /Retry map/); assert.match(mapFailed, /still use the store list/);
   const noPins = render(MapInvitation, { available: true, count: 0, onLoad() {} });
-  assert.match(noPins, /No map pins/); assert.doesNotMatch(noPins, /<button/);
+  assert.match(noPins, /Browse streets and places now/); assert.match(noPins, /Explore the map/);
 });

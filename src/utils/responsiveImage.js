@@ -17,6 +17,6 @@ export function getSrcSet(src, widths) {
   const dir = src.substring(0, lastSlash);
 
   return widths
-    .map(w => `${dir}/responsive/${base}-${w}w${ext} ${w}w`)
+    .map(w => `${dir}/responsive/${encodeURIComponent(base)}-${w}w${ext} ${w}w`)
     .join(', ');
 }

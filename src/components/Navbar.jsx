@@ -9,7 +9,7 @@ const Navbar = () => {
   const panelRef = useRef(null);
   const closeRef = useRef(null);
   const location = useLocation();
-  const hasDarkPageNav = ['/reviews'].includes(location.pathname);
+  const hasDarkPageNav = false;
 
   useEffect(() => {
     const handleScroll = () => {
@@ -58,7 +58,7 @@ const Navbar = () => {
           <Link to="/" className="navbar-logo" onClick={closeMenu} aria-label="Siomai Street Home">
             <img
               src="/images/siomai street logo.png"
-              srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w"
+              srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w"
               sizes="(max-width: 768px) 70px, 78px"
               alt="Siomai Street"
               className="logo-image"

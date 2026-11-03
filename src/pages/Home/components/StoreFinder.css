@@ -1,4 +1,5 @@
 /* A street-side poster: cream surround, crimson field, saffron wayfinding. */
+.featured-menu + .store-finder { margin-top: 0; padding-top: 0; }
 .store-finder {
   --sf-ink: #fff6df;
   --sf-dark: #263b2d;
@@ -733,12 +734,675 @@
   margin: 0;
 }
 
-.store-finder__google-map {
+.store-finder__place-search {
+  margin: 14px 0;
+  padding: 14px 18px;
+  border: 1px solid #fff3cd70;
+  border-radius: 16px;
+  background: #fffaf0;
+  color: #402c25;
+  font: 14px/1.5 var(--font-body, sans-serif);
+}
+.store-finder__place-search summary { cursor: pointer; min-height: 30px; font-weight: 700; }
+.store-finder__place-search summary span { float: right; }
+.store-finder__place-search form { margin-top: 16px; }
+.store-finder__place-search label { display: block; margin-bottom: 6px; font-weight: 600; }
+.store-finder__place-input { display: flex; flex-wrap: wrap; gap: 8px; }
+.store-finder__place-input input { flex: 1 1 220px; width: 100%; min-width: 0; min-height: 46px; border: 1px solid #baa990; border-radius: 8px; padding: 10px; font: inherit; font-size: 16px; background: #fff; color: #302b24; }
+.store-finder__place-search button, .store-finder__search-origin button { min-height: 44px; border-radius: 8px; padding: 10px 16px; border: 1px solid currentColor; font: inherit; cursor: pointer; }
+.store-finder__place-input button { background: #7e2225; color: #fffaf0; border-radius: 10px; font-weight: 700; }
+.store-finder__place-input button:disabled { opacity: .65; cursor: wait; }
+.store-finder__place-search p { font-size: 13px; margin: 10px 0; }
+.store-finder__place-search ul { list-style: none; padding: 0; margin: 12px 0; display: grid; gap: 6px; }
+.store-finder__place-search li button { width: 100%; text-align: left; display: flex; gap: 12px; justify-content: space-between; color: #402c25; background: #f5ecd7; border-color: #d8cdb6; overflow-wrap: anywhere; border-radius: 12px; padding: 12px 16px; transition: background-color .15s, transform .1s; }
+.store-finder__place-search li button:hover { background: #ffe6a6; transform: translateX(2px); }
+.store-finder__place-search li button:hover { background: #ffe6a6; }
+.store-finder__place-search small { display: block; font-size: 11px; }
+.store-finder__place-search a { color: #7e2225; text-decoration: underline; }
+.store-finder__place-search :focus-visible, .store-finder__search-origin button:focus-visible { outline: 3px solid #15588a; outline-offset: 3px; }
+.store-finder__search-origin { margin: 14px 0; padding: 12px 0; color: #fff3cd; overflow-wrap: anywhere; }
+.store-finder__search-origin p { margin: 0 0 8px; }
+.store-finder__search-origin button { background: transparent; color: inherit; }
+.store-finder__search-origin small { display: block; margin-top: 8px; }
+.store-finder__origin-pin { display: grid; place-items: center; width: 44px; height: 44px; border-radius: 50%; background: #15588a; color: white; border: 3px solid white; box-shadow: 0 2px 8px #0005; font: 700 30px/1 sans-serif; }
+
+.store-finder [hidden] { display: none !important; }
+.store-finder__search-examples, .store-finder__search-recovery { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-xs); }
+.store-finder__search-examples button { background: var(--color-cream-dark); color: var(--sf-dark); border-color: var(--color-border); }
+.store-finder__selected-place { padding: var(--space-md); background: var(--color-cream-dark); overflow-wrap: anywhere; }
+.store-finder__selected-place p { margin: var(--space-xs) 0 var(--space-sm); font-size: var(--text-md); }
+.store-finder__selected-place > div { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.store-finder__selected-place button, .store-finder__point-picker button {
+  min-height: var(--space-2xl); padding: var(--space-xs) var(--space-md); border: thin solid var(--color-border);
+  border-radius: var(--radius-sm); background: var(--sf-paper); color: var(--sf-dark); font: 650 var(--text-base)/1.4 var(--font-body);
+}
+.store-finder__selected-place button:hover, .store-finder__point-picker button:hover { background: var(--sf-yellow); }
+.store-finder__point-results small { display: block; margin-top: var(--space-xs); color: var(--color-text-secondary); font-weight: 400; }
+.store-finder__map-help { padding: var(--space-sm) var(--space-md); font-size: var(--text-base); border-top: 1px solid #d8cdb6; background: #f8f2e8; }
+.store-finder__map-help summary { font-size: 13px; }
+.store-finder__map-help ol { font-size: 13px; line-height: 1.7; }
+.store-finder__map-help strong { color: var(--sf-red); }
+.store-finder__map-help summary { min-height: var(--space-2xl); padding-block: var(--space-sm); cursor: pointer; font-weight: 650; }
+.store-finder__map-help ol { padding-inline-start: var(--space-lg); }
+.store-finder__map-help li + li { margin-top: var(--space-xs); }
+.store-finder__map-help p { margin-top: var(--space-md); color: var(--color-text-secondary); }
+.store-finder__leaflet-map.is-picking { cursor: crosshair; }
+.store-finder__map-crosshair { position: absolute; inset: 50% auto auto 50%; transform: translate(-50%, -50%); z-index: 1; pointer-events: none; color: var(--sf-red); background: var(--sf-paper); border-radius: var(--radius-full); width: var(--space-xl); height: var(--space-xl); text-align: center; font: 750 var(--text-xl)/var(--space-xl) var(--font-body); }
+.store-finder__point-picker { position: absolute; bottom: var(--space-xl); left: var(--space-xs); right: var(--space-xs); z-index: 1; padding: var(--space-sm); border-radius: var(--radius-md); background: var(--sf-paper); color: var(--sf-dark); display: flex; flex-wrap: wrap; gap: var(--space-xs); box-shadow: var(--shadow-sm); }
+.store-finder__point-picker p { width: 100%; margin: 0; font: var(--text-base)/1.4 var(--font-body); }
+.store-finder__point-picker button { flex: 1; }
+/* ── Unified search area ── */
+.store-finder__unified-search {
+  margin-bottom: 18px;
+  border: 1px solid #ffffff18;
+  border-radius: 20px;
+  background: #761a2040;
+  padding: 6px;
+  backdrop-filter: blur(4px);
+}
+
+.store-finder__search-tabs {
+  display: flex;
+  gap: 4px;
+  padding: 4px;
+  margin-bottom: 4px;
+}
+
+.store-finder__search-tabs button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1;
+  min-height: 48px;
+  padding: 12px 20px;
+  border: 0;
+  border-radius: 14px;
+  background: transparent;
+  color: var(--sf-ink);
+  font: 650 14px/1.3 var(--font-body, sans-serif);
+  transition: background-color .18s, color .18s;
+}
+
+.store-finder__search-tabs button[aria-selected='true'] {
+  background: var(--sf-paper);
+  color: #842327;
+  box-shadow: 0 2px 8px #0002;
+}
+
+.store-finder__search-tabs button:not([aria-selected='true']):hover {
+  background: #ffffff12;
+}
+
+.store-finder__search-tabs svg {
+  width: 18px;
+  height: 18px;
+  flex: none;
+}
+
+/* ── Quick action bar ── */
+.store-finder__quick-bar {
+  display: flex;
+  gap: 10px;
+  margin-bottom: 16px;
+  flex-wrap: wrap;
+}
+
+.store-finder__quick-action {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  flex: 1 1 140px;
+  min-height: 48px;
+  padding: 12px 16px;
+  border: 1px solid var(--sf-yellow);
+  border-radius: 14px;
+  background: transparent;
+  color: var(--sf-yellow);
+  font: 650 13px/1.3 var(--font-body, sans-serif);
+  transition: background-color .18s, color .18s, transform .12s;
+}
+
+.store-finder__quick-action:hover:not(:disabled) {
+  background: var(--sf-yellow);
+  color: #45281c;
+  transform: translateY(-1px);
+}
+
+.store-finder__quick-action:disabled {
+  opacity: .45;
+  border-color: #ffffff30;
+  color: #ffffff60;
+}
+
+.store-finder__quick-action svg {
+  width: 20px;
+  height: 20px;
+  flex: none;
+}
+
+/* ── No match hint ── */
+.store-finder__no-match-hint {
+  margin: 12px 0;
+  padding: 14px 18px;
+  border: 1px solid #ffd15c50;
+  border-radius: 14px;
+  background: #771b2080;
+  backdrop-filter: blur(4px);
+}
+
+.store-finder__no-match-hint p {
+  margin: 0 0 10px;
+  font-size: 14px;
+  color: var(--sf-ink);
+}
+
+.store-finder__no-match-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+.store-finder__no-match-actions button {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 44px;
+  padding: 8px 16px;
+  border: 1px solid var(--sf-yellow);
+  border-radius: 999px;
+  background: transparent;
+  color: var(--sf-yellow);
+  font-size: 13px;
+  font-weight: 650;
+}
+
+.store-finder__no-match-actions button:hover {
+  background: var(--sf-yellow);
+  color: #45281c;
+}
+
+/* ── Place search improvements ── */
+.store-finder__place-help-text {
+  font-size: 13px;
+  line-height: 1.6;
+  color: #6b5e4a;
+  margin: 8px 0;
+  padding: 8px 12px;
+  background: #f5ecd780;
+  border-radius: 8px;
+  border-left: 3px solid var(--sf-red);
+}
+
+.store-finder__place-result-label {
+  display: block;
+  font-weight: 500;
+}
+
+.store-finder__place-result-action {
+  display: block;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--sf-red);
+  margin-top: 2px;
+}
+
+.store-finder__explore-bar { display: flex; justify-content: space-between; gap: 12px; align-items: center; flex-wrap: wrap; margin-bottom: 14px; }
+.store-finder__search-modes { display: flex; padding: 4px; border: 1px solid #fff6df66; border-radius: 999px; gap: 4px; }
+.store-finder__search-modes button, .store-finder__explore-button { display: inline-flex; align-items: center; gap: 8px; min-height: 46px; padding: 10px 16px; border: 0; border-radius: 999px; background: transparent; color: var(--sf-ink); font: 650 14px/1.3 var(--font-body,sans-serif); }
+.store-finder__search-modes button[aria-pressed='true'] { background: var(--sf-paper); color: #842327; }
+.store-finder__explore-button { background: var(--sf-yellow); color: #45281c; }
+.store-finder__place-title { display:flex; gap:12px; align-items:center; }
+.store-finder__place-title>svg { width:26px; height:26px; flex:none; color:#a9252c; }
+.store-finder__place-title strong { font:750 clamp(17px,1.6vw,21px)/1.25 var(--font-heading,sans-serif); }
+.store-finder__place-title span { display:block; font-size:13px; margin-top:4px; }
+.store-finder__place-input button { display:inline-flex; align-items:center; justify-content:center; gap:8px; }
+.store-finder__search-feedback:empty { display:none; }
+.store-finder__search-feedback.is-error { border:1px solid #b85d52; border-radius:10px; padding:10px 14px; margin:10px 0; background:#fff0e8; }
+.store-finder__search-feedback.is-error button { background:#fffaf0; color:#842327; }
+.store-finder__map-actions { display:flex; flex-wrap:wrap; gap:12px; }
+.store-finder__map-panel.is-expanded { grid-column:1/-1; }
+.store-finder__map-panel.is-expanded .store-finder__map-stage { min-height:clamp(380px,65svh,700px); }
+.store-finder__map-links { display:flex; flex-wrap:wrap; gap:8px; padding:10px 14px; border-top:1px solid #d8cdb6; }
+.store-finder__map-links :is(button,a) { display:inline-flex; align-items:center; gap:6px; min-height:44px; padding:10px 16px; border:1px solid #d8cdb6; border-radius:12px; color:#842327; background:#fffaf0; font:650 13px/1.3 var(--font-body,sans-serif); text-decoration:none; transition: background-color .15s, border-color .15s; }
+.store-finder__map-links :is(button,a):hover { background:#ffe6a6; border-color:#c9a04c; }
+.store-finder__map-links svg { width:16px; height:16px; flex:none; }
+.store-finder__gesture-tools { position:absolute; top:10px; right:10px; z-index:1; display:grid; gap:4px; max-width:calc(100% - 80px); }
+.store-finder__gesture-tools .store-finder__map-interact { position:static; max-width:100%; }
+.store-finder__wheel { border:1px solid #d8cdb6; background:#fffaf0; color:#7e2225; min-height:44px; border-radius:9px; font-size:11px; }
+.store-finder__wheel[aria-pressed='true'] { background:#15588a; color:white; }
+/* ═══════════════════════════════════════════════════ */
+/* ── GET DIRECTIONS DIALOG — Complete Revamp         */
+/* ═══════════════════════════════════════════════════ */
+.store-finder__route-dialog {
+  position: fixed;
+  inset: 0;
+  width: min(calc(100% - 20px), 400px);
+  max-width: none;
+  max-height: calc(100dvh - 32px);
+  margin: auto;
+  padding: 0;
+  border: none;
+  border-radius: 24px;
+  background: var(--sf-paper);
+  color: var(--sf-dark);
+  box-shadow: 0 25px 60px -12px rgba(0,0,0,.3);
+  overflow-y: auto;
+  overscroll-behavior: contain;
+}
+.store-finder__route-dialog::backdrop {
+  background: rgba(0,0,0,.45);
+  backdrop-filter: blur(6px);
+}
+.store-finder__route-dialog-bar {
+  position: sticky; top: 0; z-index: 1;
+  display: flex; justify-content: flex-end;
+  padding: 12px 16px 0;
+  background: var(--sf-paper);
+}
+.store-finder__route-close {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; padding: 0;
+  border: 1px solid var(--color-border);
+  border-radius: 50%;
+  background: var(--sf-paper);
+  color: var(--sf-dark);
+  cursor: pointer;
+  transition: background-color .12s;
+  flex: none;
+}
+.store-finder__route-close:hover { background: #f5f0e8; }
+.store-finder__route-close svg { width: 18px; height: 18px; }
+
+/* ── Planner body ── */
+.store-finder__route-planner {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 20px;
+  min-width: 0;
+}
+.store-finder__route-planner p { margin: 0; }
+.store-finder__route-header h4 {
+  margin: 0;
+  font: 800 22px/1.15 var(--font-heading);
+  letter-spacing: -.02em;
+}
+.store-finder__route-header p {
+  margin-top: 4px;
+  font-size: 13px;
+  color: var(--color-text-secondary);
+  line-height: 1.4;
+}
+
+/* ── Route field group ── */
+.store-finder__route-fields {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+/* ── Point search ── */
+.store-finder__route-point { min-width: 0; }
+.store-finder__route-point > label {
+  display: flex; align-items: center; gap: 8px;
+  margin-bottom: 5px;
+  font: 700 11px/1 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-secondary);
+}
+.store-finder__point-marker {
+  display: grid; place-items: center;
+  width: 22px; height: 22px;
+  border-radius: 50%;
+  background: var(--sf-dark);
+  color: var(--sf-paper);
+  font-size: 11px; font-weight: 800;
+  flex: none;
+}
+.store-finder__route-point:has(#store-route-to) .store-finder__point-marker {
+  background: var(--sf-red);
+}
+
+/* ── Input container ── */
+.store-finder__point-field {
+  display: flex;
+  align-items: center;
+  border: 1.5px solid #d8cdb6;
+  border-radius: 14px;
+  background: #fffdf8;
+  overflow: hidden;
+  transition: border-color .15s, box-shadow .15s;
+}
+.store-finder__point-field:focus-within {
+  border-color: var(--sf-red);
+  box-shadow: 0 0 0 3px rgba(168, 37, 44, .1);
+}
+.store-finder__point-field.is-selected {
+  border-color: #16a34a;
+  background: #f0fdf4;
+}
+.store-finder__point-field input {
+  flex: 1; min-width: 0;
+  min-height: 48px;
+  padding: 12px 14px;
+  border: none;
+  background: transparent;
+  color: var(--sf-dark);
+  font: 500 14px/1.4 var(--font-body);
+  outline: none;
+}
+.store-finder__point-field input::placeholder {
+  color: #a09484;
+  font-weight: 400;
+}
+.store-finder__point-field input[readonly] {
+  font-weight: 600;
+  color: var(--sf-dark);
+}
+
+/* ── Field icons/buttons ── */
+.store-finder__point-ok {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; margin: 6px;
+  border-radius: 10px;
+  background: #dcfce7; color: #16a34a;
+  flex: none;
+}
+.store-finder__point-ok svg { width: 20px; height: 20px; }
+.store-finder__point-busy {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; margin: 6px;
+  font-size: 18px; flex: none;
+  animation: sf-spin 1s linear infinite;
+}
+@keyframes sf-spin { to { transform: rotate(360deg); } }
+.store-finder__point-x {
+  display: grid; place-items: center;
+  width: 36px; height: 36px; margin: 6px;
+  border: none; border-radius: 10px;
+  background: transparent; color: #9c8d7d;
+  cursor: pointer; flex: none;
+  transition: background-color .12s, color .12s;
+}
+.store-finder__point-x:hover { background: #fee2e2; color: #b91c1c; }
+.store-finder__point-x svg { width: 18px; height: 18px; }
+
+/* ── Status messages ── */
+.store-finder__point-msg {
+  font-size: 12px; line-height: 1.4;
+  color: var(--color-text-secondary);
+  margin: 0; padding: 0;
+  min-height: 0;
+}
+.store-finder__point-msg:empty { display: none; }
+.store-finder__point-msg.is-error {
+  color: #b91c1c;
+  padding: 6px 10px;
+  background: #fef2f2;
+  border-radius: 8px;
+  margin-top: 4px;
+}
+
+/* ── Search results dropdown ── */
+.store-finder__point-results {
+  list-style: none; margin: 4px 0 0; padding: 0;
+  display: grid; gap: 0;
+  border: 1.5px solid #d8cdb6;
+  border-radius: 14px;
+  overflow: hidden;
+  background: #fffdf8;
+}
+.store-finder__point-results li { margin: 0; }
+.store-finder__point-results li + li { border-top: 1px solid #f0e8d8; }
+.store-finder__point-results button {
+  display: flex; width: 100%;
+  justify-content: space-between; align-items: center;
+  gap: 10px; padding: 14px 16px;
+  border: none; background: transparent;
+  color: var(--sf-dark);
+  font: 500 13px/1.4 var(--font-body);
+  text-align: left; cursor: pointer;
+  transition: background-color .1s;
+}
+.store-finder__point-results button:hover { background: #f5ecd7; }
+.store-finder__point-results button svg {
+  width: 16px; height: 16px; color: #16a34a;
+  flex: none; opacity: 0; transition: opacity .1s;
+}
+.store-finder__point-results button:hover svg { opacity: 1; }
+
+/* ── Helper chips (My location, Use branch) ── */
+.store-finder__route-chip {
+  display: inline-flex; align-items: center; gap: 5px;
+  padding: 0; margin-top: -2px;
+  border: none; background: none;
+  color: var(--sf-red);
+  font: 600 12px/1.3 var(--font-body);
+  cursor: pointer;
+}
+.store-finder__route-chip:hover { text-decoration: underline; }
+.store-finder__route-chip svg { width: 13px; height: 13px; flex: none; }
+
+/* ── Swap button ── */
+.store-finder__route-swap {
+  display: grid; place-items: center;
+  width: 32px; height: 32px;
+  margin: 2px auto;
+  border: 1.5px solid #d8cdb6;
+  border-radius: 50%;
+  background: var(--sf-paper);
+  color: #9c8d7d;
+  cursor: pointer;
+  transition: all .15s;
+}
+.store-finder__route-swap:hover:not(:disabled) {
+  background: var(--sf-dark); color: white; border-color: var(--sf-dark);
+}
+.store-finder__route-swap:disabled { opacity: .25; cursor: not-allowed; }
+.store-finder__route-swap svg { width: 14px; height: 14px; }
+
+/* ── Travel mode toggle ── */
+.store-finder__route-modes {
+  border: 0; padding: 0; margin: 0;
+}
+.store-finder__route-modes legend {
+  margin-bottom: 6px;
+  font: 700 11px/1 var(--font-body);
+  text-transform: uppercase;
+  letter-spacing: .06em;
+  color: var(--color-text-secondary);
+}
+.store-finder__route-modes > div { display: flex; gap: 8px; }
+.store-finder__route-modes label {
+  position: relative;
+  display: flex; flex: 1; justify-content: center; align-items: center;
+  gap: 6px; min-height: 44px; padding: 8px;
+  border: 1.5px solid #d8cdb6;
+  border-radius: 12px;
+  color: var(--sf-dark);
+  font: 650 13px/1 var(--font-body);
+  cursor: pointer;
+  transition: all .15s;
+}
+.store-finder__route-modes input {
+  position: absolute; opacity: 0; width: 0; height: 0;
+}
+.store-finder__route-modes svg { width: 18px; height: 18px; }
+.store-finder__route-modes label:has(:checked) {
+  background: var(--sf-dark); border-color: var(--sf-dark); color: white;
+}
+.store-finder__route-modes label:not(:has(:checked)):hover {
+  border-color: var(--sf-dark);
+}
+.store-finder__route-modes label:has(:focus-visible) {
+  outline: 2px solid var(--sf-red); outline-offset: 2px;
+}
+
+/* ── Show Route button ── */
+.store-finder__show-route {
+  display: flex; align-items: center; justify-content: center;
+  gap: 8px; width: 100%; min-height: 52px;
+  padding: 14px 20px;
+  border: none; border-radius: 14px;
+  background: var(--sf-red); color: white;
+  font: 750 15px/1.2 var(--font-body);
+  cursor: pointer;
+  transition: background-color .15s, transform .1s;
+}
+.store-finder__show-route:hover:not(:disabled) {
+  background: #7a1f23; transform: translateY(-1px);
+}
+.store-finder__show-route:active:not(:disabled) { transform: translateY(0); }
+.store-finder__show-route:disabled { opacity: .45; cursor: not-allowed; }
+.store-finder__show-route svg { width: 18px; height: 18px; }
+
+/* ── Readiness & status ── */
+.store-finder__route-readiness {
+  font-size: 12px; font-weight: 500;
+  color: var(--color-text-secondary);
+  text-align: center;
+}
+.store-finder__route-readiness[hidden] { display: none; }
+.store-finder__route-msg { margin: 0; text-align: center; font-size: 13px; }
+.store-finder__route-msg:empty { display: none; }
+.store-finder__route-msg.is-error {
+  padding: 10px 14px; border-radius: 12px;
+  background: #fef2f2; color: #b91c1c;
+  font-weight: 500;
+}
+.store-finder__route-msg.is-ok {
+  padding: 10px 14px; border-radius: 12px;
+  background: #f0fdf4; color: #16a34a;
+  font-weight: 500;
+}
+.store-finder__route-credit {
+  display: block; text-align: center;
+  font-size: 10px; color: #b5a898;
+}
+.store-finder__route-credit a { color: inherit; text-decoration: underline; }
+
+/* ── Focus outlines ── */
+.store-finder__route-planner :is(button,input,a,[tabindex]):focus-visible {
+  outline: 2px solid var(--sf-red); outline-offset: 2px;
+}
+
+/* ── Route summary on map ── */
+.store-finder__route-summary {
+  display: flex; gap: 8px 14px; align-items: center; flex-wrap: wrap;
+  padding: 12px 16px; background: #f0fdf4; border-top: 2px solid #bbf7d0;
+  color: var(--sf-dark); font-size: 14px; overflow-wrap: anywhere;
+}
+.store-finder__route-summary .store-finder__route-endpoints {
+  width: 100%; font-size: 12px; color: var(--color-text-secondary);
+}
+.store-finder__route-summary button {
+  padding: 6px 12px; border: 1px solid #d1d5db; border-radius: 8px;
+  background: white; color: var(--sf-dark); font-size: 12px; font-weight: 600;
+  cursor: pointer;
+}
+.store-finder__route-summary button:hover { background: #f3f4f6; }
+.store-finder__route-pin { display: grid; place-items: center; width: 100%; height: 100%; border-radius: var(--radius-full); border: medium solid var(--sf-paper); background: var(--sf-dark); color: var(--sf-paper); font: 750 var(--text-lg)/1 var(--font-body); box-shadow: var(--shadow-sm); }
+.store-finder__route-pin--b { background: var(--sf-red); }
+
+/* ── Simplified map links ── */
+.store-finder__map-links {
+  display: flex; flex-wrap: wrap; gap: 6px;
+  padding: 10px 14px; border-top: 1px solid #e8dfc8;
+}
+.store-finder__map-links :is(button,a) {
+  display: inline-flex; align-items: center; gap: 6px;
+  min-height: 40px; padding: 8px 14px;
+  border: 1px solid #d8cdb6; border-radius: 10px;
+  color: var(--sf-dark); background: #fffdf8;
+  font: 650 12px/1.3 var(--font-body);
+  text-decoration: none; cursor: pointer;
+  transition: background-color .12s, border-color .12s;
+}
+.store-finder__map-links :is(button,a):hover {
+  background: #f5ecd7; border-color: #c9a04c;
+}
+.store-finder__map-links svg { width: 15px; height: 15px; flex: none; }
+.store-finder__map-note { font-size: 11px; color: var(--color-text-secondary); padding: 0 14px 6px; margin: 0; }
+
+/* Larger navigation targets */
+.store-finder__map-panel :is(.store-finder__map-top,.store-finder__map-bottom) { padding: var(--space-sm) var(--space-md); }
+.store-finder__map-top > span, .store-finder__map-bottom p { font-size: var(--text-base); }
+.store-finder__map-panel :is(.store-finder__map-top button,.store-finder__map-bottom button):hover { background: var(--color-cream-dark); }
+.store-finder__map-panel :is(button,a,[tabindex]):focus-visible { outline-color: var(--sf-red); }
+.store-finder__place-search button, .store-finder__place-input input, .store-finder__search-origin button, .store-finder__explore-button { min-height: var(--space-2xl); }
+.store-finder__place-search button { font-size: var(--text-base); }
+@media (min-width: 48rem) {
+  .store-finder__route-planner { padding: 24px 28px; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .store-finder__route-planner * { transition: none !important; }
+}
+
+@media(max-width:760px) {
+  .store-finder__workspace--map .store-finder__map-panel { order:-1; }
+  .store-finder__explore-bar { gap:8px; }
+  .store-finder__search-modes { width:100%; }
+  .store-finder__search-modes button { flex:1; justify-content:center; padding-inline:8px; font-size:12px; }
+  .store-finder__explore-button { width:100%; justify-content:center; }
+  .store-finder__place-search { padding:14px; }
+  .store-finder__place-input button[type='submit'] { flex:1; }
+}
+
+.store-finder__leaflet-map {
+  z-index: 0;
+  isolation: isolate;
+  background: #f1ebd9;
   position: absolute;
   inset: 0;
   width: 100%;
   height: 100%;
 }
+
+/* Keep Leaflet's high internal pane indexes below site navigation and dialogs. */
+.store-finder__leaflet-map .leaflet-control-attribution {
+  max-width: 100%;
+  background: #fffaf0ee;
+  color: #302b24;
+  font: 11px/1.5 var(--font-body, sans-serif);
+}
+.store-finder__leaflet-map .leaflet-control-attribution a { color: #7e2225; }
+.store-finder__leaflet-map .leaflet-control-zoom a {
+  width: 44px;
+  height: 44px;
+  line-height: 44px;
+  color: #7e2225;
+  background: #fffaf0;
+}
+.store-finder__leaflet-map .leaflet-marker-icon:focus-visible,
+.store-finder__leaflet-map:focus-visible {
+  outline: 3px solid #15588a;
+  outline-offset: 3px;
+}
+.store-finder__leaflet-map .store-finder__marker { background: none; border: 0; }
+.store-finder__map-interact {
+  position: absolute;
+  top: 10px;
+  right: 10px;
+  z-index: 1;
+  min-height: 44px;
+  max-width: calc(100% - 80px);
+  padding: 8px 12px;
+  border: 1px solid #d8cdb6;
+  border-radius: 12px;
+  background: #fffaf0;
+  color: #7e2225;
+  font: 700 12px/1.3 var(--font-body, sans-serif);
+  cursor: pointer;
+  box-shadow: 0 2px 8px #302b2420;
+}
+.store-finder__map-interact span { display: block; font-size: 10px; font-weight: 400; margin-top: 3px; }
+.store-finder__map-interact[aria-pressed="true"] { background: #7e2225; color: #fffaf0; }
+.store-finder__map-panel .store-finder__map-interact, .store-finder__map-panel .store-finder__wheel { min-height: var(--space-2xl); font-size: var(--text-base); padding: var(--space-xs) var(--space-sm); }
+.store-finder__map-panel .store-finder__map-interact span { font-size: var(--text-base); }
+.store-finder__map-panel .leaflet-control-zoom a { width: var(--space-2xl); height: var(--space-2xl); line-height: var(--space-2xl); }
 
 .store-finder__map-placeholder {
   position: relative;
@@ -779,13 +1443,14 @@
 
 .store-finder__map-invite {
   position: relative;
-  width: min(100% - 24px, 340px);
+  width: min(100% - 24px, 380px);
   margin: 20px 0 42px;
-  padding: 16px;
+  padding: 24px 20px;
   background: #fffaf0f5;
   border: 1px solid #e3ceb2;
-  border-radius: 12px;
+  border-radius: 20px;
   text-align: center;
+  box-shadow: 0 8px 32px #0001;
 }
 
 .store-finder__map-symbol {
@@ -815,9 +1480,9 @@
 
 .store-finder__map-invite h3 {
   white-space: pre-line;
-  font: 750 clamp(23px, 2vw, 28px)/1.1 var(--font-heading, sans-serif);
+  font: 750 clamp(24px, 2.2vw, 30px)/1.1 var(--font-heading, sans-serif);
   letter-spacing: -.04em;
-  margin: 0 0 10px;
+  margin: 0 0 12px;
   color: #94242a;
 }
 
@@ -834,13 +1499,16 @@
   justify-content: center;
   gap: 10px;
   width: 100%;
-  min-height: 48px;
-  padding: 10px 12px;
-  border-radius: 999px;
+  min-height: 52px;
+  padding: 14px 16px;
+  border-radius: 14px;
   background: var(--sf-red);
   color: #fff6df;
-  font-size: 12px;
-  font-weight: 650;
+  font-size: 14px;
+  font-weight: 700;
+  letter-spacing: .02em;
+  box-shadow: 0 4px 16px #a9252c40;
+  transition: background-color .18s, transform .12s;
 }
 
 .store-finder__map-invite button:hover {
@@ -1354,6 +2022,33 @@
 @media (max-width: 760px) {
   .store-finder__heading { grid-template-columns: minmax(0,1fr); gap: 0; }
 }
+
+/* ── Quick bar & unified search mobile ── */
+@media (max-width: 760px) {
+  .store-finder__unified-search {
+    padding: 4px;
+    border-radius: 16px;
+  }
+  .store-finder__search-tabs button {
+    padding: 10px 12px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+  .store-finder__quick-bar {
+    gap: 8px;
+  }
+  .store-finder__quick-action {
+    flex: 1 1 100px;
+    padding: 10px 12px;
+    font-size: 12px;
+    border-radius: 12px;
+  }
+  .store-finder__place-help-text {
+    font-size: 12px;
+    padding: 6px 10px;
+  }
+}
+
 @media (prefers-reduced-motion: reduce) {
 
   .store-finder *,

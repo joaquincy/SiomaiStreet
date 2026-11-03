@@ -46,6 +46,7 @@ const IMAGE_CONFIGS = {
   // Other
   '27980247527.png':    [400, 800],
   'franchising hero header.png': [480, 768, 1024, 1440, 1920],
+  'reviews hero header.png':     [480, 768, 1024, 1440, 1920],
 };
 
 async function run() {

@@ -91,8 +91,21 @@
 .fm-stories {
   display: flex;
   flex-direction: column;
-  gap: clamp(1rem, 2.5vw, 2.5rem);
+  gap: clamp(5.5rem, 10vw, 9.5rem);
   width: 100%;
+}
+
+/* Bring the bilao story upward and let its foreground tray cross the next poster. */
+.featured-menu .fm-story--second {
+  margin-top: calc(-1 * clamp(var(--space-3xl), 6vw, var(--space-4xl)) - var(--space-lg));
+  padding-bottom: 0;
+}
+.featured-menu .fm-imagery--story2 {
+  height: clamp(18rem, 44vw, 36rem);
+  pointer-events: none;
+}
+.featured-menu .fm-bilao-wrap--front {
+  bottom: calc(-1 * clamp(var(--space-2xl), 8vw, var(--space-5xl)));
 }
 
 .fm-story {
@@ -101,7 +114,15 @@
   width: 100%;
   position: relative;
   box-sizing: border-box;
-  min-height: clamp(520px, 44vw, 640px);
+  min-height: clamp(540px, 46vw, 660px);
+  padding: clamp(2rem, 3.5vw, 3.5rem) 0;
+}
+
+/* Neutralize global generic translateY on .fm-story so child edge-animations perform smoothly */
+.fm-story.reveal {
+  opacity: 1;
+  transform: none;
+  transition: none;
 }
 
 /* Story 1: Text Left (45%), Imagery Collage Right (55% Bleeding to 100vw right) */
@@ -489,6 +510,120 @@
   }
 }
 
+
+/* ══════════════════════════════════════════
+   CHRONOLOGICAL FOOD SHOW ANIMATIONS
+   Story 1: Food enters from Right Viewport Edge
+   Story 2: Bilao Platters enter from Left Viewport Edge
+   ══════════════════════════════════════════ */
+
+/* ─── Story 1: Text Left, Food Collage Enters From Right Edge ─── */
+.fm-story--first .fm-story-text {
+  opacity: 0;
+  transform: translate3d(-40px, 0, 0);
+  transition: opacity 0.85s ease, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--first.revealed .fm-story-text {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+}
+
+/* Story 1 Food Collage Elements (From Right Edge) */
+.fm-story--first .fm-stamp-wrap--wonton {
+  opacity: 0;
+  transform: translate3d(180px, 0, 0) rotate(16deg);
+  transition: opacity 0.85s ease, transform 0.95s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--first .fm-stamp-wrap--chicken-feet {
+  opacity: 0;
+  transform: translate3d(240px, 0, 0) rotate(2deg);
+  transition: opacity 0.85s ease, transform 1.05s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--first .fm-hero-wrap--bowl {
+  opacity: 0;
+  transform: translate3d(280px, 0, 0) scale(0.92);
+  transition: opacity 0.9s ease, transform 1.15s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--first.revealed .fm-stamp-wrap--wonton {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(7deg);
+  transition-delay: 0.1s;
+}
+
+.fm-story--first.revealed .fm-stamp-wrap--chicken-feet {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(-8deg);
+  transition-delay: 0.22s;
+}
+
+.fm-story--first.revealed .fm-hero-wrap--bowl {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: 0.36s;
+}
+
+/* ─── Story 2: Bilao Platters Enter From Left Edge, Text Right ─── */
+.fm-story--second .fm-story-text {
+  opacity: 0;
+  transform: translate3d(40px, 0, 0);
+  transition: opacity 0.85s ease, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--second.revealed .fm-story-text {
+  opacity: 1;
+  transform: translate3d(0, 0, 0);
+  transition-delay: 0.15s;
+}
+
+/* Story 2 Bilao Platters (From Left Edge) */
+.fm-story--second .fm-bilao-wrap--back {
+  opacity: 0;
+  transform: translate3d(-200px, 0, 0) rotate(-14deg);
+  transition: opacity 0.85s ease, transform 1s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--second .fm-bilao-wrap--front {
+  opacity: 0;
+  transform: translate3d(-260px, 0, 0) scale(0.92) rotate(-5deg);
+  transition: opacity 0.9s ease, transform 1.15s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--second .fm-ink-stamp--bilao {
+  opacity: 0;
+  transform: scale(0.6) rotate(-22deg);
+  transition: opacity 0.75s ease, transform 0.85s cubic-bezier(0.16, 1, 0.3, 1);
+  will-change: transform, opacity;
+}
+
+.fm-story--second.revealed .fm-bilao-wrap--back {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) rotate(-5deg);
+  transition-delay: 0.12s;
+}
+
+.fm-story--second.revealed .fm-bilao-wrap--front {
+  opacity: 1;
+  transform: translate3d(0, 0, 0) scale(1);
+  transition-delay: 0.26s;
+}
+
+.fm-story--second.revealed .fm-ink-stamp--bilao {
+  opacity: 0.88;
+  transform: scale(1) rotate(-10deg);
+  transition-delay: 0.42s;
+}
+
 /* ══════════════════════════════════════════
    Responsive — Tablet (769px - 1024px)
    ══════════════════════════════════════════ */
@@ -585,6 +720,39 @@
 
   .fm-spec-row {
     text-align: left;
+  }
+
+  
+  /* Responsive gap for stories */
+  .fm-stories {
+    gap: clamp(4.5rem, 8vw, 6.5rem);
+  }
+
+  .fm-story--first .fm-story-text,
+  .fm-story--second .fm-story-text {
+    transform: translate3d(0, 25px, 0);
+  }
+
+  .fm-story--first.revealed .fm-story-text,
+  .fm-story--second.revealed .fm-story-text {
+    transform: translate3d(0, 0, 0);
+  }
+
+  .fm-story--first .fm-stamp-wrap--wonton {
+    transform: translate3d(70px, 0, 0) rotate(16deg);
+  }
+  .fm-story--first .fm-stamp-wrap--chicken-feet {
+    transform: translate3d(80px, 0, 0) rotate(2deg);
+  }
+  .fm-story--first .fm-hero-wrap--bowl {
+    transform: translate3d(90px, 0, 0) scale(0.95);
+  }
+
+  .fm-story--second .fm-bilao-wrap--back {
+    transform: translate3d(-70px, 0, 0) rotate(-10deg);
+  }
+  .fm-story--second .fm-bilao-wrap--front {
+    transform: translate3d(-90px, 0, 0) scale(0.95) rotate(-4deg);
   }
 
   /* Story 1 Mobile Collage */
@@ -744,7 +912,16 @@
    ══════════════════════════════════════════ */
 
 @media (prefers-reduced-motion: reduce) {
-  .fm-btn {
-    transition: none;
+  .fm-btn,
+  .fm-story-text,
+  .fm-stamp-wrap--wonton,
+  .fm-stamp-wrap--chicken-feet,
+  .fm-hero-wrap--bowl,
+  .fm-bilao-wrap--back,
+  .fm-bilao-wrap--front,
+  .fm-ink-stamp--bilao {
+    opacity: 1 !important;
+    transform: none !important;
+    transition: none !important;
   }
 }

@@ -16,7 +16,7 @@ Public address: https://siomaistreet-demo.vercel.app
 - Production credentials and DOCUMENT_SCAN=off are configured in Vercel.
 - Add siomaistreet-demo.vercel.app to the existing Cloudflare Turnstile widget's allowed hostnames. The backend hostname allowlist is already configured.
 - Perform a synthetic application in the public browser and confirm receipt, exactly one database application, correction/retry and authorized staff access. Automated tests do not replace this live test.
-- Google Maps still needs its own keys, map ID and approved coordinates.
+- The homepage map now uses Leaflet with OpenStreetMap tiles; no Google Maps key or billing is needed. Publish approved branch coordinates and follow [the activation checklist](store-finder-activation-checklist.md).
 - Resend delivery and a durable worker schedule remain separate setup. Email and cleanup timers are disabled in the Vercel environment; run cleanup with the existing continuously running Node backend or configure an authenticated external schedule.
 - Submit the public sitemap to Google Search Console after ownership verification. Search indexing is not guaranteed by deployment.
 - Deployment uses the working copy via CLI. Commit reviewed changes to GitHub before relying on Git-triggered deployments, otherwise an older commit can replace these fixes.

@@ -33,7 +33,7 @@ const Marquee = () => {
               <span className="street-marquee__text">SIOMAI STREET</span>
               <img
                 src="/images/siomai 1.png"
-                srcSet="/images/responsive/siomai 1-200w.png 200w, /images/responsive/siomai 1-400w.png 400w"
+                srcSet="/images/responsive/siomai%201-200w.png 200w, /images/responsive/siomai%201-400w.png 400w"
                 sizes="80px"
                 alt="" className="street-marquee__img" loading="lazy"
               />

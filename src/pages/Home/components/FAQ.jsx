@@ -87,7 +87,7 @@ const FAQ = () => {
             <div className="faq-info-card__icon-wrap">
               <img
                 src="/images/siomai street logo.png"
-                srcSet="/images/responsive/siomai street logo-100w.png 100w, /images/responsive/siomai street logo-200w.png 200w"
+                srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w"
                 sizes="80px"
                 alt="Siomai Street"
                 className="faq-info-card__logo"

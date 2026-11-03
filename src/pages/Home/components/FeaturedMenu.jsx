@@ -127,7 +127,9 @@ const FeaturedMenu = () => {
       {/* ─── Two Alternating Food Stories ─── */}
       <div className="fm-stories">
         {/* ── Story 1: Text Left, Postage Stamps + Bowl on Right (Full Bleed to Viewport Right) ── */}
-        <article className="fm-story fm-story--text-left reveal">
+        <article
+          className="fm-story fm-story--text-left fm-story--first reveal"
+        >
           <div className="fm-story-text">
             <AccentMarks className="fm-accent-marks--story1" />
             <h3 className="fm-story-title">Classic Pork <em>Siomai</em></h3>
@@ -191,7 +193,9 @@ const FeaturedMenu = () => {
         </article>
 
         {/* ── Story 2: Lumpia Bilao + Siomai Bilao on Left (Full Bleed to Viewport Left), Text Right ── */}
-        <article className="fm-story fm-story--text-right reveal">
+        <article
+          className="fm-story fm-story--text-right fm-story--second reveal"
+        >
           <div className="fm-story-imagery fm-imagery--story2">
             {/* Background Bilao: Siomai Bilao (Bleeds off Left Viewport Edge) */}
             <div className="fm-bilao-wrap fm-bilao-wrap--back">

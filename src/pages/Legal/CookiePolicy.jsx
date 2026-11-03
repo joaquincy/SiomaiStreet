@@ -62,9 +62,9 @@ const CookiePolicy = () => (
         <section className="legal-section">
           <h2>3. Third-Party Cookies</h2>
           <p>
-            The optional store map loads Google Maps only after you choose “Explore the map”.
-            Google may process technical information and use its own storage technologies under
-            its privacy policy. You can use the store list without loading the map.
+            The optional store map loads Leaflet and OpenStreetMap tiles only after you choose “Explore the map”.
+            Map images may be cached by your browser. OpenStreetMap receives technical information
+            such as your IP address and the map areas requested under its <a href="https://osmfoundation.org/wiki/Privacy_Policy" target="_blank" rel="noopener noreferrer">privacy policy</a>. You can use the store list without loading the map.
             Store search and distance sorting do not save your location in cookies or browser storage.
           </p>
           <p>

@@ -1,3 +1,5 @@
+> Historical Google Maps integration notes. Superseded by [the Leaflet activation checklist](store-finder-activation-checklist.md) on 3 November 2026.
+
 # Homepage store finder — implementation and activation
 
 Added immediately after Featured Menu, on the existing warm-white background with an inset brand-color panel. No new page, applicant location collection or invented public branches.

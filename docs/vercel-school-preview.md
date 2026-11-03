@@ -18,7 +18,7 @@ Deployed 2026-11-02. Synthetic applicants/documents only.
    Keep localhost if local development still needs it. Do not add a scheme or path. The backend allows the Vercel-provided deployment hostname; Cloudflare must also allow it.
 2. Open the preview and submit a synthetic applicant. Verify receipt, one row in the admin app, safe retry, and draft clearing. These browser/provider checks are not yet completed.
 3. Keep the local Node backend running with `UPLOAD_CLEANUP_WORKER_ENABLED=true` while testing uploads, or arrange an authenticated external cleanup schedule. Vercel does not run the existing timer worker. Cleanup is not automatically scheduled by this deployment.
-4. Configure Google Maps keys/map ID and approved branch coordinates before expecting interactive pins. The directory currently returns two branches without coordinates.
+4. Publish approved branch coordinates before expecting interactive pins. The homepage now uses Leaflet with OpenStreetMap tiles and needs no Google Maps key or billing. Follow [the activation checklist](store-finder-activation-checklist.md); branches without coordinates remain in the directory.
 5. Configure Resend/domain/webhook and a worker execution plan before expecting receipt emails. Email processing is disabled on this preview.
 
 ## Demo configuration

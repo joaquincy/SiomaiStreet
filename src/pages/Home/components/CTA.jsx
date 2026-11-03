@@ -84,7 +84,7 @@ const CTA = () => {
           <div className="cta-art__shape cta-art__shape--circle">
             <img
               src="/images/siomai 1.png"
-              srcSet="/images/responsive/siomai 1-200w.png 200w, /images/responsive/siomai 1-400w.png 400w"
+              srcSet="/images/responsive/siomai%201-200w.png 200w, /images/responsive/siomai%201-400w.png 400w"
               sizes="200px"
               alt="Premium Siomai" loading="lazy"
             />
