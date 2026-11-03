@@ -37,7 +37,10 @@ export function locationErrorMessage(error) {
 }
 
 // Cancellation ignores late device responses; no watch, storage or network request is created here.
-export function beginLocationLookup(geolocation, { onSuccess, onError }, timers = { setTimeout, clearTimeout }) {
+export function beginLocationLookup(geolocation, { onSuccess, onError }, timers = {
+  setTimeout: (callback, delay) => globalThis.setTimeout(callback, delay),
+  clearTimeout: id => globalThis.clearTimeout(id),
+}) {
   let active = true;
   const finish = callback => value => {
     if (!active) return;

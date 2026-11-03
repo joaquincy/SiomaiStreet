@@ -1,6 +1,6 @@
 import { useEffect, useRef, useState } from 'react';
 import { coordinates } from '../../../../shared/storeLocations.js';
-import { BiSearch, BiMap, BiX } from 'react-icons/bi';
+import { BiSearch, BiX } from 'react-icons/bi';
 import { mapRequest } from '../../../utils/mapRequests';
 
 export default function PlaceSearch({ onChoose, active = true, onExplore }) {
@@ -36,16 +36,14 @@ export default function PlaceSearch({ onChoose, active = true, onExplore }) {
     }
   };
   return <section id="store-place-search" hidden={!active} className="store-finder__place-search" aria-label="Worldwide place search">
-    <div className="store-finder__place-title"><BiMap aria-hidden="true" /><div><strong>Search any place worldwide</strong><span>Find any address, landmark, or business — not just our branches.</span></div></div>
     <form onSubmit={search}>
       <label htmlFor="store-place-query">Search an address or business worldwide</label>
       <div className="store-finder__place-input"><input ref={input} id="store-place-query" type="search" value={query} maxLength={180} autoComplete="off" placeholder="e.g. Bagasbas Beach, Daet, Philippines" aria-describedby="store-place-help" onChange={event => { cancel(); setBusy(false); setFailed(false); setPlaces([]); setStatus(''); setQuery(event.target.value); }} /><button type="submit" disabled={busy}><BiSearch aria-hidden="true" />{busy ? 'Searching…' : 'Search'}</button>{busy && <button type="button" onClick={() => { cancel(); setBusy(false); setStatus('Search cancelled.'); }}><BiX aria-hidden="true" />Cancel</button>}</div>
-      <p id="store-place-help" className="store-finder__place-help-text">💡 <strong>Tip:</strong> Type a place + city → press <strong>Search</strong> → click a result to select it. Search text is sent to Geoapify only when you press Search.</p>
-      <div className="store-finder__search-examples" aria-label="Quick search examples"><span>Try these:</span>{['Daet, Philippines', 'Bagasbas Beach, Daet', 'SM City Naga'].map(example => <button type="button" key={example} onClick={() => { cancel(); setBusy(false); setFailed(false); setPlaces([]); setStatus('Example filled — press Search to find it.'); setQuery(example); input.current?.focus(); }}>{example}</button>)}</div>
+      <p id="store-place-help" className="store-finder__place-help-text">Enter a place + city, press Search, then select a result.</p>
     </form>
     <div ref={results} tabIndex={-1} className={failed ? 'store-finder__search-feedback is-error' : 'store-finder__search-feedback'}><p role="status" aria-live="polite">{status}</p>{failed && <div className="store-finder__search-recovery"><button type="button" onClick={search}>Retry search</button>{onExplore && <button type="button" onClick={onExplore}>Browse map without search</button>}</div>}
-      {places.length > 0 && <ul aria-label="Place search results">{places.map((place,index) => <li key={`${index}:${place.label}`}><button type="button" onClick={() => { onChoose(place); setPlaces([]); setStatus('✅ Place selected! See it on the map and nearby branches below.'); }}><span className="store-finder__place-result-label">{place.label}</span><span className="store-finder__place-result-action" aria-hidden="true">Select ↗</span></button></li>)}</ul>}
+      {places.length > 0 && <ul aria-label="Place search results">{places.map((place,index) => <li key={`${index}:${place.label}`}><button type="button" onClick={() => { onChoose(place); setPlaces([]); setStatus('Place selected on the map.'); }}><span className="store-finder__place-result-label">{place.label}</span><span className="store-finder__place-result-action" aria-hidden="true">Select ↗</span></button></li>)}</ul>}
     </div>
-    <small>Search by <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap contributors</a>. Some businesses may be missing. Try a street or nearby landmark, or choose a point on the map.</small>
+    <small>Search sent to <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a></small>
   </section>;
 }

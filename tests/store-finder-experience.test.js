@@ -81,7 +81,8 @@ test('store UI renders real-data details and safe loading, missing-data and map-
   const { StoreFinderExperience, StoreDetails, MapInvitation } = await vite.ssrLoadModule('/src/pages/Home/components/StoreFinder.jsx');
   const render = (component, props) => renderToStaticMarkup(createElement(component, props));
   const ready = render(StoreFinderExperience, { data: { status: 'ready', stores }, onRetry() {}, mapsAvailable: true });
-  assert.match(ready, /Browse by city/); assert.match(ready, /Narrow by region/);
+  assert.match(ready, /Our Branches/); assert.doesNotMatch(ready, /<select/);
+  assert.match(ready, /Directions on map/);
   assert.match(ready, /aria-controls="store-details"/);
   assert.match(ready, /1 store has no published pin/);
   assert.match(ready, /Selected store: A Synthetic Store/);
@@ -92,10 +93,9 @@ test('store UI renders real-data details and safe loading, missing-data and map-
   assert.match(ready, /Map privacy policy/);
   assert.doesNotMatch(ready, /<script|<iframe|Open now|Verified|store-finder__leaflet-map/);
   const detailed = render(StoreDetails, { store: stores[1], onMap() {} });
-  for (const label of ['Copy address', 'Copy store link', 'Share store', 'View pin', 'Synthetic landmark', 'Synthetic hours', 'Synthetic holiday exception', 'Drive', 'Walk', 'Transit']) assert.ok(detailed.includes(label), label);
+  for (const label of ['Copy address', 'Copy store link', 'Share store', 'View pin', 'Synthetic landmark', 'Synthetic hours', 'Synthetic holiday exception', 'Open in Google Maps']) assert.ok(detailed.includes(label), label);
   assert.match(detailed, /href="tel:\+639120000000"/);
   assert.match(detailed, /travelmode=driving/);
-  assert.match(detailed, /aria-pressed="true"[^>]*>.*Drive/);
   assert.match(detailed, /role="status" aria-live="polite"/);
   assert.match(detailed, /<details class="store-finder__visit"><summary>/);
   const noDetails = render(StoreDetails, { store: normalizeStore({ id: 'empty', name: 'Synthetic empty store' }) });

@@ -3,7 +3,7 @@ import { BiCheck, BiSearch, BiX } from 'react-icons/bi';
 import { latestMapRequest, routePoint } from '../../../utils/routePlanner';
 import { mapRequest } from '../../../utils/mapRequests';
 
-export default function RoutePointSearch({ id, label, marker, value, onChange, active }) {
+export default function RoutePointSearch({ id, label, marker, value, onChange, active, suggestion }) {
   const [query, setQuery] = useState('');
   const [places, setPlaces] = useState([]);
   const [status, setStatus] = useState('');
@@ -11,9 +11,9 @@ export default function RoutePointSearch({ id, label, marker, value, onChange, a
   const [failed, setFailed] = useState(false);
   const input = useRef(null);
   const work = useRef(null);
-  const autoTimer = useRef(null);
   if (!work.current) work.current = latestMapRequest();
-  useEffect(() => () => { work.current.cancel(); clearTimeout(autoTimer.current); }, []);
+  useEffect(() => () => { work.current.cancel(); }, []);
+  useEffect(() => { if (suggestion) setQuery((suggestion.query || '').slice(0, 180)); }, [suggestion]);
   useEffect(() => {
     work.current.cancel(); setBusy(false); setPlaces([]); setStatus(''); setFailed(false);
   }, [active, value]);
@@ -40,7 +40,7 @@ export default function RoutePointSearch({ id, label, marker, value, onChange, a
       if (request.signal.aborted) throw new Error('Search cancelled.');
       if (!request.isCurrent()) return;
       setPlaces(found);
-      setStatus(found.length ? `${found.length} result${found.length > 1 ? 's' : ''} — tap to select` : 'No results. Try a different name or add a city.');
+      setStatus(found.length ? `${found.length} result${found.length > 1 ? 's' : ''}. Select a match below.` : 'No results. Try a different name or add a city.');
     } catch (error) {
       if (request.isLatest()) { setFailed(true); setStatus(request.signal.aborted ? 'Timed out. Try again.' : error.message); }
     } finally {
@@ -48,14 +48,6 @@ export default function RoutePointSearch({ id, label, marker, value, onChange, a
       request.finish();
     }
   };
-
-  // Auto-search after 700ms of typing (3+ chars)
-  useEffect(() => {
-    clearTimeout(autoTimer.current);
-    if (value || query.trim().length < 3 || !active) return;
-    autoTimer.current = setTimeout(() => doSearch(), 700);
-    return () => clearTimeout(autoTimer.current);
-  });
 
   const handleSubmit = event => { event.preventDefault(); doSearch(); };
 
@@ -65,18 +57,16 @@ export default function RoutePointSearch({ id, label, marker, value, onChange, a
       <div className={`store-finder__point-field${value ? ' is-selected' : ''}`}>
         <input ref={input} id={id} type="text" value={value?.label ?? query} maxLength={180} autoComplete="off"
           placeholder={marker === 'A' ? 'Type a place, e.g. SM City Daet' : 'Type a destination, e.g. Daet, Philippines'}
-          aria-describedby={`${id}-status`} aria-invalid={failed || undefined}
+          aria-describedby={`${id}-hint ${id}-status`} aria-invalid={failed || undefined}
           readOnly={!!value}
           onChange={event => edit(event.target.value)} />
-        {value
-          ? <span className="store-finder__point-ok"><BiCheck aria-hidden="true" /></span>
-          : busy
-            ? <span className="store-finder__point-busy" aria-label="Searching">⏳</span>
-            : null}
+        {value && <span className="store-finder__point-ok"><BiCheck aria-hidden="true" /></span>}
         {(value || query) && <button className="store-finder__point-x" type="button" aria-label={`Clear ${label.toLowerCase()}`} onClick={() => { edit(''); input.current?.focus(); }}><BiX aria-hidden="true" /></button>}
       </div>
+      {!value && <button className="store-finder__route-chip" type="submit" disabled={busy}><BiSearch aria-hidden="true" />{busy ? 'Searching…' : 'Search'}</button>}
     </form>
-    <p id={`${id}-status`} role="status" aria-live="polite" className={`store-finder__point-msg${failed ? ' is-error' : ''}`}>{status}</p>
+    <small id={`${id}-hint`}>{value ? 'Selected. Clear to change.' : 'Enter a place + city, press Search, then select a result.'}</small>
+    <p id={`${id}-status`} role="status" aria-live="polite" className={busy ? 'store-finder__sr-only' : `store-finder__point-msg${failed ? ' is-error' : ''}`}>{status}</p>
     {places.length > 0 && <ul className="store-finder__point-results" aria-label={`${label} search results`}>
       {places.map((place, index) => <li key={`${index}:${place.label}`}><button type="button" onClick={() => {
         setQuery(place.label); setPlaces([]); setStatus(''); onChange(place); input.current?.focus();

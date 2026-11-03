@@ -1112,6 +1112,7 @@
 /* Footer: helpful */
 .cfb-review-footer {
   display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: 1rem;
   padding-top: 1rem;
@@ -1125,6 +1126,7 @@
 }
 
 .cfb-helpful-btn {
+  min-height: var(--space-2xl);
   display: inline-flex;
   align-items: center;
   gap: 0.4rem;
@@ -1140,7 +1142,7 @@
   transition: all 0.2s ease;
 }
 
-.cfb-helpful-btn:hover {
+.cfb-helpful-btn:hover:not(:disabled) {
   border-color: var(--color-red, #E63946);
   color: var(--color-red, #E63946);
   background: #fff5f5;
@@ -1153,6 +1155,12 @@
   background: #fff5f5;
   box-shadow: 0 2px 8px rgba(230, 57, 70, 0.16);
 }
+.cfb-helpful-control { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
+.cfb-helpful-control [role='status'] { font-size: var(--text-sm); color: var(--color-text-secondary); overflow-wrap: anywhere; }
+.cfb-helpful-control [role='status']:empty { display: none; }
+.cfb-helpful-btn:disabled { cursor: default; transform: none; }
+.cfb-helpful-btn[aria-busy='true'] { opacity: .7; cursor: wait; }
+.cfb-helpful-btn:focus-visible { outline: medium solid var(--color-red); outline-offset: .2em; }
 
 /* ═══════════════════════════════════════════════════════════════════
    10. RESPONSIVE BREAKPOINTS

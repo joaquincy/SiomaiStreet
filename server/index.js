@@ -4,6 +4,7 @@ import { createNotificationWebhook } from './notificationWebhook.js';
 import { readMultipart } from './multipart.js';
 import { createStoreLocationsReader } from './storeLocations.js';
 import { createPlaceSearch } from './placeSearch.js';
+import { createHelpfulHandler } from './reviewHelpful.js';
 import { createStoreRoute } from './storeRoute.js';
 import { mapDevelopmentOrigins } from './mapOrigins.js';
 import { contactConfiguration, publicContactConfiguration, createContactHandler } from './contact.js';
@@ -203,6 +204,10 @@ const applicationRate = createSharedApplicationRateLimit({
 const turnstileEnabled = process.env.NODE_ENV === 'production' || process.env.TURNSTILE_ENABLED !== 'false';
 // Vite's local proxy may rewrite Host to the backend port; allow only known dev origins.
 const mapDevOrigins = mapDevelopmentOrigins({ serverless });
+const handleHelpful = createHelpfulHandler({ json, allowedOrigins: mapDevOrigins,
+  rate: req => applicationRate(clientIP(req, trustedProxies), 'review-helpful', 60),
+  rpc: body => supabaseRequest('/rest/v1/rpc/record_review_helpful', { method: 'POST', body: JSON.stringify(body) }),
+});
 const handlePlaceSearch = createPlaceSearch({
   apiKey: process.env.GEOAPIFY_API_KEY, json, allowedOrigins: mapDevOrigins,
   rate: (req, scope, limit) => applicationRate(req ? clientIP(req, trustedProxies) : 'all-visitors', scope, limit),
@@ -333,15 +338,7 @@ export const handleRequest = async (req, res) => {
     if (url.pathname === '/api/reviews' && req.method === 'GET') return await handleReviewsGet(url, res);
     if (url.pathname === '/api/reviews' && req.method === 'POST') return await handleReviewPost(req, res);
     const helpfulMatch = url.pathname.match(/^\/api\/reviews\/([0-9a-f-]{36})\/helpful$/i);
-    if (helpfulMatch && req.method === 'POST') {
-      if (!rateLimit(req, 60, 60 * 60 * 1000)) return json(res, 429, { error: 'Please wait before voting again.' });
-      const result = await supabaseRequest('/rest/v1/rpc/increment_review_helpful', {
-        method: 'POST',
-        body: JSON.stringify({ review_id: helpfulMatch[1] }),
-      });
-      if (result === null) return json(res, 404, { error: 'Review not found.' });
-      return json(res, 200, { helpful: result });
-    }
+    if (helpfulMatch && req.method === 'POST') return await handleHelpful(req, res, helpfulMatch[1]);
     const portalMatch = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})(?:\/corrections\/([0-9a-f-]{36}))?$/i);
     if (portalMatch && !portalMatch[2] && req.method === 'GET') return await handlePortal(req, res, portalMatch[1]);
     if (portalMatch?.[2] && req.method === 'POST') return json(res, 410, { error: 'The document upload process has changed. Reload this page and select the replacement again.' });

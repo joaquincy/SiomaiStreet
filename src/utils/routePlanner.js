@@ -23,7 +23,10 @@ export function routeProblem(start, destination) {
 }
 
 // Cancellation clears the timeout immediately; identity checks reject late responses.
-export function latestMapRequest(timers = { setTimeout, clearTimeout }) {
+export function latestMapRequest(timers = {
+  setTimeout: (callback, delay) => globalThis.setTimeout(callback, delay),
+  clearTimeout: id => globalThis.clearTimeout(id),
+}) {
   let current = null;
   const cancel = () => {
     if (!current) return;

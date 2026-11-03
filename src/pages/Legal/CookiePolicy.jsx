@@ -12,7 +12,7 @@ const CookiePolicy = () => (
       <div className="legal-header">
         <span className="legal-badge">Legal</span>
         <h1>Cookie Policy</h1>
-        <p className="legal-updated">Last updated: October 31, 2026</p>
+        <p className="legal-updated">Last updated: November 3, 2026</p>
       </div>
 
       <div className="legal-content">
@@ -37,6 +37,12 @@ const CookiePolicy = () => (
                 </tr>
               </thead>
               <tbody>
+                <tr>
+                  <td><code>siomai-review-helpful-v1:*</code></td>
+                  <td>Remembers Helpful votes and keeps retries from counting twice (localStorage). Created when you vote; only a hash of the random vote token is stored on the server.</td>
+                  <td>Functional</td>
+                  <td>Browser record: until cleared. Server deduplication record: until the associated review is deleted.</td>
+                </tr>
                 <tr>
                   <td><code>cookie_consent</code></td>
                   <td>Stores your cookie consent preference</td>

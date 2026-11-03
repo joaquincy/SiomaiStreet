@@ -84,20 +84,23 @@ export default function RoutePlanner({ store, searchPoint, seed, onPickPoint, on
   return <section id="store-route-planner" className="store-finder__route-planner" aria-labelledby="store-route-title" hidden={!active}>
     <div className="store-finder__route-header">
       <h4 id="store-route-title" ref={heading} tabIndex={-1}>Get Directions</h4>
-      <p>Drive or walk between any two places, whether or not they are Siomai Street branches.</p>
+      <p>Choose your start and destination.</p>
     </div>
 
     <div className="store-finder__route-fields">
       <RoutePointSearch id="store-route-from" label="From" marker="A" value={start} onChange={changeStart} active={active} />
       {!start && <button type="button" className="store-finder__route-chip" onClick={locating ? () => { stopLocation(); setStatus(''); } : locate}>
-        <BiCurrentLocation aria-hidden="true" />{locating ? 'Cancel' : 'Use my location'}
+        <BiCurrentLocation aria-hidden="true" />{locating ? 'Cancel location lookup' : 'Use my location'}
       </button>}
+      {onPickPoint && <button type="button" className="store-finder__route-chip" onClick={() => onPickPoint('start')}>Choose start on map</button>}
 
       <button type="button" className="store-finder__route-swap" disabled={!start || !destination || locating} onClick={() => { invalidate(); stopLocation(); setStart(destination); setDestination(start); }} aria-label="Swap start and destination">
         <BiTransferAlt aria-hidden="true" />
       </button>
 
-      <RoutePointSearch id="store-route-to" label="To" marker="B" value={destination} onChange={changeDestination} active={active} />
+      <RoutePointSearch id="store-route-to" label="To" marker="B" value={destination} onChange={changeDestination} active={active} suggestion={seed?.target === 'destination' ? seed : null} />
+      {seed?.query && !destination && <small>This branch has no confirmed pin. Search its address and select the correct place.</small>}
+      {onPickPoint && <button type="button" className="store-finder__route-chip" onClick={() => onPickPoint('destination')}>Choose destination on map</button>}
       {!destination && branchPoint && <button type="button" className="store-finder__route-chip" onClick={() => changeDestination(branchPoint)}>
         <BiNavigation aria-hidden="true" />Use {store.name}
       </button>}

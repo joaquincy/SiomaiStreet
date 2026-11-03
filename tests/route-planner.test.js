@@ -4,6 +4,23 @@ import { createElement } from 'react';
 import { renderToStaticMarkup } from 'react-dom/server';
 import { createServer } from 'vite';
 import { initialRoutePoints, latestMapRequest, routePoint, routeProblem } from '../src/utils/routePlanner.js';
+import { beginLocationLookup } from '../src/utils/storeFinder.js';
+
+test('default timers retain the global receiver required by browser timers', () => {
+  const originalSet = globalThis.setTimeout, originalClear = globalThis.clearTimeout;
+  let cleared = 0;
+  try {
+    globalThis.setTimeout = function () { assert.equal(this, globalThis); return 123; };
+    globalThis.clearTimeout = function () { assert.equal(this, globalThis); cleared++; };
+    const work = latestMapRequest();
+    work.start(100); work.cancel();
+    const cancel = beginLocationLookup({ getCurrentPosition() {} }, { onSuccess() {}, onError() {} });
+    cancel();
+    assert.equal(cleared, 2);
+  } finally {
+    globalThis.setTimeout = originalSet; globalThis.clearTimeout = originalClear;
+  }
+});
 
 const origin = { label: 'Synthetic starting address', position: { lat: 14.11, lng: 122.95 } };
 const destination = { label: 'Synthetic destination', position: { lat: 14.12, lng: 122.96 } };
@@ -76,7 +93,8 @@ test('planner renders two labeled address searches, honest pin guidance and usab
   assert.match(empty, /label for="store-route-from"/);
   assert.match(empty, /label for="store-route-to"/);
   assert.doesNotMatch(empty, /no published map pin|Search results are not confirmed branch locations/);
-  assert.match(empty, /whether or not they are Siomai Street branches/);
+  assert.match(empty, /Choose your start and destination/);
+  assert.equal((empty.match(/type="submit"/g) || []).length, 2);
   assert.doesNotMatch(empty, /aria-describedby="store-route-readiness" disabled/);
   assert.match(empty, /Search for a starting point and a destination/);
   assert.match(empty, /<legend>Travel mode<\/legend>/);

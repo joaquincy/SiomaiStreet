@@ -15,7 +15,7 @@ test('locator renders an accessible loading/fallback UI before map activation, w
   assert.match(html,/label for="store-search"/);
   assert.match(html,/label for="store-place-query"/);
   assert.match(html,/Search an address or business worldwide/);
-  assert.match(html,/Search text is sent to Geoapify only/);
+  assert.match(html,/Search sent to/);
   assert.match(html,/Finding our stores/);
   assert.match(html,/Finding the stores to show on your map/);
   assert.doesNotMatch(html,/<script|<iframe|Verified|Open now|DEMO_MAP_ID/);

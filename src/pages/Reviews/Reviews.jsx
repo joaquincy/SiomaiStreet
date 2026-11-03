@@ -1,6 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { MAX_REVIEW_PHOTO_BYTES, REVIEW_PHOTO_TYPES } from '../../../shared/reviewUpload.js';
-import { BiLike, BiCamera, BiChevronDown, BiStoreAlt, BiCheck, BiSearch } from 'react-icons/bi';
+import { BiCamera, BiChevronDown, BiStoreAlt, BiCheck, BiSearch } from 'react-icons/bi';
+import HelpfulButton from './HelpfulButton';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
 import { RiVerifiedBadgeFill } from 'react-icons/ri';
 import PageMeta from '../../components/PageMeta';
@@ -170,7 +171,6 @@ const ReviewsPage = () => {
   const [branches, setBranches] = useState([]);
   const [selectedBranchId, setSelectedBranchId] = useState('');
   const [sort, setSort] = useState('Newest First');
-  const [helpfulMap, setHelpfulMap] = useState({});
   const [selectedRating, setSelectedRating] = useState(0);
   const [hoverRating, setHoverRating] = useState(0);
   const [form, setForm] = useState({ name: '', text: '', photo: null });
@@ -228,23 +228,6 @@ const ReviewsPage = () => {
     if (a.created_at && b.created_at) return new Date(b.created_at) - new Date(a.created_at);
     return Number(b.id) - Number(a.id);
   });
-
-  const handleHelpful = async (id) => {
-    if (helpfulMap[id]) return;
-    setHelpfulMap((prev) => ({ ...prev, [id]: true }));
-    try {
-      const response = await fetch(`/api/reviews/${id}/helpful`, { method: 'POST' });
-      const result = await response.json();
-      if (!response.ok) throw new Error(result.error);
-      setReviews((prev) => prev.map((review) => review.id === id ? { ...review, helpful: result.helpful } : review));
-    } catch {
-      setHelpfulMap((prev) => {
-        const next = { ...prev };
-        delete next[id];
-        return next;
-      });
-    }
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
@@ -518,13 +501,7 @@ const ReviewsPage = () => {
 
                   <div className="cfb-review-footer">
                     <span className="cfb-helpful-label">Was this helpful?</span>
-                    <button
-                      className={`cfb-helpful-btn ${helpfulMap[review.id] ? 'voted' : ''}`}
-                      onClick={() => handleHelpful(review.id)}
-                      id={`cfb-helpful-btn-${review.id}`}
-                    >
-                      <BiLike /> Helpful ({review.helpful})
-                    </button>
+                    <HelpfulButton review={review} onCount={(id, helpful) => setReviews(prev => prev.map(item => item.id === id ? { ...item, helpful } : item))} />
                   </div>
                 </div>
               ))

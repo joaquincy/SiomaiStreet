@@ -1,0 +1,9 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic map QA</title></head><body><p>Synthetic branch fixture for local testing only. Routing uses public map coordinates.</p><div id="root"></div><script type="module">
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import { StoreFinderExperience } from '/src/pages/Home/components/StoreFinder.jsx';
+import { normalizeStore } from '/shared/storeLocations.js';
+import '/src/index.css';
+const stores = [normalizeStore({id:'synthetic-pinned',name:'Synthetic branch near Mercedes',address:'Public town center for route testing',position:{lat:14.1093,lng:123.0107}}), normalizeStore({id:'synthetic-unpinned',name:'Synthetic unpinned branch',address:'Daet'})];
+createRoot(document.getElementById('root')).render(React.createElement(StoreFinderExperience,{data:{status:'ready',stores},onRetry(){}}));
+</script></body></html>

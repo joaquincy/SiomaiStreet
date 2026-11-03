@@ -1,0 +1,19 @@
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic Helpful QA</title></head><body><h1>Synthetic Helpful test</h1><p>Local simulated API only. The first response is lost after the vote is counted. Retry should count it once.</p><div id="root"></div><script type="module">
+import React, {useState} from 'react';
+import {createRoot} from 'react-dom/client';
+import HelpfulButton from '/src/pages/Reviews/HelpfulButton.jsx';
+import '/src/index.css';
+import '/src/pages/Reviews/Reviews.css';
+const id='00000000-0000-4000-8000-00000000feed', key='synthetic-helpful-server';
+const originalFetch=window.fetch.bind(window);
+let first=true;
+window.fetch=async(url,options)=>{
+  if(url!==`/api/reviews/${id}/helpful`) return originalFetch(url,options);
+  const tokens=new Set(JSON.parse(localStorage.getItem(key)||'[]'));
+  tokens.add(JSON.parse(options.body).voterId); localStorage.setItem(key,JSON.stringify([...tokens]));
+  if(first){first=false;throw new Error('Simulated lost response. Please retry.');}
+  return new Response(JSON.stringify({reviewId:id,voted:true,helpful:tokens.size}),{status:200});
+};
+function Fixture(){const [count,setCount]=useState(JSON.parse(localStorage.getItem(key)||'[]').length);return React.createElement(HelpfulButton,{review:{id,helpful:count},onCount:(_id,n)=>setCount(n)});}
+createRoot(document.getElementById('root')).render(React.createElement(Fixture));
+</script></body></html>
