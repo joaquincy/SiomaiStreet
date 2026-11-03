@@ -3,10 +3,12 @@ import { BrowserRouter as Router, Routes, Route, Link } from 'react-router-dom';
 import './App.css';
 import ErrorBoundary from './components/ErrorBoundary';
 import SiteNotice from './components/SiteNotice';
+import RateLimitNotice from './components/RateLimitNotice';
 import Navbar from './components/Navbar';
 import Footer from './components/Footer';
 import Home from './pages/Home/Home';
 import BackToTop from './components/BackToTop';
+import RouteScrollReset from './components/RouteScrollReset';
 import {
   MenuPageSkeleton,
   ReviewsPageSkeleton,
@@ -86,6 +88,7 @@ function App() {
   return (
     <Router>
       <ErrorBoundary>
+        <RouteScrollReset />
         <Navbar />
         <Suspense fallback={<DefaultPageSkeleton />}>
           <Routes>
@@ -160,6 +163,7 @@ function App() {
         </Suspense>
         <Footer />
         <SiteNotice />
+        <RateLimitNotice />
       </ErrorBoundary>
     </Router>
   );

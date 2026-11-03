@@ -27,7 +27,7 @@ test('worker claims durable job, preserves event key and reconciles early delive
   const deadline=setTimeout(()=>{stop();reject(new Error('Worker timeout'));},1000);
   stop=startNotificationWorker({intervalMs:1,report:reject,send:async event=>{assert.equal(event.eventId,'job');return {providerId:'mail'};},request:async(path,options)=>{
    calls.push(path);
-   if(path.endsWith('claim_notification')) return [{id:'job',lease:'lease',recipient:'synthetic@example.test',kind:'inquiry_received',reference:'TEST',attempts:1}];
+   if(path.endsWith('claim_contact_notification')) return [{id:'job',lease:'lease',recipient:'synthetic@example.test',kind:'inquiry_received',reference:'TEST',attempts:1}];
    if(path.includes('notification_events?')) return [{id:'event',provider_id:'mail',kind:'email.delivered',occurred_at:'2026-01-01T00:00:00Z'}];
    if(path.endsWith('record_notification_event')) {assert.equal(JSON.parse(options.body).event_id,'event');stop();clearTimeout(deadline);resolve();}
    return null;

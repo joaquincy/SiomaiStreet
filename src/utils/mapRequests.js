@@ -1,5 +1,6 @@
+import { rateAwareFetch } from './rateLimits.js';
 // Shared recovery wording for the main search and both route fields.
-export async function mapRequest(path, payload, signal, fetchImpl = fetch) {
+export async function mapRequest(path, payload, signal, fetchImpl = rateAwareFetch) {
   let response;
   try {
     response = await fetchImpl(path, { method: 'POST', headers: { 'content-type': 'application/json' }, body: JSON.stringify(payload), signal });
@@ -12,7 +13,7 @@ export async function mapRequest(path, payload, signal, fetchImpl = fetch) {
   let body;
   try { body = await response.json(); } catch { throw new Error('The map service returned an unreadable response. Please retry shortly.'); }
   if (!response.ok) {
-    if (response.status === 429) throw new Error('The map service has reached its search or route limit. Please try again later. Your selected places are kept.');
+    if (response.status === 429) throw new Error(typeof body?.error === 'string' ? `Map request limit reached. ${body.error}` : 'The map service has reached its search or route limit. Please try again later. Your selected places are kept.');
     throw new Error(typeof body?.error === 'string' ? body.error : 'The map service is unavailable. Please retry shortly.');
   }
   return body;

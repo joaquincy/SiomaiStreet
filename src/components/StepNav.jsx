@@ -1,6 +1,6 @@
 import { HiOutlineArrowRight, HiOutlineArrowLeft } from 'react-icons/hi';
 
-const StepNav = ({ currentStep, totalSteps, onBack, onNext, nextLabel, disabled = false, busy = false }) => {
+const StepNav = ({ currentStep, totalSteps, onBack, onNext, nextLabel, disabled = false, busy = false, nextDisabled = false, nextDescription }) => {
   const isFirst = currentStep === 0;
   const isLast = currentStep === totalSteps - 1;
 
@@ -30,7 +30,8 @@ const StepNav = ({ currentStep, totalSteps, onBack, onNext, nextLabel, disabled 
           type="button"
           className={`step-nav-continue ${isLast ? 'step-nav-submit' : ''}`}
           onClick={onNext}
-          disabled={disabled}
+          disabled={disabled || nextDisabled}
+          aria-describedby={nextDescription}
           aria-busy={busy}
         >
           {isLast ? (

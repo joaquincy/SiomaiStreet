@@ -1,4 +1,5 @@
 import { requestTurnstile } from '../../../utils/turnstile';
+import { rateAwareFetch, assertRateLimitReady } from '../../../utils/rateLimits.js';
 import { useEffect, useRef, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BiBowlHot, BiStore, BiRightArrowAlt, BiCheck, BiCheckCircle, BiCopy, BiDownload, BiEnvelope, BiInfoCircle, BiMap, BiFile, BiRefresh, BiChevronDown, BiErrorCircle } from 'react-icons/bi';
@@ -185,10 +186,11 @@ export default function ContactSupport() {
     const controller = new AbortController(); request.current = controller;
     let timer, sent = false;
     try {
+      assertRateLimitReady('/api/contact-inquiries', { method: 'POST' });
       const token = await requestTurnstile('inquiry', { signal: controller.signal });
       timer = setTimeout(() => controller.abort(), 20000);
       sent = true;
-      const response = await fetch('/api/contact-inquiries', { method: 'POST', signal: controller.signal, headers: { 'content-type': 'application/json', accept: 'application/json', 'x-turnstile-token': token }, body: JSON.stringify(payload) });
+      const response = await rateAwareFetch('/api/contact-inquiries', { method: 'POST', signal: controller.signal, headers: { 'content-type': 'application/json', accept: 'application/json', 'x-turnstile-token': token }, body: JSON.stringify(payload) });
       const result = await response.json().catch(() => null);
       if (!mounted.current) return;
       if (!response.ok) {

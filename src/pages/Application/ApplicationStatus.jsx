@@ -1,5 +1,6 @@
 import { useState, useRef, useEffect } from 'react';
 import { submitFranchiseApplication } from '../../api';
+import { rateAwareFetch } from '../../utils/rateLimits.js';
 import { clearUploadTransfers } from '../../api/resumableDocuments';
 import { Link } from 'react-router-dom';
 import { APPLICATION_DOCUMENTS, UUID_PATTERN } from '../../../shared/application.js';
@@ -20,7 +21,7 @@ export default function ApplicationStatus() {
   useEffect(()=>{mounted.current=true;return()=>{mounted.current=false;pending.current?.abort();clearUploadTransfers();};},[]);
   const run=async action=>{if(lock.current)return;lock.current=true;setBusy(true);setError('');setMessage('');try{await action();}catch(e){if(mounted.current)setError(e.message);}finally{lock.current=false;if(mounted.current)setBusy(false);}};
   const call=async (suffix='',body)=>{
-    let response; try { response=await fetch(`/api/application-status/${reference.trim()}${suffix}`,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${code.trim()}`},body,cache:'no-store'}); } catch {throw new Error('Connection failed. Keep this page open and retry with the same file.');}
+    let response; try { response=await rateAwareFetch(`/api/application-status/${reference.trim()}${suffix}`,{method:body?'POST':'GET',headers:{Authorization:`Bearer ${code.trim()}`},body,cache:'no-store'}); } catch {throw new Error('Connection failed. Keep this page open and retry with the same file.');}
     let data; try{data=await response.json();}catch{throw new Error('The service returned an unreadable response. Keep this page open and retry.');}
     if(!response.ok)throw new Error(data.error||'Unable to retrieve your application.');
     return data;

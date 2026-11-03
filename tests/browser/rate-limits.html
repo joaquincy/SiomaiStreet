@@ -1,0 +1,30 @@
+<!doctype html>
+<html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Synthetic rate-limit QA</title></head>
+<body><main><h1>Synthetic rate-limit QA</h1><p>This local fixture simulates server headers. It sends no submissions or provider requests.</p><label>Your unsent answer <input id="answer" value="Synthetic answer to preserve"></label><div id="root"></div></main>
+<script type="module">
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import RateLimitNotice from '/src/components/RateLimitNotice.jsx';
+import { rateFeedback } from '/src/utils/rateLimits.js';
+import { RATE_POLICIES } from '/shared/ratePolicies.js';
+import useRateCooldown from '/src/utils/useRateCooldown.js';
+import '/src/index.css';
+const show = (remaining, resetAfter = 300, scope = 'upload-start-burst') => rateFeedback.observe(Response.json({}, { status: remaining ? 200 : 429, headers: { 'X-RateLimit-Policies': JSON.stringify([{ scope, ...RATE_POLICIES[scope], remaining, resetAfter, allowed: remaining > 0 }]) } }));
+function Fixture() {
+  const cooldown = useRateCooldown('/api/franchise-applications/uploads');
+  return React.createElement(React.Fragment, null,
+    React.createElement('button', { onClick: () => show(1) }, 'Show near-limit warning'),
+    React.createElement('button', { onClick: () => show(0) }, 'Show blocked notice'),
+    React.createElement('button', { onClick: () => show(0, 5) }, 'Show five-second reset'),
+    React.createElement('button', { onClick: () => { show(0, 60); show(0, 1200, 'upload-start'); } }, 'Simulate both limits exhausted'),
+    React.createElement('button', { disabled: cooldown.blocked, onClick: () => show(1) }, cooldown.blocked ? `Retry in ${cooldown.wait}` : 'Synthetic retry ready'),
+    React.createElement('button', { onClick: () => {
+      const dialog = document.createElement('dialog'); dialog.setAttribute('aria-label', 'Synthetic existing modal');
+      const close = document.createElement('button'); close.textContent = 'Close existing modal';
+      close.onclick = () => { dialog.close(); dialog.remove(); };
+      dialog.append(close); document.body.append(dialog); dialog.showModal(); show(0, 45);
+    } }, 'Test existing modal'),
+    React.createElement(RateLimitNotice));
+}
+createRoot(document.getElementById('root')).render(React.createElement(Fixture));
+</script></body></html>

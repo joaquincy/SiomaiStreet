@@ -8,6 +8,7 @@ import { createUploadRepository, boundedDocumentBytes, createReviewerDocumentHan
 import { documentManifest, submitFranchiseApplication } from '../src/api/directUploads.js';
 import { REQUIRED_DOC_KEYS } from '../shared/application.js';
 import { uploadDatabase } from './helpers/uploadDatabase.js';
+import { createSharedApplicationRateLimit } from '../server/applicationSecurity.js';
 
 let database;
 before(async () => { database = await uploadDatabase(); });
@@ -90,6 +91,40 @@ test('scanner outage keeps uploaded files; retry checks them without re-uploadin
   await assert.rejects(send(), /Scanner/); const uploaded = rt.counts().uploads;
   assert.equal(await rt.repository.application(id), null);
   unavailable = false; assert.equal((await send()).id, id); assert.equal(rt.counts().uploads, uploaded);
+});
+
+test('real hourly limiter permits receipt replay after the new-session allowance is spent', async () => {
+  const observed = [];
+  const rate = createSharedApplicationRateLimit({ secret: 'synthetic-rate-secret'.repeat(2),
+    rpc: async body => database.request('/rest/v1/rpc/consume_rate_policies', { body: JSON.stringify(body) }),
+    onResult: p => observed.push(p) });
+  const ip = `synthetic-${randomUUID()}`;
+  const rt = runtime({ rate: (_req, scope, limit) => rate(ip, scope, limit) });
+  const data = valid(), requestId = randomUUID();
+  const send = () => submitFranchiseApplication({ formData: data, requestId, fetcher: rt.fetcher, uploader: rt.uploader });
+  const receipt = await send();
+  for (let i = 0; i < 3; i++) assert.equal(await rate(ip, 'new-application', 4), true);
+  const fresh = await rt.fetcher('/api/franchise-applications/uploads', { headers: { 'content-type': 'application/json' }, body: JSON.stringify(await bodyFor()) });
+  assert.equal(fresh.status, 429);
+  assert.equal(observed.at(-1).scope, 'new-application'); assert.equal(observed.at(-1).remaining, 0);
+  const uploads = rt.counts().uploads;
+  const replay = await send();
+  assert.equal(replay.id, receipt.id); assert.equal(replay.status, receipt.status);
+  assert.equal(Date.parse(replay.submittedAt), Date.parse(receipt.submittedAt));
+  assert.equal(rt.counts().uploads, uploads);
+  assert.equal(observed.at(-1).scope, 'upload-start'); // No new-item debit on a replay.
+  assert.equal((await database.db.query('select count(*)::int as n from franchise_applications where id=$1', [requestId])).rows[0].n, 1);
+});
+
+test('exhausted document checks explain session expiry rather than promising a short reset', async () => {
+  const rt = runtime(), body = await bodyFor();
+  const session = await (await rt.fetcher('/api/franchise-applications/uploads', { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) })).json();
+  const key = body.manifest[0].key;
+  await database.db.query('update franchise_upload_items set attempts=8 where session_id=$1 and document_key=$2', [session.sessionId, key]);
+  const checked = await rt.fetcher(`/api/franchise-applications/uploads/${session.sessionId}/check/${key}`, { headers: { 'content-type': 'application/json', authorization: `Bearer ${session.token}` }, body: '{}' });
+  assert.equal(checked.status, 409);
+  assert.match((await checked.json()).error, /all 8 checks.*does not reset.*two-hour/);
+  assert.equal(rt.counts().scans, 0);
 });
 
 test('tampered bytes and malware never enter reviewer storage or create an application', async () => {

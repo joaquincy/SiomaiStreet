@@ -1,4 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
+import { rateAwareFetch } from '../../utils/rateLimits.js';
 import { MAX_REVIEW_PHOTO_BYTES, REVIEW_PHOTO_TYPES } from '../../../shared/reviewUpload.js';
 import { BiCamera, BiChevronDown, BiStoreAlt, BiCheck, BiSearch } from 'react-icons/bi';
 import HelpfulButton from './HelpfulButton';
@@ -242,7 +243,7 @@ const ReviewsPage = () => {
       body.append('rating', String(selectedRating));
       body.append('branchId', selectedBranchId);
       if (form.photo) body.append('photo', form.photo, form.photo.name);
-      const response = await fetch('/api/reviews', { method: 'POST', body });
+      const response = await rateAwareFetch('/api/reviews', { method: 'POST', body });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || 'Your review could not be submitted.');
       setForm({ name: '', text: '', photo: null });

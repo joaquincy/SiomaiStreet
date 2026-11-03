@@ -1,0 +1,253 @@
+/* ═══════════════════════════════════════════════════════════
+   WHY CHOOSE SIOMAI STREET — Mobile Styles
+   Compact editorial layout: Centered condensed typography
+   (Bebas Neue) with food photo cards tightly nestled
+   inline in alternating rows, matching the reference editorial.
+   ═══════════════════════════════════════════════════════════ */
+
+.wc-section[data-compact='true'] {
+  height: 340svh;
+}
+
+@media (max-width: 768px) {
+  .wc-section {
+    height: 340svh;
+  }
+
+  /* ─── Typography Stage: Centered as a compact block, safe from screen edges ─── */
+  .wc-section .wc-title {
+    width: clamp(260px, 78vw, 340px);
+    max-width: calc(100vw - 32px);
+    top: 48%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    display: flex;
+    flex-direction: column;
+    gap: clamp(6px, 1.8vw, 12px);
+    padding: 0;
+    margin: 0;
+    box-sizing: border-box;
+    z-index: 10;
+    pointer-events: none;
+  }
+
+  /* ─── Each row: side-by-side with tight gap, perfectly aligned edges ─── */
+  .wc-section .wc-title__row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    width: 100%;
+    gap: clamp(6px, 2vw, 10px);
+    position: relative;
+    box-sizing: border-box;
+  }
+
+  /* Row 1: "Why Should" (left) + Image 1 (right) */
+  .wc-section .wc-title__row--1 {
+    justify-content: space-between;
+  }
+
+  /* Row 2: Image 2 (left) + "You Choose" (right) */
+  .wc-section .wc-title__row--2 {
+    justify-content: space-between;
+  }
+
+  /* Row 3: "Siomai Street?" (left) + Image 3 (right) */
+  .wc-section .wc-title__row--3 {
+    justify-content: space-between;
+  }
+
+  /* ─── Typography — Bold condensed display matching reference ─── */
+  .wc-section .wc-title__line {
+    font-family: 'Bebas Neue', var(--font-heading, 'Outfit'), sans-serif;
+    font-weight: 400;
+    text-transform: uppercase;
+    color: #291d19;
+    line-height: 0.92;
+    padding: 0;
+    margin: 0;
+    letter-spacing: 0.02em;
+    white-space: nowrap;
+    flex: 0 0 auto;
+    text-shadow: 0 1px 2px rgba(41, 29, 25, 0.08);
+  }
+
+  /* Lines 1 and 2 (~10 letters): tall condensed display */
+  .wc-section .wc-title__line--1,
+  .wc-section .wc-title__line--2 {
+    font-size: clamp(2.4rem, 11.5vw, 3.4rem);
+  }
+
+  .wc-section .wc-title__line--1 {
+    text-align: left;
+  }
+
+  .wc-section .wc-title__line--2 {
+    text-align: right;
+  }
+
+  /* Line 3 ("SIOMAI STREET?" — 14 letters): scaled to match row width exactly */
+  .wc-section .wc-title__line--3 {
+    font-size: clamp(1.9rem, 9.2vw, 2.7rem);
+    text-align: left;
+  }
+
+  /* Accent word: Brand signature red */
+  .wc-section .wc-title__accent {
+    color: var(--color-red-dark, #c62828);
+  }
+
+  /* ─── Food photo cards: compact, matching text line height ─── */
+  .wc-section .wc-block {
+    position: relative;
+    inset: auto !important;
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+    flex: 0 0 clamp(72px, 22vw, 96px);
+    width: clamp(72px, 22vw, 96px);
+    height: clamp(38px, 11vw, 50px);
+    border-radius: clamp(8px, 2vw, 12px);
+    border: 2px solid rgba(41, 29, 25, 0.85);
+    background: var(--color-red-dark, #c62828);
+    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.16);
+    overflow: hidden;
+    will-change: transform, opacity;
+  }
+
+  .wc-section .wc-block img {
+    display: block;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+  }
+
+  .wc-section .wc-block--1,
+  .wc-section .wc-block--2,
+  .wc-section .wc-block--3 {
+    top: auto !important;
+    left: auto !important;
+    right: auto !important;
+    bottom: auto !important;
+  }
+}
+
+/* ─── Secondary Stage: Single photo carousel after title breakaway ─── */
+.wc-section[data-compact='true'] .wc-images {
+  width: calc(100% - var(--space-xl));
+  height: min(62svh, 34rem);
+  top: 47%;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+  touch-action: pan-y pinch-zoom;
+}
+
+.wc-section[data-compact='true'] .wc-images__track {
+  display: block;
+  width: 100%;
+  gap: 0;
+  will-change: auto;
+}
+
+.wc-section[data-compact='true'] .wc-img-panel {
+  width: 100%;
+  height: 100%;
+  will-change: auto;
+  animation: wc-mobile-photo var(--transition-base);
+}
+
+.wc-section[data-compact='true'] .wc-img-panel img {
+  user-select: none;
+}
+
+.wc-section[data-compact='true'] .wc-img-panel:hover img {
+  transform: none;
+}
+
+.wc-section[data-compact='true'] .wc-img-panel__overlay {
+  opacity: 1;
+  padding: var(--space-lg);
+}
+
+.wc-section[data-compact='true'] .wc-img-panel__label {
+  font-family: var(--font-heading);
+  font-size: var(--fs-h3);
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+.wc-section[data-compact='true'] .wc-carousel-nav {
+  bottom: max(10%, env(safe-area-inset-bottom));
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.wc-section[data-compact='true'] .wc-nav-btn {
+  width: var(--space-3xl);
+  height: var(--space-3xl);
+  background: var(--color-ink);
+  color: var(--color-cream);
+  border: thin solid var(--color-ink);
+}
+
+.wc-section[data-compact='true'] .wc-nav-btn:hover {
+  background: var(--color-red-dark);
+  transform: none;
+}
+
+.wc-section .wc-nav-btn:focus-visible {
+  outline: medium solid var(--color-red-dark);
+  outline-offset: var(--space-xs);
+}
+
+.wc-carousel-count {
+  min-width: var(--space-2xl);
+  text-align: center;
+  white-space: nowrap;
+  font: 700 var(--fs-body)/1 var(--font-heading);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-ink);
+}
+
+@keyframes wc-mobile-photo {
+  from { opacity: .3; }
+  to { opacity: 1; }
+}
+
+/* ─── Compact landscape devices ─── */
+@media (max-height: 32rem) {
+  .wc-section .wc-title {
+    gap: 4px;
+    width: clamp(240px, 70vw, 300px);
+  }
+  .wc-section .wc-title__line--1,
+  .wc-section .wc-title__line--2 {
+    font-size: min(8vw, 8svh);
+  }
+  .wc-section .wc-title__line--3 {
+    font-size: min(6.5vw, 6.5svh);
+  }
+  .wc-section .wc-block {
+    height: clamp(32px, 8vh, 42px);
+    width: clamp(56px, 16vw, 76px);
+  }
+  .wc-section[data-compact='true'] .wc-nav-btn {
+    width: var(--space-2xl);
+    height: var(--space-2xl);
+  }
+}
+
+/* ─── Accessibility: Reduced motion ─── */
+@media (prefers-reduced-motion: reduce) {
+  .wc-section[data-compact='true'] .wc-img-panel {
+    animation: none;
+  }
+  .wc-section .wc-block,
+  .wc-section .wc-dot {
+    display: none;
+  }
+  .wc-section .wc-title__line {
+    opacity: 0 !important;
+  }
+}

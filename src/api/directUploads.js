@@ -1,5 +1,6 @@
 import { CONTRACT_VERSION, DOCUMENT_KEYS, MAX_DOCUMENT_BYTES, documentTypes, isValidReceipt, UUID_PATTERN } from '../../shared/application.js';
 import { uploadDocument, clearUploadTransfers } from './resumableDocuments.js';
+import { rateAwareFetch, rateFeedback } from '../utils/rateLimits.js';
 
 const base = '/api/franchise-applications/uploads';
 const hashes = new WeakMap();
@@ -23,7 +24,8 @@ export async function documentManifest(documents, signal) {
   return manifest;
 }
 
-export async function submitFranchiseApplication({ formData, requestId, fetcher = fetch, onProgress = () => { }, turnstileToken = '', signal, uploader = uploadDocument, correction }) {
+export async function submitFranchiseApplication({ formData, requestId, fetcher = rateAwareFetch, onProgress = () => { }, turnstileToken = '', signal, uploader = uploadDocument, correction }) {
+  const finishFeedback = rateFeedback.beginBatch();
   const controller = new AbortController();
   const activeSignal = signal ? AbortSignal.any([signal, controller.signal]) : controller.signal;
   const request = async (path, body, token, timeout = 30000) => {
@@ -93,5 +95,5 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
     }
     onProgress('Documents checked. Confirming your submission…');
     return confirmReceipt(await request(`${endpoint}/finalize`, {}, session.token));
-  } finally { controller.abort(); }
+  } finally { controller.abort(); finishFeedback(); }
 }

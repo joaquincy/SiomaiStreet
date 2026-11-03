@@ -68,6 +68,11 @@
   max-width: 920px;
 }
 
+/* Row containers pass layout directly to children on desktop */
+.wc-title__row {
+  display: contents;
+}
+
 /* Each line is a block for individual animation */
 .wc-title__line {
   display: block;

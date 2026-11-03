@@ -1,10 +1,12 @@
 import { createTurnstileVerifier, createTransactionalSender } from './transactionalServices.js';
+import { createContactEmailMaintenance } from './contactEmailMaintenance.js';
 import { startNotificationWorker } from './notificationWorker.js';
 import { createNotificationWebhook } from './notificationWebhook.js';
 import { readMultipart } from './multipart.js';
 import { createStoreLocationsReader } from './storeLocations.js';
 import { createPlaceSearch } from './placeSearch.js';
 import { createHelpfulHandler } from './reviewHelpful.js';
+import { withRateFeedback, recordRateFeedback, rateFeedbackResponse } from './rateFeedback.js';
 import { createStoreRoute } from './storeRoute.js';
 import { mapDevelopmentOrigins } from './mapOrigins.js';
 import { contactConfiguration, publicContactConfiguration, createContactHandler } from './contact.js';
@@ -45,25 +47,11 @@ const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
 
 const allowedReviewTypes = new Set(REVIEW_PHOTO_TYPES);
-const requestCounts = new Map();
 
 const json = (res, status, body) => {
+  body = rateFeedbackResponse(res, status, body);
   res.writeHead(status, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'no-store' });
   res.end(JSON.stringify(body));
-};
-
-const rateLimit = (req, limit, windowMs) => {
-  const forwarded = process.env.TRUST_PROXY === 'true' ? req.headers['x-forwarded-for'] : null;
-  const ip = (Array.isArray(forwarded) ? forwarded[0] : forwarded?.split(',')[0]) || req.socket.remoteAddress || 'unknown';
-  const key = `${ip}:${Math.floor(Date.now() / windowMs)}`;
-  const count = (requestCounts.get(key) || 0) + 1;
-  requestCounts.set(key, count);
-  if (requestCounts.size > 5000) {
-    for (const item of requestCounts.keys()) {
-      if (!item.endsWith(`:${Math.floor(Date.now() / windowMs)}`)) requestCounts.delete(item);
-    }
-  }
-  return count <= limit;
 };
 
 const supabaseRequest = async (path, options = {}) => {
@@ -164,7 +152,7 @@ const handleBranchesGet = async (_req, res) => {
 };
 
 const handleReviewPost = async (req, res) => {
-  if (!rateLimit(req, 8, 60 * 60 * 1000)) return json(res, 429, { error: 'Too many review submissions. Please try again later.' });
+  if (!await applicationRate(clientIP(req, trustedProxies), 'review-submit', 8)) return json(res, 429, { error: 'Too many review submissions. Please try again later.' });
   const form = await readMultipart(req, { maxBytes: MAX_REVIEW_REQUEST_BYTES });
   const displayName = String(form.get('displayName') || '').trim();
   const reviewText = String(form.get('text') || '').trim();
@@ -199,7 +187,8 @@ const handleReviewPost = async (req, res) => {
 const trustedProxies = (process.env.TRUSTED_PROXY_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean);
 const applicationRate = createSharedApplicationRateLimit({
   secret: process.env.APPLICATION_RATE_SECRET,
-  rpc: body => supabaseRequest('/rest/v1/rpc/consume_application_rate', { method: 'POST', body: JSON.stringify(body) }),
+  rpc: body => supabaseRequest('/rest/v1/rpc/consume_rate_policies', { method: 'POST', body: JSON.stringify(body) }),
+  onResult: recordRateFeedback,
 });
 const turnstileEnabled = process.env.NODE_ENV === 'production' || process.env.TURNSTILE_ENABLED !== 'false';
 // Vite's local proxy may rewrite Host to the backend port; allow only known dev origins.
@@ -222,6 +211,7 @@ const verifyTurnstile = createTurnstileVerifier({ secret: process.env.TURNSTILE_
 const verifyPublic = action => async req => {
   if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
 };
+const handleContactEmailMaintenance = createContactEmailMaintenance({ env: process.env, request: supabaseRequest, json });
 const handleEmailWebhook = createNotificationWebhook({ secret: process.env.RESEND_WEBHOOK_SECRET, request: supabaseRequest, json });
 const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
 const contactConfig = contactConfiguration(process.env);
@@ -307,7 +297,8 @@ const cleanUploads = async () => {
   finally { cleaningUploads = false; }
 };
 
-export const handleRequest = async (req, res) => {
+export const handleRequest = (req, res) => withRateFeedback(() => handleRequestWithFeedback(req, res));
+const handleRequestWithFeedback = async (req, res) => {
   res.setHeader('x-content-type-options', 'nosniff');
   res.setHeader('referrer-policy', 'strict-origin-when-cross-origin');
   res.setHeader('x-frame-options', 'DENY');
@@ -317,10 +308,12 @@ export const handleRequest = async (req, res) => {
     res.setHeader('vary', 'Origin');
     res.setHeader('access-control-allow-headers', 'content-type, authorization, x-turnstile-token');
     res.setHeader('access-control-allow-methods', 'GET, POST, OPTIONS');
+    res.setHeader('access-control-expose-headers', 'X-RateLimit-Policies, Retry-After');
   }
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (url.pathname === '/api/maintenance/contact-emails') return await handleContactEmailMaintenance(req, res);
     if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });
     if (url.pathname === '/api/webhooks/resend' && req.method === 'POST') return await handleEmailWebhook(req, res);
     if (url.pathname === '/api/health' && req.method === 'GET') {

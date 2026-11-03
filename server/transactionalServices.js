@@ -23,9 +23,15 @@ export function createTurnstileVerifier({ secret, hostnames = [], fetchImpl = fe
 }
 
 const emailPattern = /^[^\s<>@]+@[^\s<>@]+\.[^\s<>@]+$/;
+export function validEmailSender(value) {
+  if (typeof value !== 'string' || value.length > 320 || /[\r\n]/.test(value)) return false;
+  if (emailPattern.test(value)) return true;
+  const match = value.match(/^([^<>]+) <([^<>]+)>$/);
+  return Boolean(match && match[1].trim() && emailPattern.test(match[2]));
+}
 export function createTransactionalSender({ apiKey, from, replyTo, fetchImpl = fetch }) {
-  return async ({ eventId, to, kind, reference }) => {
-    if (!apiKey || !emailPattern.test(from || '') || (replyTo && !emailPattern.test(replyTo))) throw failure('Email delivery is not configured.');
+  return async ({ eventId, to, kind, reference, signal }) => {
+    if (!apiKey || !validEmailSender(from) || (replyTo && !emailPattern.test(replyTo))) throw failure('Email delivery is not configured.');
     if (!emailPattern.test(to || '') || !/^[a-zA-Z0-9_-]{1,120}$/.test(eventId || '') || !/^[a-zA-Z0-9-]{1,100}$/.test(reference || '')) throw failure('Invalid notification.', 400);
     const templates = {
       inquiry_received: ['We received your inquiry', 'Your inquiry has been received. Keep this reference for follow-up.'],
@@ -37,7 +43,7 @@ export function createTransactionalSender({ apiKey, from, replyTo, fetchImpl = f
     let response;
     try {
       response = await fetchImpl('https://api.resend.com/emails', {
-        method: 'POST', signal: AbortSignal.timeout(10000),
+        method: 'POST', signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(10000)]) : AbortSignal.timeout(10000),
         headers: { authorization: `Bearer ${apiKey}`, 'content-type': 'application/json', 'Idempotency-Key': eventId },
         body: JSON.stringify({ from, to: [to], ...(replyTo ? { reply_to: replyTo } : {}), subject: `Siomai Street — ${subject}`, text: `${message}\n\nReference: ${reference}\n\nPlease do not email identity documents or financial records.` }),
       });

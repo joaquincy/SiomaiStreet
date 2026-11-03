@@ -1,4 +1,6 @@
 import { requestTurnstile } from '../../utils/turnstile';
+import { assertRateLimitReady } from '../../utils/rateLimits.js';
+import useRateCooldown from '../../utils/useRateCooldown.js';
 import { validateStep, validateApplication } from '../../../shared/application.js';
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -61,6 +63,7 @@ const PACKAGE_LABELS = {
 const REVIEW_STEP_INDEX = APPLICATION_STEPS.length - 1;
 
 const ApplicationPage = () => {
+  const retryCooldown = useRateCooldown('/api/franchise-applications/uploads');
   const navigate = useNavigate();
   const [portalReceipt, setPortalReceipt] = useState(null);
   const [searchParams, setSearchParams] = useSearchParams();
@@ -276,6 +279,7 @@ const ApplicationPage = () => {
     submissionAbort.current = controller;
     saveApplicationDraft(currentStep, formData, requestId.current);
     try {
+      assertRateLimitReady('/api/franchise-applications/uploads', { method: 'POST' });
       const turnstileToken = await requestTurnstile('application');
       controller.signal.throwIfAborted();
       const result = await submitFranchiseApplication({ turnstileToken, formData, requestId: requestId.current, signal: controller.signal, onProgress: setTransferStatus });
@@ -668,10 +672,10 @@ const ApplicationPage = () => {
                       type="button"
                       className="submission-retry-btn"
                       onClick={handleNext}
-                      disabled={submitting || !draftRestored}
+                      disabled={submitting || !draftRestored || retryCooldown.blocked}
                     >
                       <BiRefresh aria-hidden="true" />
-                      <span>Retry safely</span>
+                      <span>{retryCooldown.blocked ? `Retry in ${retryCooldown.wait}` : 'Retry safely'}</span>
                     </button>
                   )}
                   <button
@@ -721,12 +725,18 @@ const ApplicationPage = () => {
             </fieldset>
           </ApplicationFeedbackContext.Provider>
 
+          {currentStep === REVIEW_STEP_INDEX && <div className="submission-rate-hint" id="submission-rate-hint">
+            <p role="status">{retryCooldown.blocked ? 'Submission attempts are temporarily paused. You can still edit your answers.' : 'Up to 5 submission attempts per 5-minute window, including the first attempt. A separate 20-per-hour allowance applies.'}</p>
+            <p>{retryCooldown.blocked ? `Try again in ${retryCooldown.wait}.` : 'Limits reset automatically; you do not need to refresh this page.'} Nothing is submitted automatically.</p>
+          </div>}
           <StepNav
             currentStep={currentStep}
             totalSteps={APPLICATION_STEPS.length}
             onBack={handleBack}
             onNext={handleNext}
-            nextLabel={nextStepLabel}
+            nextLabel={currentStep === REVIEW_STEP_INDEX && retryCooldown.blocked ? `Try again in ${retryCooldown.wait}` : nextStepLabel}
+            nextDisabled={currentStep === REVIEW_STEP_INDEX && retryCooldown.blocked}
+            nextDescription={currentStep === REVIEW_STEP_INDEX ? 'submission-rate-hint' : undefined}
             disabled={submitting || !draftRestored}
             busy={submitting}
           />

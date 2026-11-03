@@ -1,5 +1,10 @@
 # Transactional email and Turnstile activation
 
+For the current contact-only website deployment on Vercel, follow
+[contact-email-vercel-setup.md](./contact-email-vercel-setup.md).
+The notes below describe the original broader integration. The website worker
+now uses claim_contact_notification and no longer claims application emails.
+
 Implementation scope: franchise application submission and customer/franchise inquiries. Existing authenticated tracking/correction authorization and scanner checks remain intact. Reviews are not newly covered by Turnstile in this change.
 
 ## Server environment

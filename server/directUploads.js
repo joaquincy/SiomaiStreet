@@ -157,7 +157,12 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
     let claimed = false;
     try {
       claimed = Boolean(await repository.claim(sessionId, key, lease));
-      if (!claimed) throw fail('This document is being checked or its retry limit was reached. Retry shortly; select a new file if it continues.', 409);
+      if (!claimed) {
+        const latest = await repository.item(sessionId, key);
+        if (latest?.state === 'ready') return json(res, 200, { state: 'ready' });
+        if (latest?.attempts >= 8 && !(Date.parse(latest.lease_until) > now())) throw fail(`This upload session has used all 8 checks for this document. Keep your draft. This counter does not reset after a few minutes; wait for the two-hour upload session to expire (about ${Math.max(1, Math.ceil((Date.parse(row.expires_at) - now()) / 60000))} minutes remaining) before starting again, or contact support.`, 409);
+        throw fail('This document is already being checked. Wait for that check to finish before retrying; uploaded files are kept. An interrupted check can remain locked for up to 5 minutes.', 409);
+      }
       const bytes = await storage.download('franchise-quarantine', path);
       assertDocumentBytes(bytes, item);
       const original = new File([bytes], item.name, { type: item.content_type });

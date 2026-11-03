@@ -1,4 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
+import { rateAwareFetch } from '../../utils/rateLimits.js';
 import { BiCheck, BiLike } from 'react-icons/bi';
 import { prepareHelpfulVote, readHelpfulVote, saveHelpfulVote, validHelpfulReceipt } from '../../utils/reviewHelpful';
 
@@ -20,7 +21,7 @@ export default function HelpfulButton({ review, onCount }) {
     const timer = setTimeout(() => controller.abort(), 12000);
     setBusy(true); setMessage('');
     try {
-      const response = await fetch(`/api/reviews/${review.id}/helpful`, { method: 'POST', signal: controller.signal,
+      const response = await rateAwareFetch(`/api/reviews/${review.id}/helpful`, { method: 'POST', signal: controller.signal,
         headers: { 'content-type': 'application/json' }, body: JSON.stringify({ voterId: record.voterId }) });
       const body = await response.json();
       if (!response.ok) throw new Error(body.error || 'Your vote could not be confirmed. Please retry.');

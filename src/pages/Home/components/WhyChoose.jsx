@@ -1,6 +1,7 @@
-import { useEffect, useRef, useCallback } from 'react';
+import { useEffect, useRef, useCallback, useState } from 'react';
 import { getSrcSet } from '../../../utils/responsiveImage';
 import './WhyChoose.css';
+import './WhyChooseMobile.css';
 
 function clamp01(v) { return v < 0 ? 0 : v > 1 ? 1 : v; }
 function ease(p, start, end) { return clamp01((p - start) / (end - start)); }
@@ -37,6 +38,17 @@ const _polyTop = START_POLY.top.map(() => [0, 0]);
 const _polyBot = START_POLY.bottom.map(() => [0, 0]);
 
 const WhyChoose = () => {
+  const [compact, setCompact] = useState(() => typeof window !== 'undefined' && window.matchMedia('(max-width: 768px)').matches);
+  const [slide, setSlide] = useState(0);
+  const compactRef = useRef(compact);
+  const swipe = useRef(null);
+  const reducedRef = useRef(false);
+  useEffect(() => {
+    const media = window.matchMedia('(max-width: 768px)');
+    const update = () => { compactRef.current = media.matches; setCompact(media.matches); };
+    update(); media.addEventListener('change', update);
+    return () => media.removeEventListener('change', update);
+  }, []);
   const sectionRef = useRef(null);
   const stageRef = useRef(null);
 
@@ -77,7 +89,7 @@ const WhyChoose = () => {
     const vh = stageRef.current.offsetHeight;
     const scrolled = -rect.top;
     // Exactly 100vh is reserved at the end for the curtain overlap reveal
-    const animDistance = Math.max(1, sectionH - 2 * vh);
+    const animDistance = Math.max(1, sectionH - (compactRef.current ? 2.5 : 2) * vh);
     const target = clamp01(scrolled / animDistance);
     const dt = lastFrameTime.current === null ? 1000 / 60 : Math.min(50, Math.max(0, timestamp - lastFrameTime.current));
     lastFrameTime.current = timestamp;
@@ -91,12 +103,13 @@ const WhyChoose = () => {
     }
     const p = visualProgress.current;
     const scrollChanging = p !== target;
-    marqueeRunning.current = p > 0.82;
+    marqueeRunning.current = p > 0.82 && !compactRef.current;
+    const travel = compactRef.current ? 0.22 : 1;
 
     // ── CURTAIN OVERLAP & UNFOCUS EFFECT ──
     // Journey (with margin-top: -100vh) scrolls up over WhyChoose while
     // WhyChoose remains pinned at top: 0.
-    const rawOverlap = clamp01((scrolled - animDistance) / vh);
+    const rawOverlap = clamp01((scrolled - (sectionH - 2 * vh)) / vh);
     // Smoothstep easing (3x^2 - 2x^3) for zero-derivative gradual start
     const overlapRatio = rawOverlap * rawOverlap * (3 - 2 * rawOverlap);
 
@@ -127,7 +140,7 @@ const WhyChoose = () => {
     // Line 1: "WHY SHOULD"
     if (lineRefs.current[0]) {
       const tA = easeOut(ease(p, 0.0, 0.32));
-      const xA = lerp(-55, 0, tA);
+      const xA = lerp(-55 * travel, 0, tA);
       const yA = lerp(-15, 0, tA);
       const tB = easeOut(ease(p, 0.48, 0.82));
       const xB = lerp(0, -180, tB);
@@ -141,7 +154,7 @@ const WhyChoose = () => {
     // Line 2: "YOU CHOOSE"
     if (lineRefs.current[1]) {
       const tA = easeOut(ease(p, 0.05, 0.36));
-      const xA = lerp(60, 0, tA);
+      const xA = lerp(60 * travel, 0, tA);
       const yA = lerp(10, 0, tA);
       const tB = easeOut(ease(p, 0.50, 0.84));
       const xB = lerp(0, 160, tB);
@@ -170,7 +183,7 @@ const WhyChoose = () => {
 
     if (blockRefs.current[0]) {
       const tb = easeOut(ease(p, 0.03, 0.30));
-      const bx = lerp(-80, 0, tb);
+      const bx = lerp(-80 * travel, 0, tb);
       const br = lerp(-4, 0, tb);
       blockRefs.current[0].style.transform = `translate3d(${bx}px, 0, 0) rotate(${br}deg)`;
       blockRefs.current[0].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
@@ -178,8 +191,8 @@ const WhyChoose = () => {
 
     if (blockRefs.current[1]) {
       const tb = easeOut(ease(p, 0.06, 0.33));
-      const bx = lerp(50, 0, tb);
-      const by = lerp(-40, 0, tb);
+      const bx = lerp(50 * travel, 0, tb);
+      const by = lerp(-40 * travel, 0, tb);
       const br = lerp(3, 0, tb);
       blockRefs.current[1].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
       blockRefs.current[1].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
@@ -187,8 +200,8 @@ const WhyChoose = () => {
 
     if (blockRefs.current[2]) {
       const tb = easeOut(ease(p, 0.10, 0.36));
-      const bx = lerp(40, 0, tb);
-      const by = lerp(50, 0, tb);
+      const bx = lerp(40 * travel, 0, tb);
+      const by = lerp(50 * travel, 0, tb);
       const br = lerp(2, 0, tb);
       blockRefs.current[2].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
       blockRefs.current[2].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
@@ -216,7 +229,7 @@ const WhyChoose = () => {
       }
 
       const polyString = `polygon(${_polyTop.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')}, ${_polyBot.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')})`;
-      imgStripRef.current.style.clipPath = polyString;
+      imgStripRef.current.style.clipPath = compactRef.current ? `inset(${lerp(44, 0, tClip)}% round var(--radius-xl))` : polyString;
     }
 
     // Handle carousel Nav visibility
@@ -225,6 +238,7 @@ const WhyChoose = () => {
       navRef.current.style.opacity = tNav;
       navRef.current.style.transform = `translate(-50%, ${lerp(20, 0, tNav)}px)`;
       navRef.current.style.pointerEvents = p > 0.9 ? 'auto' : 'none';
+      navRef.current.inert = p <= 0.9;
     }
 
     // Continuous Marquee Logic — uses cached halfWidth (no layout read per frame)
@@ -284,6 +298,7 @@ const WhyChoose = () => {
     // Respect reduced-motion preference
     const prefersReducedMotion =
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    reducedRef.current = prefersReducedMotion;
     if (prefersReducedMotion) {
       // Show the fully-revealed panorama state
       if (imgStripRef.current) {
@@ -291,12 +306,13 @@ const WhyChoose = () => {
         imgStripRef.current.style.transform = 'translate(-50%, -50%) scale(1)';
         imgStripRef.current.style.pointerEvents = 'auto';
         const polyString = `polygon(${TARGET_POLY.top.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')}, ${TARGET_POLY.bottom.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')})`;
-        imgStripRef.current.style.clipPath = polyString;
+        imgStripRef.current.style.clipPath = compactRef.current ? 'inset(0 round var(--radius-xl))' : polyString;
       }
       if (navRef.current) {
         navRef.current.style.opacity = '1';
         navRef.current.style.transform = 'translate(-50%, 0)';
         navRef.current.style.pointerEvents = 'auto';
+        navRef.current.inert = false;
       }
       // Hide title elements (they'd be gone at p=1)
       lineRefs.current.forEach(el => { if (el) el.style.opacity = '0'; });
@@ -366,10 +382,27 @@ const WhyChoose = () => {
       visualProgress.current = null;
       lastFrameTime.current = null;
     };
-  }, [onFrame, onScroll]);
+  }, [onFrame, onScroll, compact]);
+
+  const changeSlide = direction => {
+    if (compact) setSlide(previous => (previous + direction + FOOD_IMAGES.length) % FOOD_IMAGES.length);
+    else if (reducedRef.current && trackRef.current) {
+      const step = trackRef.current.firstElementChild?.getBoundingClientRect().width || 0;
+      const half = trackRef.current.scrollWidth / 2;
+      if (half) marqueeOffset.current = -(((-marqueeOffset.current + direction * step) % half + half) % half);
+      trackRef.current.style.transform = `translate3d(${marqueeOffset.current}px, 0, 0)`;
+    } else { marqueeSpeed.current = direction * 20; onScroll(); }
+  };
+
+  useEffect(() => {
+    marqueeOffset.current = 0;
+    if (trackRef.current) trackRef.current.style.transform = '';
+    if (navRef.current && !reducedRef.current) navRef.current.inert = true;
+    onScroll();
+  }, [compact, onScroll]);
 
   return (
-    <section className="wc-section" id="why-choose" ref={sectionRef}>
+    <section className="wc-section" data-compact={compact} id="why-choose" ref={sectionRef}>
       <div className="wc-section__sticky">
         <div className="wc-stage" ref={stageRef}>
 
@@ -389,62 +422,82 @@ const WhyChoose = () => {
 
           {/* ─── TYPOGRAPHY + RED BLOCKS ─── */}
           <div className="wc-title" aria-label="Why Should You Choose Siomai Street?">
-            <span
-              className="wc-title__line wc-title__line--1"
-              ref={el => { lineRefs.current[0] = el; }}
-              style={{ opacity: 0.3 }}
-            >
-              Why Should
-            </span>
-            <span
-              className="wc-title__line wc-title__line--2"
-              ref={el => { lineRefs.current[1] = el; }}
-              style={{ opacity: 0.25 }}
-            >
-              You Choose
-            </span>
-            <span
-              className="wc-title__line wc-title__line--3"
-              ref={el => { lineRefs.current[2] = el; }}
-              style={{ opacity: 0.2 }}
-            >
-              <span className="wc-title__accent">Siomai</span> Street?
-            </span>
+            {/* Row 1: "Why Should" on left, Image on right */}
+            <div className="wc-title__row wc-title__row--1">
+              <span
+                className="wc-title__line wc-title__line--1"
+                ref={el => { lineRefs.current[0] = el; }}
+                style={{ opacity: 0.3 }}
+              >
+                Why Should
+              </span>
+              <div
+                className="wc-block wc-block--1"
+                aria-hidden="true"
+                ref={el => { blockRefs.current[0] = el; }}
+                style={{ opacity: 0 }}
+              >{compact && <img src={FOOD_IMAGES[0].src} alt={FOOD_IMAGES[0].alt} loading="lazy" decoding="async" />}</div>
+            </div>
 
-            {/* Red blocks inside title */}
-            <div
-              className="wc-block wc-block--1"
-              aria-hidden="true"
-              ref={el => { blockRefs.current[0] = el; }}
-              style={{ opacity: 0 }}
-            />
-            <div
-              className="wc-block wc-block--2"
-              aria-hidden="true"
-              ref={el => { blockRefs.current[1] = el; }}
-              style={{ opacity: 0 }}
-            />
-            <div
-              className="wc-block wc-block--3"
-              aria-hidden="true"
-              ref={el => { blockRefs.current[2] = el; }}
-              style={{ opacity: 0 }}
-            />
+            {/* Row 2: Image on left, "You Choose" on right */}
+            <div className="wc-title__row wc-title__row--2">
+              <div
+                className="wc-block wc-block--2"
+                aria-hidden="true"
+                ref={el => { blockRefs.current[1] = el; }}
+                style={{ opacity: 0 }}
+              >{compact && <img src={FOOD_IMAGES[3].src} alt={FOOD_IMAGES[3].alt} loading="lazy" decoding="async" />}</div>
+              <span
+                className="wc-title__line wc-title__line--2"
+                ref={el => { lineRefs.current[1] = el; }}
+                style={{ opacity: 0.25 }}
+              >
+                You Choose
+              </span>
+            </div>
+
+            {/* Row 3: "Siomai Street?" on left, Image on right */}
+            <div className="wc-title__row wc-title__row--3">
+              <span
+                className="wc-title__line wc-title__line--3"
+                ref={el => { lineRefs.current[2] = el; }}
+                style={{ opacity: 0.2 }}
+              >
+                <span className="wc-title__accent">Siomai</span> Street?
+              </span>
+              <div
+                className="wc-block wc-block--3"
+                aria-hidden="true"
+                ref={el => { blockRefs.current[2] = el; }}
+                style={{ opacity: 0 }}
+              >{compact && <img src={FOOD_IMAGES[5].src} alt={FOOD_IMAGES[5].alt} loading="lazy" decoding="async" />}</div>
+            </div>
           </div>
 
           {/* ═══════════════════════════════════════
               CAROUSEL IMAGES — emerge from within the title
               ═══════════════════════════════════════ */}
-          <div className="wc-images" ref={imgStripRef} style={{ opacity: 0 }}>
+          <div className="wc-images" ref={imgStripRef} style={{ opacity: 0 }}
+            role="region" aria-label="Siomai photo carousel" aria-roledescription="carousel"
+            onPointerDown={event => { if (compact && event.isPrimary) swipe.current = { x: event.clientX, y: event.clientY }; }}
+            onPointerCancel={() => { swipe.current = null; }}
+            onPointerUp={event => {
+              const start = swipe.current; swipe.current = null;
+              if (!start || !compact) return;
+              const x = event.clientX - start.x, y = event.clientY - start.y;
+              if (Math.abs(x) > 40 && Math.abs(x) > Math.abs(y) * 1.5) changeSlide(x < 0 ? 1 : -1);
+            }}>
             <div className="wc-images__track" ref={trackRef}>
-              {CAROUSEL_IMAGES.map((img, i) => (
-                <div key={i} className="wc-img-panel">
+              {(compact ? [FOOD_IMAGES[slide]] : CAROUSEL_IMAGES).map((img, i) => (
+                <div key={compact ? slide : i} className="wc-img-panel" aria-hidden={!compact && i >= FOOD_IMAGES.length ? true : undefined}>
                   <img
                     src={img.src}
                     srcSet={getSrcSet(img.src, [300, 500, 800])}
-                    sizes="(max-width: 768px) 260px, (max-width: 1440px) 24vw, 420px"
+                    sizes="(max-width: 768px) calc(100vw - 32px), (max-width: 1440px) 24vw, 420px"
                     alt={img.alt}
                     loading="lazy"
+                    decoding="async"
+                    draggable="false"
                   />
                   <div className="wc-img-panel__overlay">
                     <span className="wc-img-panel__label">{img.alt}</span>
@@ -460,17 +513,20 @@ const WhyChoose = () => {
           <div className="wc-carousel-nav" ref={navRef} style={{ opacity: 0 }}>
             <button
               className="wc-nav-btn wc-nav-btn--prev"
-              onPointerDown={() => { marqueeSpeed.current = -20; }}
-              aria-label="Scroll left"
+              type="button"
+              onClick={() => changeSlide(-1)}
+              aria-label="Previous photo"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M19 12H5M12 19l-7-7 7-7" />
               </svg>
             </button>
+            {compact && <span className="wc-carousel-count" role="status" aria-live="polite">{slide + 1} / {FOOD_IMAGES.length}</span>}
             <button
               className="wc-nav-btn wc-nav-btn--next"
-              onPointerDown={() => { marqueeSpeed.current = 20; }}
-              aria-label="Scroll right"
+              type="button"
+              onClick={() => changeSlide(1)}
+              aria-label="Next photo"
             >
               <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5">
                 <path d="M5 12h14M12 5l7 7-7 7" />

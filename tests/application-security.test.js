@@ -37,7 +37,10 @@ test('forwarded IP spoofing is ignored unless immediate proxy is explicitly trus
 });
 test('shared limiter uses scoped pseudonymous keys and rejects invalid RPC results', async () => {
   const keys = [];
-  const limit = createSharedApplicationRateLimit({ secret: 'x'.repeat(32), rpc: async args => { keys.push(args.key_hash); return true; } });
+  const limit = createSharedApplicationRateLimit({ secret: 'x'.repeat(32), rpc: async ({ p_policies }) => {
+    keys.push(...p_policies.map(p => p.key_hash));
+    return { allowed: true, policies: p_policies.map(p => ({ key_hash: p.key_hash, limit: p.max_requests, remaining: p.max_requests - 1, allowed: true, resetAfter: p.window_seconds, windowSeconds: p.window_seconds })) };
+  } });
   await limit('1.2.3.4', 'ingress', 20); await limit('1.2.3.4', 'new-application', 4);
   assert.ok(keys.every(key => /^[a-f0-9]{64}$/.test(key))); assert.notEqual(keys[0], keys[1]);
   await assert.rejects(createSharedApplicationRateLimit({ rpc: async () => true })('ip', 'ingress', 20), { status: 503 });

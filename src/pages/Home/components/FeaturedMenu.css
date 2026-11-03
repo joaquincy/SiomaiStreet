@@ -255,11 +255,12 @@
 /* Accent Button: Warm Golden Saffron Orange */
 .fm-btn--accent {
   background: #EBA028;
-  color: #FAF6F0;
+  color: #291d19;
 }
 
 .fm-btn--accent:hover {
   background: #D98F1E;
+  color: #1a1210;
   transform: translateY(-2px);
   box-shadow: 0 6px 18px rgba(235, 160, 40, 0.35);
 }
@@ -358,6 +359,10 @@
   transform: rotate(12deg);
   filter: drop-shadow(0 4px 10px rgba(0, 0, 0, 0.10));
   pointer-events: none;
+}
+
+.fm-accent-marks--bowl {
+  display: none;
 }
 
 /* Hero Bowl: Siomai Rice Bowl with Egg (Foreground, grounded on bottom baseline, fully visible) */
@@ -678,8 +683,30 @@
 
 @media (max-width: 768px) {
   .featured-menu {
-    padding: clamp(3rem, 6vw, 5rem) 0 0;
+    padding: clamp(3rem, 6vw, 4.5rem) 0 0;
     overflow-x: clip;
+  }
+
+  /* Intro Header: Left-aligned editorial flow */
+  .fm-intro {
+    text-align: left;
+    padding: 0 clamp(1.25rem, 5vw, 2rem);
+    margin: 0 auto clamp(2rem, 4vh, 3rem);
+    max-width: 100%;
+  }
+
+  .fm-kicker {
+    justify-content: flex-start;
+  }
+
+  .fm-section-title {
+    text-align: left;
+    margin: 0 0 12px;
+  }
+
+  .fm-section-lead {
+    text-align: left;
+    margin: 0;
   }
 
   .fm-stories {
@@ -698,28 +725,130 @@
     order: -1;
   }
 
+  /* Text column: Clean left-aligned editorial layout matching inspiration */
   .fm-story-text {
     max-width: 100%;
-    padding: 0 var(--space-xl) var(--space-xl) !important;
+    padding: 0 clamp(1.25rem, 5vw, 2rem) 1.5rem !important;
     justify-self: stretch !important;
-    text-align: center;
+    text-align: left !important;
   }
 
+  /* Orange droplets accent: Top-left for Story 1 */
   .fm-accent-marks--story1 {
-    margin-left: auto;
-    margin-right: auto;
+    margin-left: 0 !important;
+    margin-right: auto !important;
+    display: block;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+  }
+
+  /* Orange droplets accent: Top-right for Story 2 (Right-aligned) */
+  .fm-accent-marks--story2 {
+    margin-left: auto !important;
+    margin-right: 0 !important;
+    display: block;
+    width: 32px;
+    height: 32px;
+    margin-bottom: 8px;
+    transform: scaleX(-1);
   }
 
   .fm-title-group--inline {
-    justify-content: center;
+    justify-content: flex-start;
   }
 
-  .fm-story-actions {
-    justify-content: center;
+  /* Main Dish Title: Large, bold, commanding */
+  .fm-story-title {
+    text-align: left;
+    font: 850 clamp(2.3rem, 8.5vw, 3.2rem)/1.08 var(--font-heading, sans-serif);
+    color: #291d19;
+    letter-spacing: -0.025em;
+    margin: 0.25rem 0 clamp(1.25rem, 3.5vw, 1.75rem);
+  }
+
+  .fm-story-title em {
+    font-style: normal;
+    color: var(--color-red-dark, #c62828);
+  }
+
+  /* Specs list: Generous spacing with hairline rules below descriptions */
+  .fm-story-specs {
+    margin-bottom: 1.75rem;
+    width: 100%;
   }
 
   .fm-spec-row {
     text-align: left;
+    display: flex;
+    flex-direction: column;
+    padding: 14px 0 18px;
+    border-bottom: 1px solid rgba(41, 29, 25, 0.2);
+  }
+
+  .fm-spec-row:last-child {
+    border-bottom: none;
+    padding-bottom: 0;
+  }
+
+  .fm-spec-heading {
+    font: 800 clamp(1.3rem, 4.8vw, 1.55rem)/1.25 var(--font-heading, sans-serif);
+    color: #291d19;
+    letter-spacing: -0.015em;
+  }
+
+  .fm-spec-detail {
+    font: 500 clamp(0.95rem, 3.6vw, 1.05rem)/1.55 var(--font-body, sans-serif);
+    color: #5a4e47;
+    margin-top: 6px;
+  }
+
+  /* Left-aligned stacked action buttons matching inspiration */
+  .fm-story-actions {
+    display: flex;
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+    margin-top: 1.85rem;
+    justify-content: flex-start;
+    width: 100%;
+  }
+
+  .fm-btn {
+    border-radius: 6px;
+    padding: 14px 28px;
+    font-size: 0.82rem;
+    font-weight: 800;
+    letter-spacing: 1.2px;
+    text-transform: uppercase;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Story 2: Right-aligned text & actions contrasting left-aligned Story 1 */
+  .fm-story--second .fm-story-text {
+    text-align: right !important;
+  }
+
+  .fm-story--second .fm-story-title {
+    text-align: right !important;
+  }
+
+  .fm-story--second .fm-spec-row {
+    text-align: right !important;
+    align-items: flex-end !important;
+  }
+
+  .fm-story--second .fm-spec-heading {
+    text-align: right !important;
+  }
+
+  .fm-story--second .fm-spec-detail {
+    text-align: right !important;
+  }
+
+  .fm-story--second .fm-story-actions {
+    align-items: flex-end !important;
+    justify-content: flex-end !important;
   }
 
   
@@ -739,13 +868,31 @@
   }
 
   .fm-story--first .fm-stamp-wrap--wonton {
-    transform: translate3d(70px, 0, 0) rotate(16deg);
+    transform: translate3d(50px, 0, 0) rotate(2deg);
   }
   .fm-story--first .fm-stamp-wrap--chicken-feet {
-    transform: translate3d(80px, 0, 0) rotate(2deg);
+    transform: translate3d(60px, 0, 0) rotate(-18deg);
   }
   .fm-story--first .fm-hero-wrap--bowl {
-    transform: translate3d(90px, 0, 0) scale(0.95);
+    transform: translate3d(70px, 0, 0) scale(0.96);
+  }
+
+  .fm-story--first.revealed .fm-stamp-wrap--wonton {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(2deg);
+    transition-delay: 0.1s;
+  }
+
+  .fm-story--first.revealed .fm-stamp-wrap--chicken-feet {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(-18deg);
+    transition-delay: 0.22s;
+  }
+
+  .fm-story--first.revealed .fm-hero-wrap--bowl {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) scale(1);
+    transition-delay: 0.36s;
   }
 
   .fm-story--second .fm-bilao-wrap--back {
@@ -755,44 +902,60 @@
     transform: translate3d(-90px, 0, 0) scale(0.95) rotate(-4deg);
   }
 
-  /* Story 1 Mobile Collage */
+  /* Story 1 Mobile Collage — Replicating Exact Composition */
   .fm-imagery--story1 {
-    height: 380px;
+    position: relative;
+    height: clamp(400px, 94vw, 470px);
     width: 100%;
     overflow: visible;
+    margin-top: 0.5rem;
   }
 
+  /* Chicken Feet Stamp (Tilted -18deg, in front of wonton stamp) */
   .fm-stamp-wrap--chicken-feet {
-    width: 200px;
-    top: 50px;
-    left: 10px;
+    width: clamp(205px, 56vw, 255px);
+    top: clamp(65px, 17vw, 95px);
+    left: clamp(-10px, -2vw, 10px);
+    right: auto;
+    z-index: 2;
   }
 
   .fm-botanical--calamansi {
-    width: 58px;
-    height: 58px;
+    width: clamp(52px, 14vw, 66px);
+    height: clamp(52px, 14vw, 66px);
     top: -20px;
-    right: 18px;
+    right: 28px;
     left: auto;
+    transform: rotate(10deg);
   }
 
+  /* Wonton Stamp (Upright rotate(2deg), tucked in background on right) */
   .fm-stamp-wrap--wonton {
-    width: 205px;
-    top: 10px;
-    right: 10px;
+    width: clamp(190px, 50vw, 235px);
+    top: clamp(-10px, -2vw, 5px);
+    right: clamp(10px, 3.5vw, 25px);
+    left: auto;
+    z-index: 1;
   }
 
   .fm-botanical--anise {
-    width: 54px;
-    height: 54px;
-    top: -20px;
-    right: 10px;
+    display: none;
   }
 
+  /* Hero Bowl: Large foreground bowl overlapping both cards */
   .fm-hero-wrap--bowl {
-    width: 270px;
-    bottom: 0;
-    right: 5px;
+    width: clamp(285px, 74vw, 355px);
+    bottom: clamp(-10px, -2vw, 5px);
+    right: clamp(-15px, -3.5vw, 0px);
+    left: auto;
+    z-index: 4;
+    filter:
+      drop-shadow(-8px 18px 28px rgba(0, 0, 0, 0.28))
+      drop-shadow(0 4px 12px rgba(0, 0, 0, 0.14));
+  }
+
+  .fm-accent-marks--bowl {
+    display: none;
   }
 
   /* Story 2 Mobile Collage */
@@ -835,7 +998,7 @@
 
 @media (max-width: 480px) {
   .fm-story-title {
-    font-size: 1.65rem;
+    font-size: clamp(2rem, 8.5vw, 2.5rem);
   }
 
   .fm-section-title {
@@ -843,33 +1006,34 @@
   }
 
   .fm-btn {
-    font-size: 0.78rem;
-    padding: 11px 20px;
+    font-size: 0.8rem;
+    padding: 12px 22px;
   }
 
   .fm-imagery--story1 {
-    height: 320px;
+    height: clamp(370px, 94vw, 430px);
   }
 
   .fm-imagery--story2 {
-    height: 320px;
+    height: 330px;
   }
 
   .fm-stamp-wrap--chicken-feet {
-    width: 160px;
-    top: 40px;
-    left: 5px;
+    width: clamp(190px, 54vw, 230px);
+    top: clamp(55px, 15vw, 75px);
+    left: -5px;
   }
 
   .fm-stamp-wrap--wonton {
-    width: 150px;
-    top: 8px;
-    right: 5px;
+    width: clamp(175px, 48vw, 210px);
+    top: -5px;
+    right: 10px;
   }
 
   .fm-hero-wrap--bowl {
-    width: 220px;
-    right: 0;
+    width: clamp(270px, 74vw, 315px);
+    bottom: -6px;
+    right: -10px;
   }
 
   .fm-bilao-wrap--back {

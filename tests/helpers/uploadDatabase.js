@@ -13,7 +13,7 @@ export async function uploadDatabase() {
     create table storage.objects(id uuid primary key default gen_random_uuid(), bucket_id text);
     alter table storage.objects enable row level security;
   `);
-  for (const name of ['20261025000000_reviews_and_franchise_applications.sql', '20261026000000_application_security.sql', '20261027000000_application_corrections.sql', '20261102000000_direct_application_uploads.sql']) {
+  for (const name of ['20261025000000_reviews_and_franchise_applications.sql', '20261026000000_application_security.sql', '20261027000000_application_corrections.sql', '20261102000000_direct_application_uploads.sql', '20261103010000_rate_limit_feedback.sql', '20261103020000_layered_rate_limits.sql']) {
     const sql = await readFile(new URL(`../../supabase/migrations/${name}`, import.meta.url), 'utf8');
     // gen_random_uuid is built into PostgreSQL; this test engine needs no pgcrypto extension.
     await db.exec(sql.replace('create extension if not exists pgcrypto;', ''));
