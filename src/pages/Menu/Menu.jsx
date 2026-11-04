@@ -1,4 +1,4 @@
-import { useRef } from 'react';
+import { useRef, useEffect, useCallback, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { BiChevronLeft, BiChevronRight } from 'react-icons/bi';
 import PageMeta from '../../components/PageMeta';
@@ -190,14 +190,108 @@ const BackgroundDrawings = () => (
 
 const MenuCarousel = ({ section }) => {
   const trackRef = useRef(null);
+  const animRef = useRef(null);
+  const targetIdxRef = useRef(0);
 
-  const scrollByCard = (dir) => {
+  const stopAnimation = useCallback(() => {
+    if (animRef.current) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
+    if (trackRef.current) {
+      trackRef.current.style.scrollSnapType = '';
+    }
+  }, []);
+
+  useEffect(() => () => stopAnimation(), [stopAnimation]);
+
+  const scrollByCard = useCallback((dir) => {
     const track = trackRef.current;
     if (!track) return;
-    const card = track.firstElementChild;
-    const step = card ? card.getBoundingClientRect().width : track.clientWidth / 3;
-    track.scrollBy({ left: dir * step, behavior: 'smooth' });
-  };
+    const cards = track.children;
+    const total = cards.length;
+    if (!total) return;
+
+    const firstWidth = cards[0].offsetWidth || track.clientWidth;
+    const visibleCount = Math.max(1, Math.round(track.clientWidth / firstWidth));
+    const maxIdx = Math.max(0, total - visibleCount);
+
+    // Sync starting index from actual scroll position when not mid-animation
+    if (!animRef.current) {
+      let closestIdx = 0;
+      let minDiff = Infinity;
+      const currentScroll = track.scrollLeft;
+      for (let i = 0; i <= maxIdx; i++) {
+        const card = cards[i];
+        const cardTarget =
+          visibleCount === 1
+            ? card.offsetLeft - (track.clientWidth - card.offsetWidth) / 2
+            : card.offsetLeft;
+        const diff = Math.abs(currentScroll - cardTarget);
+        if (diff < minDiff) {
+          minDiff = diff;
+          closestIdx = i;
+        }
+      }
+      targetIdxRef.current = closestIdx;
+    }
+
+    let nextIdx = targetIdxRef.current + dir;
+    if (nextIdx > maxIdx) nextIdx = 0;
+    else if (nextIdx < 0) nextIdx = maxIdx;
+    targetIdxRef.current = nextIdx;
+
+    const targetCard = cards[nextIdx];
+    const rawTarget =
+      visibleCount === 1
+        ? targetCard.offsetLeft - (track.clientWidth - targetCard.offsetWidth) / 2
+        : targetCard.offsetLeft;
+    const maxScroll = Math.max(0, track.scrollWidth - track.clientWidth);
+    const targetLeft = Math.max(0, Math.min(maxScroll, rawTarget));
+
+    if (
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    ) {
+      stopAnimation();
+      track.scrollLeft = targetLeft;
+      return;
+    }
+
+    if (animRef.current) {
+      cancelAnimationFrame(animRef.current);
+      animRef.current = null;
+    }
+
+    const startLeft = track.scrollLeft;
+    const distance = targetLeft - startLeft;
+    if (Math.abs(distance) < 1) {
+      track.style.scrollSnapType = '';
+      return;
+    }
+
+    // Temporarily disable CSS scroll-snap so it never fights the button glide
+    track.style.scrollSnapType = 'none';
+    const duration = 340;
+    const startTime = performance.now();
+
+    const stepFrame = (now) => {
+      const t = Math.min(1, (now - startTime) / duration);
+      // Quartic ease-out for fast response and silky deceleration
+      const eased = 1 - Math.pow(1 - t, 4);
+      track.scrollLeft = startLeft + distance * eased;
+
+      if (t < 1) {
+        animRef.current = requestAnimationFrame(stepFrame);
+      } else {
+        track.scrollLeft = targetLeft;
+        track.style.scrollSnapType = '';
+        animRef.current = null;
+      }
+    };
+
+    animRef.current = requestAnimationFrame(stepFrame);
+  }, [stopAnimation]);
 
   return (
     <section className="food-section" id={section.id} aria-labelledby={`${section.id}-title`}>
@@ -224,7 +318,12 @@ const MenuCarousel = ({ section }) => {
           <BiChevronLeft aria-hidden="true" />
         </button>
 
-        <ul className="food-carousel__track" ref={trackRef}>
+        <ul
+          className="food-carousel__track"
+          ref={trackRef}
+          onPointerDown={stopAnimation}
+          onTouchStart={stopAnimation}
+        >
           {section.items.map((item) => (
             <li className="food-item" key={item.name}>
               <div className={`food-item__plate ${item.cutout ? 'is-cutout' : 'is-photo'}`}>
@@ -260,8 +359,30 @@ const MenuCarousel = ({ section }) => {
   );
 };
 
+const MENU_CATEGORIES = [
+  { id: 'siomai', index: '01', label: 'Signature Siomai' },
+  { id: 'specials', index: '02', label: 'Street Specials' },
+  { id: 'meals', index: '03', label: 'Rice Meals & Platters' },
+  { id: 'drinks', index: '04', label: 'Drinks & Coolers' },
+];
+
 const MenuPage = () => {
   useScrollReveal();
+  const [activeCategory, setActiveCategory] = useState('siomai');
+
+  const handleCategoryClick = useCallback((e, id) => {
+    e.preventDefault();
+    setActiveCategory(id);
+    const target = document.getElementById(id);
+    if (!target) return;
+    const prefersReduced =
+      typeof window !== 'undefined' &&
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+    target.scrollIntoView({ behavior: prefersReduced ? 'auto' : 'smooth', block: 'start' });
+    if (typeof window !== 'undefined' && window.history?.replaceState) {
+      window.history.replaceState(null, '', `#${id}`);
+    }
+  }, []);
 
   return (
     <main className="food-page">
@@ -316,24 +437,19 @@ const MenuPage = () => {
               and our signature slow-simmered house chili garlic crisp.
             </p>
 
-            {/* Quick-Jump Category Navigation Pills for Panelists & Users */}
+            {/* Minimal Editorial Category Index */}
             <nav className="food-nav" aria-label="Menu categories">
-              <a href="#siomai" className="food-nav__pill">
-                <span className="food-nav__icon" aria-hidden="true">🥟</span>
-                <span>Signature Siomai</span>
-              </a>
-              <a href="#specials" className="food-nav__pill">
-                <span className="food-nav__icon" aria-hidden="true">🥢</span>
-                <span>Street Specials</span>
-              </a>
-              <a href="#meals" className="food-nav__pill">
-                <span className="food-nav__icon" aria-hidden="true">🍚</span>
-                <span>Rice Meals & Platters</span>
-              </a>
-              <a href="#drinks" className="food-nav__pill">
-                <span className="food-nav__icon" aria-hidden="true">🧋</span>
-                <span>Drinks & Coolers</span>
-              </a>
+              {MENU_CATEGORIES.map((cat) => (
+                <a
+                  key={cat.id}
+                  href={`#${cat.id}`}
+                  className={`food-nav__pill${activeCategory === cat.id ? ' is-active' : ''}`}
+                  onClick={(e) => handleCategoryClick(e, cat.id)}
+                >
+                  <span className="food-nav__index" aria-hidden="true">{cat.index}</span>
+                  <span className="food-nav__label">{cat.label}</span>
+                </a>
+              ))}
             </nav>
           </div>
         </section>

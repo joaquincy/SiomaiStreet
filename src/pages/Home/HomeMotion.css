@@ -1,0 +1,12 @@
+/* Pause offscreen work without hiding content or changing sticky scroll geometry.
+   Only override paused sections, so individual hover/pause controls still win.
+   Top-layer dialogs stay independent of their section's viewport position. */
+[data-home-motion-root] > [data-home-motion="paused"],
+[data-home-motion-root] > [data-home-motion="paused"]::before,
+[data-home-motion-root] > [data-home-motion="paused"]::after,
+[data-home-motion-root] > [data-home-motion="paused"] :not(dialog, dialog *, [role="dialog"], [role="dialog"] *),
+[data-home-motion-root] > [data-home-motion="paused"] :not(dialog, dialog *, [role="dialog"], [role="dialog"] *)::before,
+[data-home-motion-root] > [data-home-motion="paused"] :not(dialog, dialog *, [role="dialog"], [role="dialog"] *)::after {
+  animation-play-state: paused !important;
+  will-change: auto !important;
+}

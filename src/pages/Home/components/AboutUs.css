@@ -379,7 +379,9 @@
   right: 3.5%;
   top: 10%;
   width: 1px;
-  height: 0%;
+  height: 55%;
+  transform: scaleY(0);
+  transform-origin: top;
   background: linear-gradient(180deg, transparent 0%, rgba(214, 27, 34, 0.25) 30%, rgba(214, 27, 34, 0.25) 70%, transparent 100%);
   z-index: 8;
 }
@@ -782,5 +784,6 @@
 
   .chef-editorial-line {
     height: 40% !important;
+    transform: none !important;
   }
 }

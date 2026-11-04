@@ -16,8 +16,8 @@
   color: #FFFDF5;
   /* Cream typography */
   padding-top: clamp(4rem, 6vh, 6rem);
-  padding-bottom: clamp(6rem, 12vh, 10rem);
-  /* Reduced bottom padding so it perfectly fits in one viewport */
+  padding-bottom: 0;
+  /* Flush to the bottom edge so the placer bar sits at the absolute bottom */
   display: flex;
   flex-direction: column;
   z-index: 10;
@@ -204,7 +204,7 @@
   width: 100%;
   max-width: 1400px;
   margin: 0 auto;
-  padding: 0 clamp(1.5rem, 4vw, 4rem);
+  padding: 0 clamp(1.5rem, 4vw, 4rem) clamp(4rem, 8vh, 6.5rem);
   display: flex;
   flex-direction: column;
 }
@@ -213,9 +213,10 @@
 .footer-poster__stamp-row {
   display: flex;
   justify-content: space-between;
-  border-bottom: 2px solid rgba(255, 255, 255, 0.2);
+  align-items: center;
+  border-bottom: 1.5px solid rgba(255, 253, 245, 0.22);
   padding-bottom: 1rem;
-  margin-bottom: clamp(3rem, 6vh, 5rem);
+  margin-bottom: clamp(2.5rem, 5vh, 4.5rem);
   font-family: 'Inter', sans-serif;
   font-size: 0.75rem;
   font-weight: 700;
@@ -231,49 +232,51 @@
 /* ─── GRID LAYOUT ─── */
 .footer-poster__grid {
   display: grid;
-  grid-template-columns: 1fr 1fr 1.5fr;
-  gap: clamp(2rem, 5vw, 6rem);
-  margin-bottom: clamp(4rem, 8vh, 6rem);
+  grid-template-columns: 1fr 1fr 1.45fr;
+  gap: clamp(2rem, 4.5vw, 5.5rem);
+  margin-bottom: clamp(3.5rem, 7vh, 5.5rem);
+  align-items: start;
 }
 
 .footer-poster__col-title {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.5rem, 2vw, 2rem);
+  font-size: clamp(1.35rem, 1.8vw, 1.85rem);
   font-weight: 900;
-  margin: 0 0 2rem 0;
-  letter-spacing: -0.02em;
+  margin: 0 0 1.5rem 0;
+  letter-spacing: 0.02em;
+  color: #FFFDF5;
 }
 
 /* Navigation Links */
 .footer-poster__nav {
   display: flex;
   flex-direction: column;
-  gap: 1rem;
+  gap: 0.9rem;
 }
 
 .footer-poster__nav a {
   font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.2rem, 1.5vw, 1.5rem);
+  font-size: clamp(1.15rem, 1.4vw, 1.4rem);
   font-weight: 800;
   color: #FFFDF5;
   text-decoration: none;
   display: flex;
   align-items: center;
-  gap: 1rem;
-  transition: transform 0.3s ease, color 0.3s ease;
+  gap: 0.85rem;
+  transition: transform 0.28s ease, color 0.28s ease, background-color 0.28s ease, border-color 0.28s ease;
 }
 
 .footer-poster__nav a span {
   font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
+  font-size: 0.72rem;
+  font-weight: 700;
   color: #FCE46C;
   /* Yellow numbering */
   letter-spacing: 0.1em;
 }
 
 .footer-poster__nav a:hover {
-  transform: translateX(10px);
+  transform: translateX(8px);
   color: #FCE46C;
 }
 
@@ -281,14 +284,14 @@
 .footer-poster__contact-list {
   display: flex;
   flex-direction: column;
-  gap: 1.25rem;
-  margin-bottom: 2.5rem;
+  gap: 1.15rem;
+  margin-bottom: 2rem;
 }
 
 .footer-poster__contact-item {
   display: flex;
   align-items: center;
-  gap: 1rem;
+  gap: 0.9rem;
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
   font-weight: 500;
@@ -297,102 +300,122 @@
 .footer-poster__contact-item a {
   color: #FFFDF5;
   text-decoration: none;
-  transition: opacity 0.3s ease;
+  transition: color 0.25s ease, opacity 0.25s ease;
 }
 
 .footer-poster__contact-item a:hover {
-  opacity: 0.7;
+  color: #FCE46C;
 }
 
 .footer-poster__contact-icon {
-  font-size: 1.5rem;
+  font-size: 1.4rem;
   color: #FCE46C;
+  flex-shrink: 0;
 }
 
 /* Socials */
 .footer-poster__socials {
   display: flex;
-  gap: 1rem;
+  gap: 0.85rem;
 }
 
 .footer-poster__socials a {
   display: flex;
   align-items: center;
   justify-content: center;
-  width: 45px;
-  height: 45px;
-  background: rgba(255, 255, 255, 0.1);
+  width: 44px;
+  height: 44px;
+  background: rgba(255, 253, 245, 0.1);
+  border: 1px solid rgba(255, 253, 245, 0.16);
   color: #FFFDF5;
   border-radius: 50%;
   font-size: 1.25rem;
   text-decoration: none;
-  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease;
-  backdrop-filter: blur(4px);
+  transition: background-color 0.3s ease, color 0.3s ease, transform 0.3s ease, border-color 0.3s ease;
+  backdrop-filter: blur(6px);
+  -webkit-backdrop-filter: blur(6px);
 }
 
 .footer-poster__socials a:hover {
   background: #FCE46C;
+  border-color: #FCE46C;
   color: #B31318;
-  transform: scale(1.1) rotate(5deg);
+  transform: scale(1.08) rotate(4deg);
 }
 
-/* Brand/Action Column */
+/* ─── Brand/Action Column (Subtle, Cohesive Glassmorphism) ─── */
 .footer-poster__col--action {
-  background: rgba(255, 255, 255, 0.03);
-  padding: 2.5rem;
-  border-radius: 16px;
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  backdrop-filter: blur(8px);
-  /* Helps separate it from food pieces slightly */
+  position: relative;
+  background: linear-gradient(
+    145deg,
+    rgba(255, 253, 245, 0.11) 0%,
+    rgba(255, 253, 245, 0.04) 55%,
+    rgba(88, 6, 10, 0.28) 100%
+  );
+  padding: clamp(1.75rem, 3vw, 2.5rem);
+  border-radius: 20px;
+  border: 1px solid rgba(255, 253, 245, 0.18);
+  box-shadow:
+    0 18px 40px rgba(42, 3, 6, 0.25),
+    inset 0 1px 0 rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(12px) saturate(125%);
+  -webkit-backdrop-filter: blur(12px) saturate(125%);
 }
 
 .footer-poster__logo {
   font-family: 'Outfit', sans-serif;
-  font-size: 2.5rem;
+  font-size: clamp(2.1rem, 2.5vw, 2.5rem);
   font-weight: 900;
-  margin-bottom: 1rem;
+  margin-bottom: 0.9rem;
   line-height: 1;
+  color: #FFFDF5;
 }
 
 .footer-poster__logo span {
-  font-weight: 400;
+  font-weight: 600;
   font-family: 'Inter', sans-serif;
   text-transform: uppercase;
-  font-size: 1rem;
-  letter-spacing: 0.2em;
+  font-size: 0.9rem;
+  letter-spacing: 0.22em;
   display: block;
+  margin-top: 0.25rem;
   color: #FCE46C;
 }
 
 .footer-poster__desc {
   font-family: 'Inter', sans-serif;
   font-size: 0.95rem;
-  line-height: 1.6;
-  opacity: 0.9;
-  margin-bottom: 2rem;
+  line-height: 1.65;
+  color: rgba(255, 253, 245, 0.9);
+  margin-bottom: 1.75rem;
 }
 
 .footer-poster__cta {
   display: inline-flex;
   align-items: center;
-  gap: 1rem;
+  justify-content: center;
+  gap: 0.85rem;
   background: #FFFDF5;
   color: #111;
   font-family: 'Outfit', sans-serif;
-  font-size: 1.1rem;
+  font-size: 1.05rem;
   font-weight: 800;
-  padding: 1.25rem 2rem;
+  padding: 1.1rem 1.85rem;
   border-radius: 50px;
   text-decoration: none;
   text-transform: uppercase;
-  transition: background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94), box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
+  letter-spacing: 0.02em;
+  transition:
+    background-color 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    transform 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94),
+    box-shadow 0.3s cubic-bezier(0.25, 0.46, 0.45, 0.94);
+  box-shadow: 0 10px 24px rgba(35, 2, 5, 0.22);
 }
 
 .footer-poster__cta:hover {
   background: #FCE46C;
-  transform: translateY(-4px);
-  box-shadow: 0 15px 30px rgba(0, 0, 0, 0.25);
+  transform: translateY(-3px);
+  box-shadow: 0 14px 28px rgba(35, 2, 5, 0.32);
 }
 
 .footer-poster__cta .arrow {
@@ -403,44 +426,84 @@
   transform: translateX(6px);
 }
 
-/* ─── BOTTOM BAR (Copyright & Legal) ─── */
-.footer-poster__bottom-bar {
+/* ─── BOTTOM-MOST RECTANGLE PLACER BAR (Glassmorphic Editorial Aesthetic) ─── */
+.footer-poster__placer-bar {
+  position: relative;
+  z-index: 25;
+  width: 100%;
+  background: linear-gradient(
+    180deg,
+    rgba(255, 255, 255, 0.09) 0%,
+    rgba(181, 53, 48, 0.7) 32%,
+    rgba(138, 19, 23, 0.85) 100%
+  );
+  backdrop-filter: blur(14px) saturate(140%);
+  -webkit-backdrop-filter: blur(14px) saturate(140%);
+  border-top: 1px solid rgba(255, 255, 255, 0.22);
+  box-shadow:
+    0 -6px 24px rgba(0, 0, 0, 0.18),
+    inset 0 1px 0 rgba(255, 255, 255, 0.2);
+  padding: clamp(0.65rem, 1vh, 0.85rem) clamp(1.5rem, 4vw, 4rem);
+}
+
+.footer-poster__placer-inner {
+  max-width: 1400px;
+  margin: 0 auto;
   display: flex;
-  justify-content: space-between;
   align-items: center;
-  border-top: 2px solid rgba(255, 255, 255, 0.2);
-  padding-top: 1.5rem;
-  font-family: 'Inter', sans-serif;
-  font-size: 0.75rem;
-  font-weight: 600;
-  opacity: 0.8;
+  justify-content: flex-end;
+  flex-wrap: wrap;
+  gap: 0.35rem 0.65rem;
+  font-family: 'Georgia', 'Times New Roman', serif;
+  font-size: clamp(0.62rem, 0.72vw, 0.74rem);
+  font-weight: 500;
+  letter-spacing: 0.14em;
+  text-transform: uppercase;
+  color: #E2D2B6; /* Refined warm ivory/parchment tone */
+  line-height: 1.4;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.35);
 }
 
-.footer-poster__bottom-bar p {
-  margin: 0;
+.footer-poster__placer-copy {
+  display: inline-block;
+  color: #E2D2B6;
 }
 
-.footer-poster__legal {
-  display: flex;
-  gap: 2rem;
+.footer-poster__placer-pipe {
+  color: rgba(226, 210, 182, 0.6);
+  font-weight: 400;
+  user-select: none;
 }
 
-.footer-poster__legal a {
-  color: #FFFDF5;
+.footer-poster__placer-links {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.45rem;
+}
+
+.footer-poster__placer-links a {
+  color: #E2D2B6;
   text-decoration: none;
-  transition: opacity 0.3s ease;
+  transition: color 180ms ease, opacity 180ms ease;
 }
 
-.footer-poster__legal a:hover {
-  opacity: 0.6;
+.footer-poster__placer-links a:hover {
+  color: #FFFFFF;
+}
+
+.footer-poster__placer-link-sep {
+  color: rgba(226, 210, 182, 0.6);
+  font-weight: 400;
+  user-select: none;
 }
 
 /* ═══════════════════════════════════════════════════
-   RESPONSIVE
+   RESPONSIVE — TABLET (≤1024px)
    ═══════════════════════════════════════════════════ */
 @media (max-width: 1024px) {
   .footer-poster__grid {
     grid-template-columns: 1fr 1fr;
+    gap: 2.25rem;
   }
 
   .footer-poster__col--action {
@@ -448,114 +511,242 @@
   }
 }
 
+/* ═══════════════════════════════════════════════════
+   RESPONSIVE — MOBILE (≤768px)
+   ═══════════════════════════════════════════════════ */
 @media (max-width: 768px) {
   .footer-poster {
-    --footer-pile-height: clamp(190px, 43vw, 330px);
-    padding-top: 2.25rem;
-    padding-bottom: calc(var(--footer-pile-height) + 24px);
+    padding-top: 2rem;
+    padding-bottom: 0;
   }
 
+  /* ─── Bigger, Proportioned Wordmark & Centered Logo ─── */
   .footer-poster__giant-text-container {
-    margin-bottom: 1.5rem;
-    padding: .75rem 0 1rem;
+    margin-bottom: 1.15rem;
+    padding: 0.35rem 0 0.65rem;
   }
 
   .footer-poster__word-row {
-    gap: clamp(.375rem, 1.5vw, .75rem);
-    padding-inline: clamp(.875rem, 4vw, 1.75rem);
+    gap: 0;
+    padding-inline: clamp(0.35rem, 2vw, 1rem);
   }
 
   .footer-sign-word {
-    font-size: clamp(1.75rem, 11vw, 5.3rem);
-    letter-spacing: 0;
-    transform: none;
-    -webkit-text-stroke: 3px #120206;
-    text-shadow: 1px 2px 0 #fff, 2px 4px 0 #2a040b, 0 5px 10px #0006;
-    filter: none;
+    font-size: clamp(2.45rem, 13.8vw, 6.2rem);
+    letter-spacing: 0.01em;
+    transform: scaleX(1.08);
+    -webkit-text-stroke: clamp(3.5px, 0.95vw, 6px) #120206;
+    text-shadow:
+      1px 1.5px 0 #FFFFFF,
+      1.5px 2.5px 0 #E8DBD9,
+      2.5px 4.5px 0 #2A040B,
+      3.5px 6px 1px #120206,
+      0 7px 16px rgba(0, 0, 0, 0.72);
+    filter: drop-shadow(0 0 14px rgba(255, 20, 90, 0.28));
   }
 
   .footer-sign-word::before {
-    -webkit-text-stroke: 1.5px #ff1867;
-    text-shadow: none;
+    -webkit-text-stroke: clamp(1.8px, 0.48vw, 3.2px) #FF1867;
+    text-shadow: 0 0 8px rgba(255, 24, 103, 0.55);
   }
 
   .footer-sign-logo {
-    width: clamp(44px, 14vw, 86px);
+    width: clamp(54px, 16.5vw, 108px);
     height: auto;
-    margin: 0;
-    transform: none;
-    filter: drop-shadow(0 3px 6px #0005);
+    margin-left: clamp(0.45rem, 2.4vw, 1.25rem);
+    margin-right: clamp(0.15rem, 0.9vw, 0.5rem);
+    transform: translateY(clamp(-0.2rem, -0.9vw, -0.6rem));
+    filter:
+      drop-shadow(0 6px 14px rgba(0, 0, 0, 0.72))
+      drop-shadow(0 0 12px rgba(255, 24, 103, 0.35));
   }
 
-  .footer-poster__content-wrapper { padding-inline: clamp(1rem, 5vw, 2rem); }
+  /* ─── Editorial Content Container ─── */
+  .footer-poster__content-wrapper {
+    padding-inline: clamp(1rem, 4.5vw, 1.75rem);
+    padding-bottom: clamp(4rem, 16vw, 6rem);
+  }
+
+  /* Keep stamp row horizontal & compact on mobile */
+  .footer-poster__stamp-row {
+    flex-direction: row;
+    justify-content: space-between;
+    align-items: center;
+    gap: 0.5rem;
+    padding-bottom: 0.75rem;
+    margin-bottom: 1.35rem;
+    font-size: 0.65rem;
+    letter-spacing: 0.12em;
+  }
 
   .footer-poster__grid {
     grid-template-columns: minmax(0, 1fr);
-    gap: 2rem;
-    margin-bottom: 2rem;
+    gap: 1.5rem;
+    margin-bottom: 1.5rem;
   }
 
-  .footer-poster__col { min-width: 0; }
-  .footer-poster__col-title { font-size: 1.25rem; margin-bottom: 1rem; }
-  .footer-poster__nav { gap: .15rem; }
-  .footer-poster__nav a { min-height: 44px; font-size: 1rem; gap: .75rem; }
-  .footer-poster__contact-list { gap: .65rem; margin-bottom: 1.25rem; }
-  .footer-poster__contact-item { gap: .65rem; font-size: .875rem; }
-  .footer-poster__contact-item a { min-width: 0; overflow-wrap: anywhere; padding-block: .6rem; }
-  .footer-poster__contact-icon { flex: none; font-size: 1.25rem; }
-  .footer-poster__col--action { padding: 1.25rem; }
-  .footer-poster__logo { font-size: 2rem; }
-  .footer-poster__logo span { font-size: .8125rem; margin-top: .25rem; }
-  .footer-poster__desc { font-size: .875rem; margin-bottom: 1.25rem; }
-  .footer-poster__cta { width: 100%; justify-content: space-between; min-height: 48px; padding: .85rem 1rem; gap: .5rem; font-size: .875rem; }
-
-  .footer-poster__bottom-bar {
-    flex-direction: column;
-    gap: 1rem;
-    text-align: center;
-    font-size: .6875rem;
-    line-height: 1.6;
+  .footer-poster__col {
+    min-width: 0;
   }
 
-  .footer-poster__legal { flex-wrap: wrap; justify-content: center; gap: .25rem 1.25rem; }
-  .footer-poster__legal a { display: inline-flex; align-items: center; min-height: 44px; }
+  .footer-poster__col-title {
+    font-size: 1.05rem;
+    letter-spacing: 0.06em;
+    margin-bottom: 0.75rem;
+  }
 
-  .footer-poster__stamp-row {
-    flex-direction: column;
+  /* ─── 2-Column Explore Buttons ─── */
+  .footer-poster__nav {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.65rem;
+  }
+
+  .footer-poster__nav a {
+    min-height: 44px;
+    padding: 0.6rem 0.75rem;
+    border-radius: 11px;
+    background: rgba(255, 253, 245, 0.06);
+    border: 1px solid rgba(255, 253, 245, 0.13);
+    font-size: clamp(0.78rem, 3.3vw, 0.92rem);
+    gap: 0.45rem;
+    line-height: 1.15;
+  }
+
+  .footer-poster__nav a span {
+    font-size: 0.65rem;
+    flex-shrink: 0;
+  }
+
+  .footer-poster__nav a:hover,
+  .footer-poster__nav a:active {
+    transform: translateY(-1px);
+    background: rgba(252, 228, 108, 0.14);
+    border-color: rgba(252, 228, 108, 0.35);
+    color: #FCE46C;
+  }
+
+  /* ─── Compact Contact & Socials ─── */
+  .footer-poster__contact-list {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 0.55rem 0.75rem;
+    margin-bottom: 1rem;
+  }
+
+  .footer-poster__contact-item {
+    gap: 0.55rem;
+    font-size: 0.8125rem;
+    min-width: 0;
+  }
+
+  /* Email takes full width on small screens so it never wraps awkwardly */
+  .footer-poster__contact-item:nth-child(2) {
+    grid-column: 1 / -1;
+  }
+
+  .footer-poster__contact-item a {
+    min-width: 0;
+    overflow-wrap: anywhere;
+    padding-block: 0.25rem;
+  }
+
+  .footer-poster__contact-icon {
+    flex: none;
+    font-size: 1.15rem;
+  }
+
+  .footer-poster__socials {
+    gap: 0.65rem;
+  }
+
+  .footer-poster__socials a {
+    width: 40px;
+    height: 40px;
+    font-size: 1.15rem;
+  }
+
+  /* ─── Apply for Franchise Glassmorphic Card on Mobile ─── */
+  .footer-poster__col--action {
+    padding: 1.35rem 1.25rem;
+    border-radius: 18px;
+    background: linear-gradient(
+      145deg,
+      rgba(255, 253, 245, 0.12) 0%,
+      rgba(255, 253, 245, 0.04) 55%,
+      rgba(82, 5, 9, 0.32) 100%
+    );
+    border: 1px solid rgba(255, 253, 245, 0.2);
+    box-shadow:
+      0 14px 32px rgba(38, 2, 5, 0.26),
+      inset 0 1px 0 rgba(255, 255, 255, 0.22);
+    backdrop-filter: blur(12px) saturate(125%);
+    -webkit-backdrop-filter: blur(12px) saturate(125%);
+  }
+
+  .footer-poster__logo {
+    font-size: 1.75rem;
+    margin-bottom: 0.65rem;
+  }
+
+  .footer-poster__logo span {
+    font-size: 0.75rem;
+    margin-top: 0.2rem;
+  }
+
+  .footer-poster__desc {
+    font-size: 0.85rem;
+    line-height: 1.55;
+    margin-bottom: 1.15rem;
+  }
+
+  .footer-poster__cta {
+    width: 100%;
+    justify-content: space-between;
+    min-height: 48px;
+    padding: 0.85rem 1.25rem;
     gap: 0.5rem;
-    text-align: center;
-    margin-bottom: 1.75rem;
-    font-size: .625rem;
+    font-size: 0.875rem;
   }
 
-  /* Layered mound: back pieces land first, with a fuller foreground at the base.
-     This reserved strip stays below the legal links at every mobile width. */
-  .footer-poster__food-pile { inset: auto 0 0; height: var(--footer-pile-height); overflow: hidden; isolation: isolate; }
-  .footer-poster__food-pile::before { content: ''; position: absolute; inset: auto 6% -12px; height: 60px; border-radius: 50%; background: radial-gradient(ellipse, #4b090c88, transparent 70%); }
-  .footer-poster__food-pile .footer-poster__food-piece {
-    display: block;
-    left: var(--mobile-left);
-    bottom: var(--mobile-bottom);
-    width: clamp(88px, var(--mobile-size, 29vw), 220px);
-    z-index: var(--mobile-layer);
-    filter: drop-shadow(0 7px 6px #37070b66);
-    transform: translate3d(0, -240px, 0) rotate(calc(var(--mobile-rot) - 35deg));
-    transition: transform 1s cubic-bezier(.25, 1.15, .5, 1) var(--mobile-delay), opacity .35s ease var(--mobile-delay);
-    will-change: auto;
+  /* ─── Mobile Rectangle Placer Bar ─── */
+  .footer-poster__placer-bar {
+    padding: 0.65rem clamp(0.85rem, 3.5vw, 1.25rem);
   }
-  .footer-poster__food-piece:nth-child(1) { --mobile-left: -7%; --mobile-bottom: -7%; --mobile-rot: -18deg; --mobile-layer: 5; --mobile-delay: .3s; }
-  .footer-poster__food-piece:nth-child(2) { --mobile-left: 10%; --mobile-bottom: 1%; --mobile-rot: 12deg; --mobile-layer: 6; --mobile-delay: .4s; }
-  .footer-poster__food-piece:nth-child(3) { --mobile-left: 29%; --mobile-bottom: -8%; --mobile-rot: -8deg; --mobile-layer: 7; --mobile-delay: .5s; --mobile-size: 32vw; }
-  .footer-poster__food-piece:nth-child(4) { --mobile-left: 50%; --mobile-bottom: -2%; --mobile-rot: 20deg; --mobile-layer: 6; --mobile-delay: .35s; }
-  .footer-poster__food-piece:nth-child(5) { --mobile-left: 72%; --mobile-bottom: -7%; --mobile-rot: -15deg; --mobile-layer: 7; --mobile-delay: .45s; --mobile-size: 32vw; }
-  .footer-poster__food-piece:nth-child(6) { --mobile-left: -2%; --mobile-bottom: 19%; --mobile-rot: 14deg; --mobile-layer: 2; --mobile-delay: .05s; --mobile-size: 26vw; }
-  .footer-poster__food-piece:nth-child(7) { --mobile-left: 19%; --mobile-bottom: 21%; --mobile-rot: -24deg; --mobile-layer: 3; --mobile-delay: .1s; }
-  .footer-poster__food-piece:nth-child(8) { --mobile-left: 44%; --mobile-bottom: 22%; --mobile-rot: 9deg; --mobile-layer: 3; --mobile-delay: .15s; }
-  .footer-poster__food-piece:nth-child(9) { --mobile-left: 68%; --mobile-bottom: 18%; --mobile-rot: 27deg; --mobile-layer: 2; --mobile-delay: .1s; }
-  .footer-poster__food-piece:nth-child(10) { --mobile-left: 13%; --mobile-bottom: 37%; --mobile-rot: -15deg; --mobile-layer: 1; --mobile-delay: 0s; --mobile-size: 24vw; }
-  .footer-poster__food-piece:nth-child(11) { --mobile-left: 34%; --mobile-bottom: 45%; --mobile-rot: 18deg; --mobile-layer: 1; --mobile-delay: .05s; --mobile-size: 25vw; }
-  .footer-poster__food-piece:nth-child(12) { --mobile-left: 57%; --mobile-bottom: 38%; --mobile-rot: -12deg; --mobile-layer: 1; --mobile-delay: 0s; --mobile-size: 25vw; }
-  .footer-poster.is-visible .footer-poster__food-pile .footer-poster__food-piece { transform: translate3d(0, 0, 0) rotate(var(--mobile-rot)); }
+
+  .footer-poster__placer-inner {
+    justify-content: flex-end;
+    font-size: 0.62rem;
+    letter-spacing: 0.1em;
+    gap: 0.25rem 0.5rem;
+    text-align: right;
+  }
+
+  .footer-poster__placer-links {
+    gap: 0.35rem;
+  }
+
+  /* ─── Desktop-Style Falling Siomai Placement along the Bottom Edge ─── */
+  .footer-poster__food-pile {
+    inset: 0;
+    overflow: visible;
+  }
+
+  .footer-poster__food-piece {
+    left: var(--mobile-left, var(--left));
+    bottom: var(--mobile-bottom, var(--bottom));
+    width: var(--mobile-width, var(--width));
+    filter: drop-shadow(0 12px 18px rgba(0, 0, 0, 0.38));
+    transform: translate3d(0, -120vh, 0) rotate(calc(var(--rot) - 180deg));
+    transition:
+      transform 1.15s cubic-bezier(0.34, 1.2, 0.64, 1) var(--delay),
+      opacity 0.55s ease var(--delay);
+  }
+
+  .footer-poster.is-visible .footer-poster__food-piece {
+    opacity: 1;
+    transform: translate3d(0, 0, 0) rotate(var(--rot));
+  }
 }
 
 /* ═══════════════════════════════════════════════════
@@ -565,7 +756,7 @@
   .footer-poster__food-piece {
     /* Instantly render at final state, no animation */
     opacity: 1 !important;
-    transform: translate3d(0, 0, 0) rotate(var(--mobile-rot, var(--rot))) !important;
+    transform: translate3d(0, 0, 0) rotate(var(--rot)) !important;
     transition: none !important;
   }
 

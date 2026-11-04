@@ -1,5 +1,4 @@
 import { Link } from 'react-router-dom';
-import useScrollReveal from '../../../hooks/useScrollReveal';
 import './FeaturedMenu.css';
 
 /* ─── Orange Accent Marks (twin curved droplets like inspiration) ─── */
@@ -107,7 +106,6 @@ const InkPostmarkStamp = ({ className = '' }) => (
 
 /* ─── Main FeaturedMenu Section ─── */
 const FeaturedMenu = () => {
-  useScrollReveal();
 
   return (
     <section className="featured-menu" id="menu">

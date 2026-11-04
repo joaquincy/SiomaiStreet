@@ -153,29 +153,51 @@
   max-width: var(--max-width, 1200px);
   margin: 0 auto;
   padding: 0.4rem 2rem;
-  display: flex;
-  align-items: center;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: stretch;
   gap: 0.35rem;
-  overflow-x: auto;
-  scrollbar-width: none;
-}
-
-.application-page .app-subnav-inner::-webkit-scrollbar {
-  display: none;
+  min-width: 0;
+  overflow: visible;
 }
 
 .application-page .app-subnav-tab {
   position: relative;
-  padding: 0.5rem 0.85rem;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 0;
+  min-height: 3.25rem;
+  padding: 0.5rem 0.35rem;
   font-size: 0.8125rem;
   font-weight: 500;
   color: var(--app-text-secondary);
   background: transparent;
   border: none;
   border-radius: var(--app-radius-sm);
-  white-space: nowrap;
+  white-space: normal;
+  overflow-wrap: anywhere;
+  text-align: center;
+  line-height: 1.4;
+  text-decoration: none;
   cursor: pointer;
   transition: color 0.16s ease, background-color 0.16s ease;
+}
+
+.application-page .app-subnav-tab:focus-visible {
+  outline: 2px solid var(--app-red-dark);
+  outline-offset: 2px;
+}
+
+@media (min-width: 721px) {
+  .application-page .app-subnav-inner {
+    display: flex;
+    flex-wrap: wrap;
+  }
+  .application-page .app-subnav-tab {
+    min-height: 2.75rem;
+    padding-inline: 0.85rem;
+  }
 }
 
 .application-page .app-subnav-tab:hover:not(.disabled) {

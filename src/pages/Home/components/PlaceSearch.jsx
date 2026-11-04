@@ -39,11 +39,13 @@ export default function PlaceSearch({ onChoose, active = true, onExplore }) {
     <form onSubmit={search}>
       <label htmlFor="store-place-query">Search an address or business worldwide</label>
       <div className="store-finder__place-input"><input ref={input} id="store-place-query" type="search" value={query} maxLength={180} autoComplete="off" placeholder="e.g. Bagasbas Beach, Daet, Philippines" aria-describedby="store-place-help" onChange={event => { cancel(); setBusy(false); setFailed(false); setPlaces([]); setStatus(''); setQuery(event.target.value); }} /><button type="submit" disabled={busy}><BiSearch aria-hidden="true" />{busy ? 'Searching…' : 'Search'}</button>{busy && <button type="button" onClick={() => { cancel(); setBusy(false); setStatus('Search cancelled.'); }}><BiX aria-hidden="true" />Cancel</button>}</div>
-      <p id="store-place-help" className="store-finder__place-help-text">Enter a place + city, press Search, then select a result.</p>
     </form>
     <div ref={results} tabIndex={-1} className={failed ? 'store-finder__search-feedback is-error' : 'store-finder__search-feedback'}><p role="status" aria-live="polite">{status}</p>{failed && <div className="store-finder__search-recovery"><button type="button" onClick={search}>Retry search</button>{onExplore && <button type="button" onClick={onExplore}>Browse map without search</button>}</div>}
       {places.length > 0 && <ul aria-label="Place search results">{places.map((place,index) => <li key={`${index}:${place.label}`}><button type="button" onClick={() => { onChoose(place); setPlaces([]); setStatus('Place selected on the map.'); }}><span className="store-finder__place-result-label">{place.label}</span><span className="store-finder__place-result-action" aria-hidden="true">Select ↗</span></button></li>)}</ul>}
     </div>
-    <small>Search sent to <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a></small>
+    <div className="store-finder__place-meta">
+      <p id="store-place-help" className="store-finder__place-help-text">Enter a place + city, press Search, then select a result.</p>
+      <small>Search sent to <a href="https://www.geoapify.com/" target="_blank" rel="noopener noreferrer">Geoapify</a> · <a href="https://www.openstreetmap.org/copyright" target="_blank" rel="noopener noreferrer">© OpenStreetMap</a></small>
+    </div>
   </section>;
 }

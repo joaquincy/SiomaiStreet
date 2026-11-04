@@ -5,16 +5,17 @@ import ReceiptAccess from './ReceiptAccess';
 import ApplicationSupport from './ApplicationSupport';
 import './ApplicationReceipt.css';
 
-export default function ApplicationReceipt({ receipt, cleanupStatus = '', busy = false, onRetryCleanup, onNewApplication }) {
+export default function ApplicationReceipt({ receipt, cleanupStatus = '', busy = false, onRetryCleanup, onNewApplication, inModal = false }) {
   const headingRef = useRef(null);
   const cleanupFailed = cleanupStatus.startsWith('Cleanup failed');
   const clearing = !cleanupStatus || cleanupStatus.startsWith('Clearing');
 
   useEffect(() => {
+    if (inModal) return;
     // This is an in-place route transition; move keyboard and reading focus to its outcome.
     window.scrollTo({ top: 0, behavior: 'instant' });
     headingRef.current?.focus({ preventScroll: true });
-  }, []);
+  }, [inModal]);
 
   return <div className="application-receipt">
     <div className="receipt-masthead">

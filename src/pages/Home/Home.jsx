@@ -1,4 +1,6 @@
+import { useEffect, useRef } from 'react';
 import PageMeta from '../../components/PageMeta';
+import { observeMotionVisibility } from '../../utils/motionVisibility';
 import useScrollReveal from '../../hooks/useScrollReveal';
 import Hero from './components/Hero';
 import AboutUs from './components/AboutUs';
@@ -13,12 +15,24 @@ import FAQ from './components/FAQ';
 import Testimonials from './components/Testimonials';
 import CTA from './components/CTA';
 import ContactSupport from './components/ContactSupport';
+import './HomeMotion.css';
 
 const Home = () => {
-  useScrollReveal();
+  const pageRef = useRef(null);
+  useScrollReveal(pageRef);
+  useEffect(() => {
+    const sections = Array.from(pageRef.current?.children || []);
+    const stop = observeMotionVisibility(sections, (section, active) => {
+      section.dataset.homeMotion = active ? 'active' : 'paused';
+    }, { rootMargin: '200px 0px' });
+    return () => {
+      stop();
+      sections.forEach(section => delete section.dataset.homeMotion);
+    };
+  }, []);
 
   return (
-    <main>
+    <main ref={pageRef} data-home-motion-root>
       <PageMeta
         path="/"
         description="Explore Siomai Street franchise formats, request current pricing and prepare your franchise application."

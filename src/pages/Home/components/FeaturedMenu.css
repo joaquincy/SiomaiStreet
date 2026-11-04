@@ -6,6 +6,7 @@
    ══════════════════════════════════════════════════════════ */
 
 .featured-menu {
+  margin-top: -1px;
   position: relative;
   background: #f0e9da;
   overflow: visible;

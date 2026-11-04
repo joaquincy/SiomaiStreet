@@ -128,24 +128,28 @@
   z-index: 2;
 }
 
-/* Complementing Category Badge */
+/* Modern Japanese-Chinese Lacquer Seal Kicker Tag */
 .req-max__badge {
   display: inline-flex;
   align-items: center;
-  gap: 0.5rem;
-  padding: 0.35rem 0.85rem;
-  background: rgba(245, 166, 35, 0.08);
-  border: 1px solid rgba(245, 166, 35, 0.22);
-  border-radius: 9999px;
-  margin-bottom: 0.75rem;
+  gap: 0.55rem;
+  padding: 0.36rem 0.8rem;
+  background: #1B1714;
+  border: 1px solid rgba(245, 238, 224, 0.24);
+  border-radius: 4px;
+  margin-bottom: 0.85rem;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .req-max__badge-dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
-  background: #F5A623;
-  box-shadow: 0 0 8px #F5A623;
+  border-radius: 1px;
+  background: #D61B22;
+  transform: rotate(45deg);
+  box-shadow: none;
+  flex-shrink: 0;
 }
 
 .req-max__badge-title {
@@ -153,21 +157,27 @@
   font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.12em;
-  color: #F5A623;
+  color: #F2B249;
   text-transform: uppercase;
 }
 
 .req-max__badge-divider {
-  color: rgba(255, 255, 255, 0.2);
-  font-size: 0.7rem;
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: rgba(245, 238, 224, 0.24);
+  color: transparent;
+  overflow: hidden;
+  font-size: 0;
+  flex-shrink: 0;
 }
 
 .req-max__badge-notice {
   font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: 0.65rem;
-  font-weight: 700;
+  font-weight: 600;
   letter-spacing: 0.08em;
-  color: rgba(255, 253, 245, 0.6);
+  color: rgba(245, 238, 224, 0.78);
   text-transform: uppercase;
 }
 
@@ -518,59 +528,82 @@
     font-size: clamp(8rem, 24vw, 15rem);
   }
 
-  /* ─── Centered, Balanced Mobile Header ─── */
+  /* ─── Right-Aligned Mobile Header (Matching Desktop Orientation) ─── */
   .req-max__header {
-    flex-direction: column;
+    display: flex;
+    flex-direction: row;
     align-items: center;
-    text-align: center;
+    justify-content: space-between;
+    text-align: right;
     padding: 0 clamp(1rem, 4vw, 1.5rem);
     margin: 0 auto clamp(2rem, 4vh, 2.75rem);
     gap: 0.85rem;
   }
 
   .req-max__header-badge {
-    width: 66px;
-    height: 66px;
-    margin: 0 auto 0.25rem;
+    width: clamp(52px, 14vw, 68px);
+    height: clamp(52px, 14vw, 68px);
+    margin: 0;
     align-self: center;
+    flex-shrink: 0;
   }
 
   .req-max__spin-icon {
-    font-size: 1.6rem;
+    font-size: clamp(1.2rem, 3.5vw, 1.6rem);
   }
 
   .req-max__heading-wrap {
-    align-items: center;
-    text-align: center;
-    width: 100%;
-    margin-left: 0;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
+    width: auto;
+    margin-left: auto;
+    min-width: 0;
   }
 
   .req-max__badge {
+    align-self: flex-end;
     margin-bottom: 0.6rem;
-    padding: 0.3rem 0.8rem;
+    padding: 0.28rem 0.62rem;
+    gap: 0.42rem;
+    white-space: nowrap;
+  }
+
+  .req-max__badge-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.09em;
+  }
+
+  .req-max__badge-notice {
+    font-size: 0.56rem;
+    letter-spacing: 0.06em;
   }
 
   .req-max__heading {
-    align-items: center;
-    text-align: center;
+    display: flex;
+    flex-direction: column;
+    align-items: flex-end;
+    text-align: right;
     width: 100%;
   }
 
   .req-max__heading-outline {
-    font-size: clamp(1.65rem, 7vw, 2.35rem);
-    text-align: center;
+    font-size: clamp(1.35rem, 5.8vw, 2.15rem);
+    text-align: right;
     letter-spacing: 0.04em;
     line-height: 1.05;
+    display: block;
   }
 
   .req-max__heading-solid {
-    font-size: clamp(1.75rem, 7.6vw, 2.5rem);
-    text-align: center;
+    font-size: clamp(1.45rem, 6.2vw, 2.3rem);
+    text-align: right;
     margin-left: 0;
     margin-top: 0.2rem;
     letter-spacing: -0.02em;
     line-height: 0.95;
+    display: block;
   }
 
   /* ─── Vertical Cards Flow: Upright, Focused, Clean Proportions ─── */
@@ -684,16 +717,18 @@
   }
 
   .req-max__header-badge {
-    width: 60px;
-    height: 60px;
+    width: 52px;
+    height: 52px;
   }
 
   .req-max__heading-outline {
-    font-size: clamp(1.5rem, 6.8vw, 2rem);
+    font-size: clamp(1.25rem, 5.6vw, 1.85rem);
+    text-align: right;
   }
 
   .req-max__heading-solid {
-    font-size: clamp(1.65rem, 7.5vw, 2.2rem);
+    font-size: clamp(1.35rem, 6.2vw, 2.05rem);
+    text-align: right;
   }
 }
 
@@ -752,7 +787,7 @@
 .req-transition__rule--red {
   width: 60px;
   background: #D61B22;
-  box-shadow: 0 0 8px rgba(214, 27, 34, 0.6);
+  box-shadow: none;
 }
 
 .req-transition__canopy {
@@ -776,11 +811,11 @@
   align-items: center;
   gap: 10px;
   margin-top: -8px;
-  padding: 0.45rem 1.15rem;
-  background: #110F0D;
-  border: 1px solid rgba(248, 246, 241, 0.24);
-  border-radius: 9999px;
-  box-shadow: 0 6px 18px rgba(0, 0, 0, 0.45);
+  padding: 0.45rem 1.1rem;
+  background: #1B1714;
+  border: 1px solid rgba(245, 238, 224, 0.24);
+  border-radius: 4px;
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.18);
   position: relative;
   z-index: 2;
 }
@@ -788,9 +823,11 @@
 .req-transition__dot {
   width: 6px;
   height: 6px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: #D61B22;
-  box-shadow: 0 0 6px #D61B22;
+  transform: rotate(45deg);
+  box-shadow: none;
+  flex-shrink: 0;
 }
 
 .req-transition__text {

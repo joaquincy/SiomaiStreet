@@ -104,7 +104,7 @@ const AboutUs = () => {
     // Editorial line — grows
     if (editorialRef.current) {
       const lineH = clamp01(p * 2);
-      editorialRef.current.style.height = `${lineH * 55}%`;
+      editorialRef.current.style.transform = `scaleY(${lineH})`;
     }
 
     // Accent dots
@@ -127,11 +127,12 @@ const AboutUs = () => {
   }, []);
 
   const onFrame = useCallback(() => {
-    if (!isActive.current || !sectionRef.current || !stageRef.current) return;
+    rafId.current = null;
+    if (!isActive.current || document.hidden || !sectionRef.current || !stageRef.current) return;
 
     // 1. Read scroll position (single layout read, batched before writes)
     const rect = sectionRef.current.getBoundingClientRect();
-    const total = sectionRef.current.offsetHeight - window.innerHeight;
+    const total = Math.max(1, sectionRef.current.offsetHeight - window.innerHeight);
     targetP.current = clamp01(-rect.top / total);
 
     // 2. Lerp for buttery smoothness
@@ -159,7 +160,7 @@ const AboutUs = () => {
 
   // Kick the rAF loop when the user scrolls (so it restarts after settling)
   const onScroll = useCallback(() => {
-    if (isActive.current && !rafId.current) {
+    if (isActive.current && !document.hidden && rafId.current === null) {
       isSettled.current = false;
       rafId.current = requestAnimationFrame(onFrame);
     }
@@ -216,7 +217,7 @@ const AboutUs = () => {
           }
         } else if (isActive.current) {
           isSettled.current = false;
-          rafId.current = requestAnimationFrame(onFrame);
+          onScroll();
         }
       };
       document.addEventListener('visibilitychange', onVisibility);
@@ -226,7 +227,7 @@ const AboutUs = () => {
           if (entry.isIntersecting) {
             isActive.current = true;
             isSettled.current = false;
-            rafId.current = requestAnimationFrame(onFrame);
+            onScroll();
           } else {
             isActive.current = false;
             if (rafId.current) {

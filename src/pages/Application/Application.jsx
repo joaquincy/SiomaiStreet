@@ -5,7 +5,7 @@ import { validateStep, validateApplication } from '../../../shared/application.j
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ApplicationStart from './ApplicationStart';
-import ApplicationReceipt from './ApplicationReceipt';
+import ApplicationReceiptModal from './ApplicationReceiptModal';
 import { HiOutlineCheck } from 'react-icons/hi';
 import { stepFeedback } from '../../utils/personalFeedback';
 import { ApplicationFeedbackContext } from '../../components/applicationFeedbackContext';
@@ -377,7 +377,7 @@ const ApplicationPage = () => {
           path="/application"
           description="Your Siomai Street franchise application has been submitted successfully."
         />
-        <ApplicationReceipt
+        <ApplicationReceiptModal
           receipt={portalReceipt}
           cleanupStatus={cleanupStatus}
           busy={submitting}
@@ -437,6 +437,7 @@ const ApplicationPage = () => {
               type="button"
               className={`app-subnav-tab ${tab.active ? 'active' : ''} ${tab.disabled ? 'disabled' : ''}`}
               disabled={tab.disabled}
+              aria-current={tab.active ? 'page' : undefined}
               id={`subnav-${tab.id}`}
               onClick={() => { if (tab.id === 'track') navigate('/application/status'); if (tab.id === 'onboard') navigate('/application/onboarding'); }}
             >
@@ -725,10 +726,44 @@ const ApplicationPage = () => {
             </fieldset>
           </ApplicationFeedbackContext.Provider>
 
-          {currentStep === REVIEW_STEP_INDEX && <div className="submission-rate-hint" id="submission-rate-hint">
-            <p role="status">{retryCooldown.blocked ? 'Submission attempts are temporarily paused. You can still edit your answers.' : 'Up to 5 submission attempts per 5-minute window, including the first attempt. A separate 20-per-hour allowance applies.'}</p>
-            <p>{retryCooldown.blocked ? `Try again in ${retryCooldown.wait}.` : 'Limits reset automatically; you do not need to refresh this page.'} Nothing is submitted automatically.</p>
-          </div>}
+          {currentStep === REVIEW_STEP_INDEX && (
+            <div
+              className={`submission-rate-hint ${retryCooldown.blocked ? 'submission-rate-hint--paused' : ''}`}
+              id="submission-rate-hint"
+            >
+              <div className="submission-rate-hint__icon" aria-hidden="true">
+                <HiOutlineShieldExclamation />
+              </div>
+              <div className="submission-rate-hint__body">
+                <div className="submission-rate-hint__header">
+                  <span className="submission-rate-hint__eyebrow">
+                    {retryCooldown.blocked ? 'Cooldown Active' : 'Submission Safeguard'}
+                  </span>
+                  <span className="submission-rate-hint__pills" aria-hidden="true">
+                    <span className="submission-rate-hint__pill">
+                      {retryCooldown.blocked ? `Wait ${retryCooldown.wait}` : '5 attempts / 5 min'}
+                    </span>
+                    {!retryCooldown.blocked && (
+                      <span className="submission-rate-hint__pill submission-rate-hint__pill--subtle">
+                        20 / hour max
+                      </span>
+                    )}
+                  </span>
+                </div>
+                <p role="status" className="submission-rate-hint__primary">
+                  {retryCooldown.blocked
+                    ? 'Submission attempts are temporarily paused. You can still edit your answers.'
+                    : 'Up to 5 submission attempts per 5-minute window, including the first attempt. A separate 20-per-hour allowance applies.'}
+                </p>
+                <p className="submission-rate-hint__secondary">
+                  {retryCooldown.blocked
+                    ? `Try again in ${retryCooldown.wait}.`
+                    : 'Limits reset automatically; you do not need to refresh this page.'}{' '}
+                  Nothing is submitted automatically.
+                </p>
+              </div>
+            </div>
+          )}
           <StepNav
             currentStep={currentStep}
             totalSteps={APPLICATION_STEPS.length}

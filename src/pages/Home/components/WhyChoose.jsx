@@ -75,19 +75,29 @@ const WhyChoose = () => {
   const rafId = useRef(null);
   const visualProgress = useRef(null);
   const lastFrameTime = useRef(null);
+  const metricsRef = useRef(null);
+  const metricsDirty = useRef(true);
+  const lastPaint = useRef({ progress: null, overlap: null });
 
   // Whether the marquee carousel is in its "running" phase (p > 0.82)
   const marqueeRunning = useRef(false);
 
   const onFrame = useCallback((timestamp = performance.now()) => {
     rafId.current = null;
-    if (!isActive.current || !sectionRef.current || !stageRef.current) return;
+    if (!isActive.current || document.hidden || !sectionRef.current || !stageRef.current) return;
 
     // 1. Calculate normalized scroll progress (0–1) — batched reads
-    const rect = sectionRef.current.getBoundingClientRect();
-    const sectionH = sectionRef.current.offsetHeight;
-    const vh = stageRef.current.offsetHeight;
-    const scrolled = -rect.top;
+    // The running marquee changes only its track transform. Re-read geometry
+    // when scrolling/resizing changes it, not on every idle carousel frame.
+    if (metricsDirty.current || !metricsRef.current) {
+      metricsRef.current = {
+        scrolled: -sectionRef.current.getBoundingClientRect().top,
+        sectionH: sectionRef.current.offsetHeight,
+        vh: Math.max(1, stageRef.current.offsetHeight),
+      };
+      metricsDirty.current = false;
+    }
+    const { scrolled, sectionH, vh } = metricsRef.current;
     // Exactly 100vh is reserved at the end for the curtain overlap reveal
     const animDistance = Math.max(1, sectionH - (compactRef.current ? 2.5 : 2) * vh);
     const target = clamp01(scrolled / animDistance);
@@ -103,17 +113,19 @@ const WhyChoose = () => {
     }
     const p = visualProgress.current;
     const scrollChanging = p !== target;
-    marqueeRunning.current = p > 0.82 && !compactRef.current;
     const travel = compactRef.current ? 0.22 : 1;
 
     // ── CURTAIN OVERLAP & UNFOCUS EFFECT ──
     // Journey (with margin-top: -100vh) scrolls up over WhyChoose while
     // WhyChoose remains pinned at top: 0.
     const rawOverlap = clamp01((scrolled - (sectionH - 2 * vh)) / vh);
+    // The next section fully covers the carousel at the end of the curtain.
+    marqueeRunning.current = p > 0.82 && !compactRef.current && rawOverlap < 1;
     // Smoothstep easing (3x^2 - 2x^3) for zero-derivative gradual start
     const overlapRatio = rawOverlap * rawOverlap * (3 - 2 * rawOverlap);
 
-    if (stageRef.current) {
+    if (lastPaint.current.overlap !== rawOverlap) {
+      lastPaint.current.overlap = rawOverlap;
       if (rawOverlap > 0.001) {
         // Refined 3D depth recession: scale down ~7.5% and drift back into the distance
         const coverScale = (1 - overlapRatio * 0.075).toFixed(4);
@@ -132,113 +144,126 @@ const WhyChoose = () => {
       }
     }
 
-    // ── TITLE FADE ──
-    const titleFade = 1 - easeOut(ease(p, 0.48, 0.82));
+    // Keep settled titles, dots and clip paths out of the continuous marquee loop.
+    if (lastPaint.current.progress !== p) {
+      lastPaint.current.progress = p;
+      // ── TITLE FADE ──
+      const titleFade = 1 - easeOut(ease(p, 0.48, 0.82));
 
-    // ── PHASE 1: Typography assembly (0.00–0.35) + PHASE 3: Title breakaway (0.45–0.80) ──
+      // ── PHASE 1: Typography assembly (0.00–0.35) + PHASE 3: Title breakaway (0.45–0.80) ──
 
-    // Line 1: "WHY SHOULD"
-    if (lineRefs.current[0]) {
-      const tA = easeOut(ease(p, 0.0, 0.32));
-      const xA = lerp(-55 * travel, 0, tA);
-      const yA = lerp(-15, 0, tA);
-      const tB = easeOut(ease(p, 0.48, 0.82));
-      const xB = lerp(0, -180, tB);
-      const yB = lerp(0, -100, tB);
-      const rB = lerp(0, -6, tB);
-      lineRefs.current[0].style.transform =
-        `translate3d(${xA + xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
-      lineRefs.current[0].style.opacity = clamp01(lerp(0.3, 1, tA)) * titleFade;
-    }
-
-    // Line 2: "YOU CHOOSE"
-    if (lineRefs.current[1]) {
-      const tA = easeOut(ease(p, 0.05, 0.36));
-      const xA = lerp(60 * travel, 0, tA);
-      const yA = lerp(10, 0, tA);
-      const tB = easeOut(ease(p, 0.50, 0.84));
-      const xB = lerp(0, 160, tB);
-      const yB = lerp(0, -80, tB);
-      const rB = lerp(0, 5, tB);
-      lineRefs.current[1].style.transform =
-        `translate3d(${xA + xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
-      lineRefs.current[1].style.opacity = clamp01(lerp(0.25, 1, tA)) * titleFade;
-    }
-
-    // Line 3: "SIOMAI STREET?"
-    if (lineRefs.current[2]) {
-      const tA = easeOut(ease(p, 0.08, 0.38));
-      const yA = lerp(40, 0, tA);
-      const tB = easeOut(ease(p, 0.52, 0.86));
-      const xB = lerp(0, 60, tB);
-      const yB = lerp(0, 120, tB);
-      const rB = lerp(0, 3, tB);
-      lineRefs.current[2].style.transform =
-        `translate3d(${xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
-      lineRefs.current[2].style.opacity = clamp01(lerp(0.2, 1, tA)) * titleFade;
-    }
-
-    // ── RED BLOCKS ──
-    const blockFade = 1 - easeOut(ease(p, 0.42, 0.60));
-
-    if (blockRefs.current[0]) {
-      const tb = easeOut(ease(p, 0.03, 0.30));
-      const bx = lerp(-80 * travel, 0, tb);
-      const br = lerp(-4, 0, tb);
-      blockRefs.current[0].style.transform = `translate3d(${bx}px, 0, 0) rotate(${br}deg)`;
-      blockRefs.current[0].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
-    }
-
-    if (blockRefs.current[1]) {
-      const tb = easeOut(ease(p, 0.06, 0.33));
-      const bx = lerp(50 * travel, 0, tb);
-      const by = lerp(-40 * travel, 0, tb);
-      const br = lerp(3, 0, tb);
-      blockRefs.current[1].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
-      blockRefs.current[1].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
-    }
-
-    if (blockRefs.current[2]) {
-      const tb = easeOut(ease(p, 0.10, 0.36));
-      const bx = lerp(40 * travel, 0, tb);
-      const by = lerp(50 * travel, 0, tb);
-      const br = lerp(2, 0, tb);
-      blockRefs.current[2].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
-      blockRefs.current[2].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
-    }
-
-    // ── IMAGE STRIP ──
-    if (imgStripRef.current) {
-      const tStrip = easeOut(ease(p, 0.48, 0.88));
-      const stripScale = lerp(0.78, 1, tStrip);
-      imgStripRef.current.style.transform =
-        `translate(-50%, -50%) scale(${stripScale})`;
-      imgStripRef.current.style.opacity = easeOut(ease(p, 0.48, 0.68));
-      imgStripRef.current.style.pointerEvents = p > 0.82 ? 'auto' : 'none';
-    }
-
-    // Animate container clip-path (from tiny sliver to full concave panorama)
-    if (imgStripRef.current) {
-      const tClip = easeOut(ease(p, 0.48, 0.88));
-      // Re-use pre-allocated arrays to avoid GC pressure
-      for (let i = 0; i < 5; i++) {
-        _polyTop[i][0] = lerp(START_POLY.top[i][0], TARGET_POLY.top[i][0], tClip);
-        _polyTop[i][1] = lerp(START_POLY.top[i][1], TARGET_POLY.top[i][1], tClip);
-        _polyBot[i][0] = lerp(START_POLY.bottom[i][0], TARGET_POLY.bottom[i][0], tClip);
-        _polyBot[i][1] = lerp(START_POLY.bottom[i][1], TARGET_POLY.bottom[i][1], tClip);
+      // Line 1: "WHY SHOULD"
+      if (lineRefs.current[0]) {
+        const tA = easeOut(ease(p, 0.0, 0.32));
+        const xA = lerp(-55 * travel, 0, tA);
+        const yA = lerp(-15, 0, tA);
+        const tB = easeOut(ease(p, 0.48, 0.82));
+        const xB = lerp(0, -180, tB);
+        const yB = lerp(0, -100, tB);
+        const rB = lerp(0, -6, tB);
+        lineRefs.current[0].style.transform =
+          `translate3d(${xA + xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
+        lineRefs.current[0].style.opacity = clamp01(lerp(0.3, 1, tA)) * titleFade;
       }
 
-      const polyString = `polygon(${_polyTop.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')}, ${_polyBot.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')})`;
-      imgStripRef.current.style.clipPath = compactRef.current ? `inset(${lerp(44, 0, tClip)}% round var(--radius-xl))` : polyString;
-    }
+      // Line 2: "YOU CHOOSE"
+      if (lineRefs.current[1]) {
+        const tA = easeOut(ease(p, 0.05, 0.36));
+        const xA = lerp(60 * travel, 0, tA);
+        const yA = lerp(10, 0, tA);
+        const tB = easeOut(ease(p, 0.50, 0.84));
+        const xB = lerp(0, 160, tB);
+        const yB = lerp(0, -80, tB);
+        const rB = lerp(0, 5, tB);
+        lineRefs.current[1].style.transform =
+          `translate3d(${xA + xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
+        lineRefs.current[1].style.opacity = clamp01(lerp(0.25, 1, tA)) * titleFade;
+      }
 
-    // Handle carousel Nav visibility
-    if (navRef.current) {
-      const tNav = easeOut(ease(p, 0.85, 0.95));
-      navRef.current.style.opacity = tNav;
-      navRef.current.style.transform = `translate(-50%, ${lerp(20, 0, tNav)}px)`;
-      navRef.current.style.pointerEvents = p > 0.9 ? 'auto' : 'none';
-      navRef.current.inert = p <= 0.9;
+      // Line 3: "SIOMAI STREET?"
+      if (lineRefs.current[2]) {
+        const tA = easeOut(ease(p, 0.08, 0.38));
+        const yA = lerp(40, 0, tA);
+        const tB = easeOut(ease(p, 0.52, 0.86));
+        const xB = lerp(0, 60, tB);
+        const yB = lerp(0, 120, tB);
+        const rB = lerp(0, 3, tB);
+        lineRefs.current[2].style.transform =
+          `translate3d(${xB}px, ${yA + yB}px, 0) rotate(${rB}deg)`;
+        lineRefs.current[2].style.opacity = clamp01(lerp(0.2, 1, tA)) * titleFade;
+      }
+
+      // ── RED BLOCKS ──
+      const blockFade = 1 - easeOut(ease(p, 0.42, 0.60));
+
+      if (blockRefs.current[0]) {
+        const tb = easeOut(ease(p, 0.03, 0.30));
+        const bx = lerp(-80 * travel, 0, tb);
+        const br = lerp(-4, 0, tb);
+        blockRefs.current[0].style.transform = `translate3d(${bx}px, 0, 0) rotate(${br}deg)`;
+        blockRefs.current[0].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
+      }
+
+      if (blockRefs.current[1]) {
+        const tb = easeOut(ease(p, 0.06, 0.33));
+        const bx = lerp(50 * travel, 0, tb);
+        const by = lerp(-40 * travel, 0, tb);
+        const br = lerp(3, 0, tb);
+        blockRefs.current[1].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
+        blockRefs.current[1].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
+      }
+
+      if (blockRefs.current[2]) {
+        const tb = easeOut(ease(p, 0.10, 0.36));
+        const bx = lerp(40 * travel, 0, tb);
+        const by = lerp(50 * travel, 0, tb);
+        const br = lerp(2, 0, tb);
+        blockRefs.current[2].style.transform = `translate3d(${bx}px, ${by}px, 0) rotate(${br}deg)`;
+        blockRefs.current[2].style.opacity = clamp01(lerp(0, 1, tb)) * blockFade;
+      }
+
+      // ── IMAGE STRIP ──
+      if (imgStripRef.current) {
+        const tStrip = easeOut(ease(p, 0.48, 0.88));
+        const stripScale = lerp(0.78, 1, tStrip);
+        imgStripRef.current.style.transform =
+          `translate(-50%, -50%) scale(${stripScale})`;
+        imgStripRef.current.style.opacity = easeOut(ease(p, 0.48, 0.68));
+        imgStripRef.current.style.pointerEvents = p > 0.82 ? 'auto' : 'none';
+      }
+
+      // Animate container clip-path (from tiny sliver to full concave panorama)
+      if (imgStripRef.current) {
+        const tClip = easeOut(ease(p, 0.48, 0.88));
+        // Re-use pre-allocated arrays to avoid GC pressure
+        for (let i = 0; i < 5; i++) {
+          _polyTop[i][0] = lerp(START_POLY.top[i][0], TARGET_POLY.top[i][0], tClip);
+          _polyTop[i][1] = lerp(START_POLY.top[i][1], TARGET_POLY.top[i][1], tClip);
+          _polyBot[i][0] = lerp(START_POLY.bottom[i][0], TARGET_POLY.bottom[i][0], tClip);
+          _polyBot[i][1] = lerp(START_POLY.bottom[i][1], TARGET_POLY.bottom[i][1], tClip);
+        }
+
+        const polyString = `polygon(${_polyTop.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')}, ${_polyBot.map(pt => `${pt[0]}% ${pt[1]}%`).join(', ')})`;
+        imgStripRef.current.style.clipPath = compactRef.current ? `inset(${lerp(44, 0, tClip)}% round var(--radius-xl))` : polyString;
+      }
+
+      // Handle carousel Nav visibility
+      if (navRef.current) {
+        const tNav = easeOut(ease(p, 0.85, 0.95));
+        navRef.current.style.opacity = tNav;
+        navRef.current.style.transform = `translate(-50%, ${lerp(20, 0, tNav)}px)`;
+        navRef.current.style.pointerEvents = p > 0.9 ? 'auto' : 'none';
+        navRef.current.inert = p <= 0.9;
+      }
+
+      // ── DECORATIVE: Dots parallax + fade during image reveal ──
+      const dotFade = 1 - easeOut(ease(p, 0.55, 0.75));
+      dotRefs.current.forEach((el, i) => {
+        if (!el) return;
+        const speed = [0.6, -0.4, 0.5, -0.3, 0.4, 0.7, -0.5, 0.3, -0.6][i] || 0.5;
+        el.style.transform = `translate3d(0, ${p * speed * -40}px, 0)`;
+        el.style.opacity = dotFade;
+      });
     }
 
     // Continuous Marquee Logic — uses cached halfWidth (no layout read per frame)
@@ -262,15 +287,6 @@ const WhyChoose = () => {
       if (Math.abs(marqueeSpeed.current - 1.5) < 0.1) marqueeSpeed.current = 1.5;
     }
 
-    // ── DECORATIVE: Dots parallax + fade during image reveal ──
-    const dotFade = 1 - easeOut(ease(p, 0.55, 0.75));
-    dotRefs.current.forEach((el, i) => {
-      if (!el) return;
-      const speed = [0.6, -0.4, 0.5, -0.3, 0.4, 0.7, -0.5, 0.3, -0.6][i] || 0.5;
-      el.style.transform = `translate3d(0, ${p * speed * -40}px, 0)`;
-      el.style.opacity = dotFade;
-    });
-
     // Decide whether to keep looping:
     // - If the marquee is running, we always need frames (it's continuous motion)
     // - Otherwise, stop when settled
@@ -285,6 +301,7 @@ const WhyChoose = () => {
 
   // Kick the rAF loop when the user scrolls (restarts after settling)
   const onScroll = useCallback(() => {
+    metricsDirty.current = true;
     if (isActive.current && !document.hidden && rafId.current === null) {
 
       rafId.current = requestAnimationFrame(onFrame);
@@ -294,6 +311,8 @@ const WhyChoose = () => {
   useEffect(() => {
     const section = sectionRef.current;
     if (!section) return;
+    metricsDirty.current = true;
+    lastPaint.current = { progress: null, overlap: null };
 
     // Respect reduced-motion preference
     const prefersReducedMotion =
@@ -332,6 +351,10 @@ const WhyChoose = () => {
     const cacheTimer = setTimeout(cacheHalfWidth, 200);
     window.addEventListener('resize', cacheHalfWidth, { passive: true });
     window.addEventListener('scroll', onScroll, { passive: true });
+    const resizeObserver = new ResizeObserver(cacheHalfWidth);
+    resizeObserver.observe(section);
+    if (stageRef.current) resizeObserver.observe(stageRef.current);
+    if (trackRef.current) resizeObserver.observe(trackRef.current);
 
     // Pause when tab is hidden
     const onVisibility = () => {
@@ -352,7 +375,7 @@ const WhyChoose = () => {
       ([entry]) => {
         if (entry.isIntersecting) {
           isActive.current = true;
-
+          metricsDirty.current = true;
           visualProgress.current = null;
           lastFrameTime.current = null;
           // Cancel before synchronizing so only one loop owns the next frame.
@@ -372,6 +395,7 @@ const WhyChoose = () => {
 
     return () => {
       observer.disconnect();
+      resizeObserver.disconnect();
       clearTimeout(cacheTimer);
       window.removeEventListener('resize', cacheHalfWidth);
       window.removeEventListener('scroll', onScroll);
@@ -420,7 +444,7 @@ const WhyChoose = () => {
             />
           ))}
 
-          {/* ─── TYPOGRAPHY + RED BLOCKS ─── */}
+          {/* ─── TYPOGRAPHY + PHOTO PLACEHOLDER BLOCKS ─── */}
           <div className="wc-title" aria-label="Why Should You Choose Siomai Street?">
             {/* Row 1: "Why Should" on left, Image on right */}
             <div className="wc-title__row wc-title__row--1">
@@ -436,7 +460,16 @@ const WhyChoose = () => {
                 aria-hidden="true"
                 ref={el => { blockRefs.current[0] = el; }}
                 style={{ opacity: 0 }}
-              >{compact && <img src={FOOD_IMAGES[0].src} alt={FOOD_IMAGES[0].alt} loading="lazy" decoding="async" />}</div>
+              >
+                <img
+                  src={FOOD_IMAGES[0].src}
+                  srcSet={getSrcSet(FOOD_IMAGES[0].src, [300, 500])}
+                  sizes="(max-width: 768px) 96px, 280px"
+                  alt={FOOD_IMAGES[0].alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             </div>
 
             {/* Row 2: Image on left, "You Choose" on right */}
@@ -446,7 +479,16 @@ const WhyChoose = () => {
                 aria-hidden="true"
                 ref={el => { blockRefs.current[1] = el; }}
                 style={{ opacity: 0 }}
-              >{compact && <img src={FOOD_IMAGES[3].src} alt={FOOD_IMAGES[3].alt} loading="lazy" decoding="async" />}</div>
+              >
+                <img
+                  src={FOOD_IMAGES[3].src}
+                  srcSet={getSrcSet(FOOD_IMAGES[3].src, [300, 500])}
+                  sizes="(max-width: 768px) 96px, 350px"
+                  alt={FOOD_IMAGES[3].alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
               <span
                 className="wc-title__line wc-title__line--2"
                 ref={el => { lineRefs.current[1] = el; }}
@@ -470,7 +512,16 @@ const WhyChoose = () => {
                 aria-hidden="true"
                 ref={el => { blockRefs.current[2] = el; }}
                 style={{ opacity: 0 }}
-              >{compact && <img src={FOOD_IMAGES[5].src} alt={FOOD_IMAGES[5].alt} loading="lazy" decoding="async" />}</div>
+              >
+                <img
+                  src={FOOD_IMAGES[5].src}
+                  srcSet={getSrcSet(FOOD_IMAGES[5].src, [300, 500])}
+                  sizes="(max-width: 768px) 96px, 180px"
+                  alt={FOOD_IMAGES[5].alt}
+                  loading="lazy"
+                  decoding="async"
+                />
+              </div>
             </div>
           </div>
 

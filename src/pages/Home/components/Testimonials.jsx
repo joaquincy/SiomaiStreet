@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef, useCallback, useMemo } from 'react';
 import { BiChevronLeft, BiChevronRight, BiStar } from 'react-icons/bi';
+import useAutoMotion from '../../../hooks/useAutoMotion';
 import './Testimonials.css';
 
 const DEFAULT_REVIEWS = [
@@ -58,7 +59,6 @@ const FALLBACK_AVATARS = [
 ];
 
 /* ─── Tiny spring-interpolation helper (no external library) ─── */
-const springCurve = 'cubic-bezier(0.34, 1.56, 0.64, 1)';
 const smoothCurve = 'cubic-bezier(0.16, 1, 0.3, 1)';
 
 /* ─── Auto-play interval in ms ─── */
@@ -77,11 +77,13 @@ const Testimonials = () => {
   const [liveText, setLiveText] = useState('');
 
   const sectionRef = useRef(null);
+  const autoMotion = useAutoMotion(sectionRef);
   const deckRef = useRef(null);
   const frontCardRef = useRef(null);
   const dragStartRef = useRef({ x: 0, y: 0, time: 0 });
   const isDraggingRef = useRef(false);
-  const autoPlayTimerRef = useRef(null);
+  const tiltFrameRef = useRef(null);
+  const pendingTiltRef = useRef(null);
   const progressRef = useRef(null);
   const velocityHistoryRef = useRef([]);
   const [deckHeight, setDeckHeight] = useState(400);
@@ -89,7 +91,8 @@ const Testimonials = () => {
   /* ─── Fetch reviews from API ─── */
   useEffect(() => {
     let active = true;
-    fetch('/api/reviews')
+    const controller = new AbortController();
+    fetch('/api/reviews', { signal: controller.signal })
       .then(async (response) => {
         const data = await response.json();
         if (!response.ok) throw new Error(data.error || 'Could not load reviews.');
@@ -102,6 +105,7 @@ const Testimonials = () => {
       });
     return () => {
       active = false;
+      controller.abort();
     };
   }, []);
 
@@ -158,37 +162,35 @@ const Testimonials = () => {
       }
     };
     measure();
-    // Re-measure when active card changes
+    // Reflow after orientation changes, zoom and fonts/images loading as well.
+    const observer = new ResizeObserver(measure);
+    if (frontCardRef.current) observer.observe(frontCardRef.current);
     const raf = requestAnimationFrame(measure);
-    return () => cancelAnimationFrame(raf);
+    return () => { cancelAnimationFrame(raf); observer.disconnect(); };
   }, [safeIndex, allReviews]);
 
-  /* ─── Auto-play logic ─── */
+  const shouldPlay = autoMotion && isAutoPlaying && !isHovered && !isFocused && !isDragging && !exitDirection;
+
+  /* ─── Auto-play logic: only one pending advance, while visible ─── */
   useEffect(() => {
-    if (autoPlayTimerRef.current) {
-      clearInterval(autoPlayTimerRef.current);
-      autoPlayTimerRef.current = null;
-    }
+    if (!shouldPlay) return;
+    const timer = setTimeout(() => {
+      setExitDirection('left');
+      setDragOffset({ x: 0, y: 0 });
+    }, AUTOPLAY_INTERVAL);
+    return () => clearTimeout(timer);
+  }, [shouldPlay]);
 
-    const shouldPlay = isAutoPlaying && !isHovered && !isFocused && !isDragging && !exitDirection;
-
-    if (shouldPlay) {
-      autoPlayTimerRef.current = setInterval(() => {
-        setExitDirection('left');
-        setDragOffset({ x: 0, y: 0 });
-        setTimeout(() => {
-          setActiveIndex((prev) => (prev + 1) % count);
-          setExitDirection(null);
-        }, 380);
-      }, AUTOPLAY_INTERVAL);
-    }
-
-    return () => {
-      if (autoPlayTimerRef.current) {
-        clearInterval(autoPlayTimerRef.current);
-      }
-    };
-  }, [isAutoPlaying, isHovered, isFocused, isDragging, exitDirection, count]);
+  // Auto and manual navigation share a cancellable transition timer.
+  useEffect(() => {
+    if (!exitDirection) return;
+    const delay = window.matchMedia('(prefers-reduced-motion: reduce)').matches ? 0 : 380;
+    const timer = setTimeout(() => {
+      setActiveIndex(previous => (previous + (exitDirection === 'left' ? 1 : -1) + count) % count);
+      setExitDirection(null);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [exitDirection, count]);
 
   /* ─── Progress bar animation sync ─── */
   useEffect(() => {
@@ -196,15 +198,14 @@ const Testimonials = () => {
     if (!bar) return;
     // Reset animation
     bar.style.animation = 'none';
-    // Force reflow
-    void bar.offsetHeight;
-    const shouldAnimate = isAutoPlaying && !isHovered && !isFocused && !isDragging && !exitDirection;
-    if (shouldAnimate) {
+    if (shouldPlay) {
+      // Restart only when autoplay actually starts, never on pointer movement.
+      void bar.offsetHeight;
       bar.style.animation = `progressFill ${AUTOPLAY_INTERVAL}ms linear forwards`;
     } else {
       bar.style.animation = 'none';
     }
-  }, [activeIndex, isAutoPlaying, isHovered, isFocused, isDragging, exitDirection]);
+  }, [activeIndex, shouldPlay]);
 
   /* ─── Live region announcement ─── */
   useEffect(() => {
@@ -223,17 +224,8 @@ const Testimonials = () => {
       setDragOffset({ x: 0, y: 0 });
       setCardTilt({ x: 0, y: 0 });
 
-      setTimeout(() => {
-        setActiveIndex((prev) => {
-          if (direction === 'left') {
-            return (prev + 1) % count;
-          }
-          return (prev - 1 + count) % count;
-        });
-        setExitDirection(null);
-      }, 380);
     },
-    [exitDirection, count]
+    [exitDirection]
   );
 
   const handleNext = () => triggerExit('left');
@@ -324,16 +316,31 @@ const Testimonials = () => {
   };
 
   /* ─── Card mouse-follow tilt (only on non-touch, non-drag) ─── */
+  useEffect(() => {
+    // Cancel queued pointer updates before a transition/drag or unmount.
+    return () => {
+      if (tiltFrameRef.current !== null) cancelAnimationFrame(tiltFrameRef.current);
+      tiltFrameRef.current = null;
+    };
+  }, [isDragging, exitDirection]);
+
   const handleCardMouseMove = (e) => {
-    if (isDragging || exitDirection) return;
-    const card = e.currentTarget;
-    const rect = card.getBoundingClientRect();
-    const x = (e.clientX - rect.left) / rect.width - 0.5;
-    const y = (e.clientY - rect.top) / rect.height - 0.5;
-    setCardTilt({ x: x * 8, y: y * -6 });
+    if (isDragging || exitDirection || !autoMotion) return;
+    pendingTiltRef.current = { card: e.currentTarget, x: e.clientX, y: e.clientY };
+    if (tiltFrameRef.current !== null) return;
+    tiltFrameRef.current = requestAnimationFrame(() => {
+      tiltFrameRef.current = null;
+      const { card, x, y } = pendingTiltRef.current;
+      const rect = card.getBoundingClientRect();
+      if (!rect.width || !rect.height) return;
+      setCardTilt({ x: ((x - rect.left) / rect.width - 0.5) * 8, y: ((y - rect.top) / rect.height - 0.5) * -6 });
+    });
   };
 
   const handleCardMouseLeave = () => {
+    if (tiltFrameRef.current !== null) cancelAnimationFrame(tiltFrameRef.current);
+    tiltFrameRef.current = null;
+    setIsHovered(false);
     setCardTilt({ x: 0, y: 0 });
   };
 
@@ -380,13 +387,11 @@ const Testimonials = () => {
         ? 1
         : 0;
     const scale = 0.93 + 0.07 * dragRatio;
-    const rot = -6.5 * (1 - dragRatio);
-    const x = -30 * (1 - dragRatio);
     const y = 16 * (1 - dragRatio);
     const z = -35 * (1 - dragRatio);
 
     return {
-      transform: `translate3d(${x}px, ${y}px, ${z}px) rotate(${rot}deg) scale(${scale})`,
+      transform: `translate3d(calc(var(--review-back-left-x, -30px) * ${1 - dragRatio}), ${y}px, ${z}px) rotate(calc(var(--review-back-left-angle, -6.5deg) * ${1 - dragRatio})) scale(${scale})`,
       transition: isDragging ? 'none' : `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)`,
     };
   };
@@ -398,13 +403,11 @@ const Testimonials = () => {
         ? 1
         : 0;
     const scale = 0.88 + 0.05 * dragRatio;
-    const rot = 5.5 * (1 - dragRatio);
-    const x = 26 * (1 - dragRatio);
     const y = -14 * (1 - dragRatio);
     const z = -60 * (1 - dragRatio);
 
     return {
-      transform: `translate3d(${x}px, ${y}px, ${z}px) rotate(${rot}deg) scale(${scale})`,
+      transform: `translate3d(calc(var(--review-back-right-x, 26px) * ${1 - dragRatio}), ${y}px, ${z}px) rotate(calc(var(--review-back-right-angle, 5.5deg) * ${1 - dragRatio})) scale(${scale})`,
       transition: isDragging ? 'none' : `transform 0.5s cubic-bezier(0.34, 1.56, 0.64, 1)`,
     };
   };
@@ -430,8 +433,6 @@ const Testimonials = () => {
       className="reviews"
       id="reviews"
       ref={sectionRef}
-      onMouseEnter={() => setIsHovered(true)}
-      onMouseLeave={() => setIsHovered(false)}
     >
       {/* ─── Accessibility: Live region for screen readers ─── */}
       <div className="reviews__sr-live" aria-live="polite" aria-atomic="true">
@@ -628,6 +629,7 @@ const Testimonials = () => {
                   className="reviews__card reviews__card--front"
                   ref={frontCardRef}
                   style={getFrontCardStyle()}
+                  onMouseEnter={() => setIsHovered(true)}
                   onMouseMove={handleCardMouseMove}
                   onMouseLeave={handleCardMouseLeave}
                   aria-label={`Review by ${currentCard.name}: ${currentCard.text}`}

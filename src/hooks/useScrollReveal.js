@@ -11,16 +11,17 @@ import { useEffect, useRef } from 'react';
  * Respects prefers-reduced-motion: when the user requests reduced motion
  * all `.reveal` elements are immediately made visible without animation.
  */
-const useScrollReveal = () => {
+const useScrollReveal = (rootRef) => {
   const observerRef = useRef(null);
 
   useEffect(() => {
+    const root = rootRef?.current || document.body;
     const prefersReducedMotion =
       window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 
     // If reduced motion is preferred, reveal everything immediately
     if (prefersReducedMotion) {
-      const all = document.querySelectorAll('.reveal');
+      const all = root.querySelectorAll('.reveal');
       all.forEach((el) => el.classList.add('revealed'));
       // Still observe new elements that appear later
       const mo = new MutationObserver((mutations) => {
@@ -34,7 +35,7 @@ const useScrollReveal = () => {
           }
         }
       });
-      mo.observe(document.body, { childList: true, subtree: true });
+      mo.observe(root, { childList: true, subtree: true });
       return () => mo.disconnect();
     }
 
@@ -54,7 +55,7 @@ const useScrollReveal = () => {
 
     // Observe initial elements
     const observeAll = () => {
-      document.querySelectorAll('.reveal:not(.revealed)').forEach((el) =>
+      root.querySelectorAll('.reveal:not(.revealed)').forEach((el) =>
         observer.observe(el)
       );
     };
@@ -65,29 +66,26 @@ const useScrollReveal = () => {
     // MutationObserver picks up dynamically added .reveal elements
     // (e.g. after the user switches menu category)
     const mo = new MutationObserver((mutations) => {
-      let hasNew = false;
       for (const m of mutations) {
         for (const node of m.addedNodes) {
           if (node.nodeType !== 1) continue;
           if (node.classList?.contains('reveal') && !node.classList.contains('revealed')) {
             observer.observe(node);
-            hasNew = true;
           }
           node.querySelectorAll?.('.reveal:not(.revealed)')?.forEach((el) => {
             observer.observe(el);
-            hasNew = true;
           });
         }
       }
     });
-    mo.observe(document.body, { childList: true, subtree: true });
+    mo.observe(root, { childList: true, subtree: true });
 
     return () => {
       clearTimeout(timer);
       observer.disconnect();
       mo.disconnect();
     };
-  }, []);
+  }, [rootRef]);
 };
 
 export default useScrollReveal;

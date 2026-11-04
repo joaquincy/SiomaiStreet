@@ -43,27 +43,12 @@
   z-index: 0;
 }
 
-/* ─── AMBIENT GLOW (Reactive to drag) ─── */
+/* ─── AMBIENT GLOW (Disabled for clean editorial dark canvas) ─── */
 .reviews__ambient-glow {
-  position: absolute;
-  top: 50%;
-  left: 35%;
-  transform: translate(-50%, -50%);
-  width: 700px;
-  height: 500px;
-  border-radius: 50%;
-  background: radial-gradient(
-    ellipse at center,
-    rgba(214, 27, 34, 0.1) 0%,
-    rgba(245, 166, 35, 0.06) 30%,
-    transparent 70%
-  );
-  pointer-events: none;
-  z-index: 0;
-  filter: blur(60px);
-  opacity: 0.5;
-  transition: transform 0.6s cubic-bezier(0.16, 1, 0.3, 1), opacity 0.6s ease;
+  display: none;
 }
+
+/* Bottom divider removed */
 
 /* ─── GIANT FAINT BACKGROUND TYPOGRAPHY (Harmonized with START & FORMATS) ─── */
 .reviews__bg-type {
@@ -128,59 +113,65 @@
 .reviews__badge {
   display: inline-flex;
   align-items: center;
-  gap: 10px;
-  background: rgba(255, 255, 255, 0.04);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  padding: 0.35rem 0.85rem;
-  border-radius: 9999px;
-  backdrop-filter: blur(8px);
+  gap: 0.55rem;
+  background: #1B1714;
+  border: 1px solid rgba(245, 238, 224, 0.24);
+  padding: 0.36rem 0.8rem;
+  border-radius: 4px;
+  white-space: nowrap;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.12);
 }
 
 .reviews__badge-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
   background: #D61B22;
-  box-shadow: 0 0 10px rgba(214, 27, 34, 0.8);
-  animation: dotPulse 2s ease-in-out infinite;
-}
-
-@keyframes dotPulse {
-  0%, 100% { box-shadow: 0 0 10px rgba(214, 27, 34, 0.8); }
-  50% { box-shadow: 0 0 18px rgba(214, 27, 34, 1), 0 0 6px rgba(214, 27, 34, 0.6); }
+  transform: rotate(45deg);
+  box-shadow: none;
+  animation: none;
+  flex-shrink: 0;
 }
 
 .reviews__badge-title {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.76rem;
-  font-weight: 700;
+  font-size: 0.68rem;
+  font-weight: 800;
   letter-spacing: 0.12em;
   text-transform: uppercase;
-  color: #FFFDF5;
+  color: #F2B249;
 }
 
 .reviews__badge-divider {
-  color: rgba(255, 255, 255, 0.25);
-  font-size: 0.75rem;
+  display: inline-block;
+  width: 1px;
+  height: 11px;
+  background: rgba(245, 238, 224, 0.24);
+  color: transparent;
+  overflow: hidden;
+  font-size: 0;
+  flex-shrink: 0;
 }
 
 .reviews__badge-notice {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.65rem;
   font-weight: 600;
   letter-spacing: 0.08em;
-  color: #F5A623;
+  color: rgba(245, 238, 224, 0.78);
+  text-transform: uppercase;
 }
 
 .reviews__stamp-tag {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 0.72rem;
+  font-size: 0.68rem;
   font-weight: 800;
   letter-spacing: 0.14em;
   text-transform: uppercase;
-  color: rgba(255, 253, 245, 0.45);
-  border: 1px dashed rgba(255, 255, 255, 0.15);
-  padding: 0.35rem 0.75rem;
+  color: rgba(245, 238, 224, 0.65);
+  background: #1B1714;
+  border: 1px solid rgba(245, 238, 224, 0.2);
+  padding: 0.34rem 0.72rem;
   border-radius: 4px;
 }
 
@@ -201,7 +192,7 @@
   margin: 0;
 }
 
-/* Line 1: VOICES FROM — The Last Shuriken (Illuminated Warm Gold) */
+/* Line 1: VOICES FROM — The Last Shuriken (Warm Gold Gradient, No Glow) */
 .reviews__heading-outline {
   font-family: var(--font-shuriken, 'The Last Shuriken', sans-serif);
   font-size: clamp(2rem, 3.8vw, 3.35rem);
@@ -212,13 +203,13 @@
   -webkit-background-clip: text;
   -webkit-text-fill-color: transparent;
   background-clip: text;
-  filter: drop-shadow(0 2px 10px rgba(245, 166, 35, 0.22));
+  filter: none;
   letter-spacing: 0.04em;
   text-align: right;
   display: block;
 }
 
-/* Line 2: THE STREET — Outfit 900 (Crimson Glow) */
+/* Line 2: THE STREET — Outfit 900 (Crimson Gradient, No Glow) */
 .reviews__heading-solid {
   font-family: var(--font-heading, 'Outfit', sans-serif);
   font-size: clamp(2.05rem, 4vw, 3.5rem);
@@ -232,7 +223,7 @@
   -webkit-text-fill-color: transparent;
   background-clip: text;
   margin-top: 0.15rem;
-  filter: drop-shadow(0 4px 14px rgba(214, 27, 34, 0.32));
+  filter: none;
   text-align: right;
   display: block;
 }
@@ -276,6 +267,7 @@
   display: flex;
   flex-direction: column;
   width: 100%;
+  min-width: 0;
   max-width: 530px;
   /* Stagger entrance for deck column */
   opacity: 0;
@@ -304,12 +296,13 @@
   gap: 8px;
 }
 
-.reviews__deck-dot {
-  width: 7px;
-  height: 7px;
-  border-radius: 50%;
+.reviews__deck-title-lockup .reviews__deck-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 1px;
   background: #D61B22;
-  box-shadow: 0 0 8px rgba(214, 27, 34, 0.7);
+  transform: rotate(45deg);
+  box-shadow: none;
 }
 
 .reviews__deck-label {
@@ -375,44 +368,27 @@
   justify-content: center;
   width: 38px;
   height: 38px;
-  border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.22);
-  background: rgba(255, 255, 255, 0.06);
+  border-radius: 8px;
+  border: 1px solid rgba(245, 238, 224, 0.24);
+  background: #1B1714;
   color: #FFFDF5;
   font-size: 1.35rem;
   cursor: pointer;
-  transition: all 0.3s cubic-bezier(0.34, 1.56, 0.64, 1);
-  backdrop-filter: blur(8px);
+  transition: background-color 0.2s ease, color 0.2s ease, border-color 0.2s ease, transform 0.2s ease;
   position: relative;
   overflow: hidden;
-}
-
-.reviews__chevron-btn::before {
-  content: '';
-  position: absolute;
-  inset: 0;
-  border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 166, 35, 0.3), transparent);
-  opacity: 0;
-  transform: scale(0);
-  transition: all 0.35s cubic-bezier(0.16, 1, 0.3, 1);
 }
 
 .reviews__chevron-btn:hover {
   background: #F5A623;
   color: #110F0D;
   border-color: #F5A623;
-  transform: scale(1.12);
-  box-shadow: 0 8px 24px rgba(245, 166, 35, 0.4), 0 0 0 4px rgba(245, 166, 35, 0.1);
-}
-
-.reviews__chevron-btn:hover::before {
-  opacity: 1;
-  transform: scale(2);
+  transform: translateY(-1px);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.28);
 }
 
 .reviews__chevron-btn:active {
-  transform: scale(0.92);
+  transform: translateY(0);
   transition-duration: 0.1s;
 }
 
@@ -477,6 +453,9 @@
   top: 0;
   left: 0;
   width: 100%;
+  box-sizing: border-box;
+  min-width: 0;
+  overflow-wrap: anywhere;
   min-height: 360px;
   border-radius: 24px;
   padding: clamp(2rem, 3.5vw, 2.8rem);
@@ -509,30 +488,9 @@
   pointer-events: none;
 }
 
-/* ─── Glassmorphism shimmer overlay on front card ─── */
+/* ─── Glassmorphism shimmer overlay disabled for natural paper card feel ─── */
 .reviews__card-shimmer {
-  position: absolute;
-  inset: 0;
-  border-radius: 22px;
-  background: linear-gradient(
-    135deg,
-    rgba(255, 255, 255, 0) 0%,
-    rgba(255, 255, 255, 0.04) 40%,
-    rgba(255, 255, 255, 0.12) 50%,
-    rgba(255, 255, 255, 0.04) 60%,
-    rgba(255, 255, 255, 0) 100%
-  );
-  background-size: 200% 200%;
-  animation: shimmerSlide 4s ease-in-out infinite;
-  pointer-events: none;
-  z-index: 1;
-  opacity: 0.5;
-}
-
-@keyframes shimmerSlide {
-  0% { background-position: -100% -100%; }
-  50% { background-position: 200% 200%; }
-  100% { background-position: -100% -100%; }
+  display: none;
 }
 
 /* ─── Quote mark ornament ─── */
@@ -555,9 +513,8 @@
   border: 1px solid #C5BC9F;
   color: #1A1614;
   z-index: 1;
-  box-shadow: 0 12px 35px -10px rgba(0, 0, 0, 0.4);
+  box-shadow: 0 10px 28px -8px rgba(0, 0, 0, 0.38);
   pointer-events: none;
-  filter: blur(0.6px) brightness(0.96);
 }
 
 /* Card 2: Back Left Layer (Counter-Clockwise Tilt — Left Peek like Reference) */
@@ -566,44 +523,22 @@
   border: 1px solid #D5CCB8;
   color: #1A1614;
   z-index: 2;
-  box-shadow: 0 18px 45px -10px rgba(0, 0, 0, 0.5);
+  box-shadow: 0 14px 36px -8px rgba(0, 0, 0, 0.45);
   pointer-events: none;
-  filter: blur(0.3px) brightness(0.98);
 }
 
 /* Card 1: Front Active Layer */
 .reviews__card--front {
-  background-color: #FFFFFF;
-  background-image:
-    linear-gradient(135deg, rgba(255, 255, 255, 1) 0%, rgba(252, 250, 246, 1) 100%);
-  border: none;
+  background-color: #FDFBF7;
+  border: 1px solid #D5C8B4;
   color: #181512;
   z-index: 3;
   cursor: grab;
-  /* Gradient border via pseudo-element */
   outline: none;
 }
 
 .reviews__card--front::before {
-  content: '';
-  position: absolute;
-  inset: -1px;
-  border-radius: 25px;
-  padding: 1px;
-  background: linear-gradient(
-    145deg,
-    rgba(214, 27, 34, 0.15) 0%,
-    rgba(245, 166, 35, 0.12) 30%,
-    rgba(255, 255, 255, 0.2) 60%,
-    rgba(214, 27, 34, 0.08) 100%
-  );
-  -webkit-mask: linear-gradient(#fff 0 0) content-box, linear-gradient(#fff 0 0);
-  -webkit-mask-composite: xor;
-  mask-composite: exclude;
-  pointer-events: none;
-  z-index: -1;
-  transition: opacity 0.4s ease;
-  opacity: 0.6;
+  display: none;
 }
 
 .reviews__card--front::after {
@@ -612,26 +547,17 @@
   inset: 0;
   border-radius: 24px;
   box-shadow:
-    0 28px 60px -14px rgba(0, 0, 0, 0.6),
-    0 4px 12px rgba(0, 0, 0, 0.1),
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 0 70px -20px rgba(214, 27, 34, 0.1);
+    0 20px 44px -12px rgba(0, 0, 0, 0.52),
+    0 4px 12px rgba(0, 0, 0, 0.12);
   pointer-events: none;
   z-index: -1;
-  transition: box-shadow 0.4s ease;
-}
-
-.reviews__card--front:hover::before {
-  opacity: 1;
+  transition: box-shadow 0.3s ease;
 }
 
 .reviews__card--front:hover::after {
   box-shadow:
-    0 36px 80px -16px rgba(0, 0, 0, 0.7),
-    0 6px 16px rgba(0, 0, 0, 0.14),
-    0 0 0 1px rgba(0, 0, 0, 0.04),
-    0 0 90px -20px rgba(214, 27, 34, 0.18),
-    0 0 40px -10px rgba(245, 166, 35, 0.08);
+    0 24px 52px -12px rgba(0, 0, 0, 0.6),
+    0 6px 16px rgba(0, 0, 0, 0.16);
 }
 
 /* ─── Card Interior Typography & Layout ─── */
@@ -690,6 +616,8 @@
 }
 
 .reviews__author-meta {
+  min-width: 0;
+  max-width: 100%;
   display: flex;
   flex-direction: column;
   align-items: flex-start;
@@ -872,8 +800,8 @@
 .reviews__deck-dot--active {
   width: 24px;
   border-radius: 9999px;
-  background: linear-gradient(90deg, #D61B22, #E63946);
-  box-shadow: 0 0 12px rgba(214, 27, 34, 0.65), 0 0 4px rgba(214, 27, 34, 0.3);
+  background: #D61B22;
+  box-shadow: none;
 }
 
 .reviews__leave-link {
@@ -932,19 +860,20 @@
   align-items: center;
 }
 
-/* ─── Radiant Warm Streetlamp Stage Disk Behind Mascot ─── */
+/* ─── Crisp Japanese-Chinese Editorial Roundel Behind Mascot (No Blur Glow) ─── */
 .reviews__mascot-disc {
   position: absolute;
   top: 12%;
   left: 50%;
   transform: translateX(-50%);
-  width: 350px;
-  height: 350px;
+  width: 340px;
+  height: 340px;
   border-radius: 50%;
-  background: radial-gradient(circle, rgba(245, 166, 35, 0.14) 0%, rgba(214, 27, 34, 0.05) 55%, transparent 72%);
+  background: rgba(245, 238, 224, 0.025);
+  border: 1px solid rgba(245, 238, 224, 0.08);
   pointer-events: none;
   z-index: 0;
-  filter: blur(15px);
+  filter: none;
 }
 
 .reviews__mascot-ring-outer {
@@ -952,19 +881,13 @@
   inset: 0;
   border-radius: 50%;
   border: 1px dashed rgba(245, 166, 35, 0.22);
-  animation: ringPulse 6s ease-in-out infinite;
-}
-
-@keyframes ringPulse {
-  0%, 100% { opacity: 1; transform: scale(1); }
-  50% { opacity: 0.6; transform: scale(1.03); }
 }
 
 .reviews__mascot-ring-inner {
   position: absolute;
   inset: 22px;
   border-radius: 50%;
-  border: 1px solid rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(245, 238, 224, 0.08);
 }
 
 /* ─── Circular Print-Shop Ink Stamp (Rotates slowly around shoulder) ─── */
@@ -1033,38 +956,30 @@
 }
 
 .reviews__mascot-poster:hover .reviews__mascot-img {
-  transform: translateY(-8px) scale(1.03) rotate(-1deg);
-  filter: drop-shadow(0 28px 40px rgba(0, 0, 0, 0.8))
-          drop-shadow(0 0 30px rgba(245, 166, 35, 0.15));
+  transform: translateY(-6px) scale(1.02);
+  filter: drop-shadow(0 24px 36px rgba(0, 0, 0, 0.78));
 }
 
-/* ─── Asian Dim Sum Signboard Banner (Inspired by Lunar & Traditional Street Plaque) ─── */
+/* ─── Asian Dim Sum Signboard Banner (Lacquer Plaque without Neon Glow) ─── */
 .reviews__mascot-banner {
   position: relative;
   z-index: 2;
   width: 100%;
   margin-top: 1.5rem;
   padding: 1.4rem 1.6rem 1.25rem;
-  background: linear-gradient(145deg, #2A090D 0%, #1A0507 55%, #100204 100%);
-  border: 1px solid rgba(245, 166, 35, 0.45);
+  background: #181412;
+  border: 1px solid rgba(245, 166, 35, 0.38);
   border-radius: 8px;
-  outline: 1px solid rgba(245, 166, 35, 0.16);
+  outline: 1px solid rgba(245, 238, 224, 0.1);
   outline-offset: -5px;
-  backdrop-filter: blur(12px);
-  box-shadow:
-    0 16px 36px rgba(0, 0, 0, 0.65),
-    0 0 25px rgba(214, 27, 34, 0.15),
-    inset 0 1px 0 rgba(255, 255, 255, 0.08);
-  transition: transform 0.4s cubic-bezier(0.16, 1, 0.3, 1),
-              box-shadow 0.4s ease;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.45);
+  transition: transform 0.3s cubic-bezier(0.16, 1, 0.3, 1),
+              box-shadow 0.3s ease;
 }
 
 .reviews__mascot-banner:hover {
-  transform: translateY(-3px);
-  box-shadow:
-    0 22px 44px rgba(0, 0, 0, 0.7),
-    0 0 35px rgba(214, 27, 34, 0.2),
-    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transform: translateY(-2px);
+  box-shadow: 0 16px 34px rgba(0, 0, 0, 0.52);
 }
 
 /* Traditional Asian Meander / Fret Corner Ornaments */
@@ -1150,12 +1065,10 @@
   text-transform: uppercase;
   margin: 0;
   line-height: 1.1;
-  color: #F5A623;
-  background: linear-gradient(135deg, #FFFFFF 0%, #FFF5E0 45%, #F5A623 100%);
-  -webkit-background-clip: text;
-  -webkit-text-fill-color: transparent;
-  background-clip: text;
-  filter: drop-shadow(0 2px 10px rgba(245, 166, 35, 0.35));
+  color: #F2B249;
+  background: none;
+  -webkit-text-fill-color: currentColor;
+  filter: none;
 }
 
 /* Gold Divider Line with Center Diamond Motif */
@@ -1215,9 +1128,10 @@
 .reviews__spec-dot {
   width: 5px;
   height: 5px;
-  border-radius: 50%;
+  border-radius: 1px;
   background: #D61B22;
-  box-shadow: 0 0 6px #D61B22;
+  transform: rotate(45deg);
+  box-shadow: none;
 }
 
 .reviews__banner-spec-sep {
@@ -1230,7 +1144,7 @@
    ═══════════════════════════════════════════════════════════════════════════ */
 @media (max-width: 991px) {
   .reviews__showcase {
-    grid-template-columns: 1fr;
+    grid-template-columns: minmax(0, 1fr);
     gap: 3.5rem;
   }
 
@@ -1264,9 +1178,53 @@
     margin-bottom: 2.5rem;
   }
 
+  .reviews__badge {
+    padding: 0.28rem 0.62rem;
+    gap: 0.42rem;
+  }
+
+  .reviews__badge-title {
+    font-size: 0.58rem;
+    letter-spacing: 0.08em;
+  }
+
+  .reviews__badge-notice {
+    font-size: 0.55rem;
+    letter-spacing: 0.05em;
+  }
+
+  .reviews__stamp-tag {
+    font-size: 0.58rem;
+    padding: 0.26rem 0.55rem;
+  }
+
   .reviews__deck {
     min-height: 380px;
+    --review-back-left-x: -0.4rem;
+    --review-back-right-x: 0.4rem;
+    /* A tall, rotated quote projects outside the viewport. On phones, retain
+       depth and stagger with inset layers instead of wide diagonal corners. */
+    --review-back-left-angle: 0deg;
+    --review-back-right-angle: 0deg;
   }
+
+  .reviews__card--back-left,
+  .reviews__card--back-right {
+    height: calc(100% - 30px);
+    min-height: 0;
+    overflow: hidden;
+  }
+
+  .reviews__deck-topbar {
+    flex-wrap: wrap;
+    gap: 0.75rem;
+    padding-inline: 0;
+  }
+
+  .reviews__deck-controls { margin-left: auto; flex-shrink: 0; }
+  .reviews__autoplay-btn,
+  .reviews__chevron-btn { width: 44px; height: 44px; flex-shrink: 0; }
+  .reviews__card-pill { max-width: 100%; white-space: normal; }
 
   .reviews__card {
     min-height: 360px;

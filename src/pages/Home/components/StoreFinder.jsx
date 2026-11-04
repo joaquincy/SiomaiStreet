@@ -170,13 +170,26 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
 
       {/* ── Unified search area ── */}
       <div className="store-finder__unified-search">
-        <div className="store-finder__search-tabs" role="group" aria-label="Search type">
-          <button type="button" aria-pressed={searchMode === 'places'} aria-controls="store-place-search" onClick={() => setSearchMode('places')}>
-            <BiSearch aria-hidden="true" />Search Places
-          </button>
-          <button type="button" aria-pressed={searchMode === 'stores'} aria-controls="store-branch-search" onClick={() => setSearchMode('stores')}>
-            <BiMap aria-hidden="true" />Our Branches
-          </button>
+        <div className="store-finder__command-bar">
+          <div className="store-finder__search-tabs" role="group" aria-label="Search type">
+            <button type="button" aria-pressed={searchMode === 'places'} aria-controls="store-place-search" onClick={() => setSearchMode('places')}>
+              <BiSearch aria-hidden="true" />Search Places
+            </button>
+            <button type="button" aria-pressed={searchMode === 'stores'} aria-controls="store-branch-search" onClick={() => setSearchMode('stores')}>
+              <BiMap aria-hidden="true" />Our Branches
+            </button>
+          </div>
+
+          <div className="store-finder__quick-bar">
+            <button type="button" className="store-finder__quick-action" onClick={openMap}>
+              <BiMap aria-hidden="true" />
+              <span>Explore Map</span>
+            </button>
+            <button type="button" className="store-finder__quick-action" onClick={openPlanner}>
+              <BiNavigation aria-hidden="true" />
+              <span>Get Directions</span>
+            </button>
+          </div>
         </div>
 
         {/* Place search panel */}
@@ -200,27 +213,16 @@ export function StoreFinderExperience({ sectionRef, data, onRetry, mapsAvailable
 
       {searchedPlace && hasPins && <p className="store-finder__search-origin">{nearestDistance > 50 ? 'No matching Siomai Street branch pin is within 50 km of this place. You can still explore it and get directions.' : 'Siomai Street branches are sorted by distance from your selected place.'}</p>}
 
-      {/* ── Quick actions bar ── */}
-      <div className="store-finder__quick-bar">
-        <button type="button" className="store-finder__quick-action" onClick={openMap}>
-          <BiMap aria-hidden="true" />
-          <span>Explore Map</span>
-        </button>
-        <button type="button" className="store-finder__quick-action" onClick={openPlanner}>
-          <BiNavigation aria-hidden="true" />
-          <span>Get Directions</span>
-        </button>
-      </div>
-
-      <div className="store-finder__discovery">
-        <p className="store-finder__privacy" id="store-location-note">{data.status === 'ready' && !hasPins ? 'Branch pins are being prepared. You can still search and route to other places.' : 'Numbered pins mark Siomai Street branches.'}{position && !searchedPlace && <button type="button" onClick={clearLocation}>Clear my location</button>}</p>
-      </div>
       <p className="store-finder__location-status" role="status" aria-live="polite">{locationStatus}</p>
       {sharedId && data.status === 'ready' && !data.stores.some(store => store.id === sharedId) && <p className="store-finder__notice">That shared store is no longer in this directory. Browse the current stores below.</p>}
 
       <div className="store-finder__results-bar">
-        <p role="status" aria-live="polite" aria-atomic="true">{data.status === 'ready' ? <><strong>{String(filtered.length).padStart(2, '0')}</strong> {filtered.length === 1 ? 'store' : 'stores'}{query ? ' found' : ' to explore'}</> : 'Store directory'}</p>
-        {(query) && <button type="button" className="store-finder__text-button" onClick={reset}>Reset filters <BiX aria-hidden="true" /></button>}
+        <div className="store-finder__results-summary">
+          <p role="status" aria-live="polite" aria-atomic="true">{data.status === 'ready' ? <><strong>{String(filtered.length).padStart(2, '0')}</strong> {filtered.length === 1 ? 'store' : 'stores'}{query ? ' found' : ' to explore'}</> : 'Store directory'}</p>
+          {(query) && <button type="button" className="store-finder__text-button" onClick={reset}>Reset filters <BiX aria-hidden="true" /></button>}
+          <span className="store-finder__meta-dot" aria-hidden="true" />
+          <p className="store-finder__privacy" id="store-location-note">{data.status === 'ready' && !hasPins ? 'Branch pins are being prepared. You can still search and route to other places.' : 'Numbered pins mark Siomai Street branches.'}{position && !searchedPlace && <button type="button" onClick={clearLocation}>Clear my location</button>}</p>
+        </div>
         {filtered.length > 1 && <div className="store-finder__pager" role="group" aria-label="Browse matching stores"><button type="button" aria-label="Previous store" disabled={selectedIndex <= 0} onClick={() => choose(filtered[selectedIndex - 1].id)}><BiArrowBack aria-hidden="true" /></button><span>{selectedIndex + 1} / {filtered.length}</span><button type="button" aria-label="Next store" disabled={selectedIndex >= filtered.length - 1} onClick={() => choose(filtered[selectedIndex + 1].id)}><BiArrowToRight aria-hidden="true" /></button></div>}
         <div className="store-finder__view-switch" role="group" aria-label="Store finder view"><button type="button" aria-pressed={view === 'list'} aria-controls="store-results" onClick={browse}><BiListUl aria-hidden="true" />List</button><button type="button" aria-pressed={view === 'map'} aria-controls="store-map-panel" onClick={() => { setView('map'); setMapFocusVersion(value => value + 1); }}><BiMap aria-hidden="true" />Map</button></div>
       </div>

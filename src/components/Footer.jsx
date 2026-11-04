@@ -31,7 +31,7 @@ const Footer = () => {
           observer.disconnect(); // Only trigger once
         }
       },
-      { threshold: 0.2 } // Trigger when 20% visible
+      { threshold: 0.12 } // Trigger smoothly on both desktop and mobile viewports
     );
 
     if (sectionRef.current) {
@@ -41,22 +41,105 @@ const Footer = () => {
     return () => observer.disconnect();
   }, []);
 
-  // Mix siomai varieties here as new product images are added.
+  // Curated, balanced siomai pieces along the bottom edge (matches desktop composition on all screens)
   const foodPieces = [
-    { variety: 'original', left: '-5%', bottom: '-5%', width: 'clamp(150px, 15vw, 250px)', rot: '-12deg', delay: '0s', z: 3 },
-    { variety: 'japanese', left: '8%', bottom: '2%', width: 'clamp(180px, 18vw, 280px)', rot: '5deg', delay: '0.1s', z: 4 },
-    { variety: 'original', left: '20%', bottom: '-8%', width: 'clamp(160px, 16vw, 260px)', rot: '22deg', delay: '0.05s', z: 2 },
-    { variety: 'japanese', left: '35%', bottom: '5%', width: 'clamp(140px, 14vw, 220px)', rot: '-18deg', delay: '0.2s', z: 5 },
-    { variety: 'original', left: '48%', bottom: '-2%', width: 'clamp(200px, 20vw, 300px)', rot: '8deg', delay: '0.15s', z: 3 },
-    { variety: 'japanese', left: '60%', bottom: '10%', width: 'clamp(160px, 15vw, 240px)', rot: '-5deg', delay: '0.25s', z: 4 },
-    { variety: 'original', left: '72%', bottom: '-5%', width: 'clamp(180px, 18vw, 280px)', rot: '15deg', delay: '0.1s', z: 2 },
-    { variety: 'japanese', left: '85%', bottom: '5%', width: 'clamp(170px, 17vw, 270px)', rot: '-25deg', delay: '0.3s', z: 5 },
-    { variety: 'original', left: '95%', bottom: '-10%', width: 'clamp(200px, 20vw, 320px)', rot: '35deg', delay: '0.05s', z: 3 },
-    
-    // Additional smaller background scatter
-    { variety: 'original', left: '15%', bottom: '15%', width: 'clamp(100px, 10vw, 150px)', rot: '45deg', delay: '0.4s', z: 1 },
-    { variety: 'japanese', left: '55%', bottom: '25%', width: 'clamp(120px, 12vw, 180px)', rot: '-40deg', delay: '0.35s', z: 1 },
-    { variety: 'original', left: '80%', bottom: '18%', width: 'clamp(110px, 11vw, 160px)', rot: '60deg', delay: '0.45s', z: 1 },
+    {
+      variety: 'original',
+      left: '-4%',
+      bottom: '-5%',
+      width: 'clamp(145px, 14.5vw, 230px)',
+      mobileLeft: '-6%',
+      mobileBottom: '-3%',
+      mobileWidth: 'clamp(84px, 23vw, 128px)',
+      rot: '-14deg',
+      delay: '0s',
+      z: 3,
+    },
+    {
+      variety: 'japanese',
+      left: '11%',
+      bottom: '2%',
+      width: 'clamp(160px, 16vw, 250px)',
+      mobileLeft: '11%',
+      mobileBottom: '1%',
+      mobileWidth: 'clamp(90px, 25vw, 136px)',
+      rot: '8deg',
+      delay: '0.1s',
+      z: 4,
+    },
+    {
+      variety: 'original',
+      left: '29%',
+      bottom: '-6%',
+      width: 'clamp(150px, 15vw, 235px)',
+      mobileLeft: '30%',
+      mobileBottom: '-4%',
+      mobileWidth: 'clamp(82px, 22.5vw, 124px)',
+      rot: '20deg',
+      delay: '0.06s',
+      z: 2,
+    },
+    {
+      variety: 'japanese',
+      left: '46%',
+      bottom: '1%',
+      width: 'clamp(170px, 17vw, 265px)',
+      mobileLeft: '48%',
+      mobileBottom: '1%',
+      mobileWidth: 'clamp(92px, 25.5vw, 138px)',
+      rot: '-10deg',
+      delay: '0.16s',
+      z: 4,
+    },
+    {
+      variety: 'original',
+      left: '65%',
+      bottom: '-5%',
+      width: 'clamp(155px, 15.5vw, 245px)',
+      mobileLeft: '66%',
+      mobileBottom: '-3%',
+      mobileWidth: 'clamp(84px, 23vw, 128px)',
+      rot: '15deg',
+      delay: '0.12s',
+      z: 3,
+    },
+    {
+      variety: 'japanese',
+      left: '83%',
+      bottom: '2%',
+      width: 'clamp(165px, 16.5vw, 255px)',
+      mobileLeft: '81%',
+      mobileBottom: '1%',
+      mobileWidth: 'clamp(88px, 24.5vw, 134px)',
+      rot: '-22deg',
+      delay: '0.22s',
+      z: 4,
+    },
+    // Subtle smaller background scatter for depth
+    {
+      variety: 'original',
+      left: '21%',
+      bottom: '13%',
+      width: 'clamp(100px, 10vw, 148px)',
+      mobileLeft: '20%',
+      mobileBottom: '7%',
+      mobileWidth: 'clamp(62px, 17vw, 92px)',
+      rot: '38deg',
+      delay: '0.3s',
+      z: 1,
+    },
+    {
+      variety: 'japanese',
+      left: '74%',
+      bottom: '14%',
+      width: 'clamp(108px, 10.5vw, 158px)',
+      mobileLeft: '73%',
+      mobileBottom: '8%',
+      mobileWidth: 'clamp(64px, 17.5vw, 96px)',
+      rot: '-32deg',
+      delay: '0.35s',
+      z: 1,
+    },
   ];
 
   return (
@@ -71,7 +154,7 @@ const Footer = () => {
           <img
             src="/images/siomai street logo.png"
             srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w, /images/responsive/siomai%20street%20logo-400w.png 400w"
-            sizes="(max-width: 768px) 14vw, 10.5vw"
+            sizes="(max-width: 768px) 17vw, 10.5vw"
             alt="Siomai Street" className="footer-sign-logo"
           />
           <div className="footer-sign-col footer-sign-col--right">
@@ -90,13 +173,16 @@ const Footer = () => {
               key={index}
               src={siomai.src}
               srcSet={getSrcSet(siomai.src, siomai.widths)}
-              sizes="(max-width: 768px) 29vw, 280px"
+              sizes="(max-width: 768px) 25vw, 260px"
               alt={siomai.alt}
               className="footer-poster__food-piece"
               style={{
                 '--left': piece.left,
                 '--bottom': piece.bottom,
                 '--width': piece.width,
+                '--mobile-left': piece.mobileLeft,
+                '--mobile-bottom': piece.mobileBottom,
+                '--mobile-width': piece.mobileWidth,
                 '--rot': piece.rot,
                 '--delay': piece.delay,
                 '--z': piece.z
@@ -175,15 +261,22 @@ const Footer = () => {
           </div>
 
         </div>
+      </div>
 
-        {/* Bottom Copyright */}
-        <div className="footer-poster__bottom-bar">
-          <p>© {currentYear} SIOMAI STREET. ALL RIGHTS RESERVED.</p>
-          <div className="footer-poster__legal">
+      {/* ─── Bottom-Most Rectangle Placer Bar ─── */}
+      <div className="footer-poster__placer-bar">
+        <div className="footer-poster__placer-inner">
+          <span className="footer-poster__placer-copy">
+            © {currentYear} SIOMAI STREET. ALL RIGHTS RESERVED.
+          </span>
+          <span className="footer-poster__placer-pipe" aria-hidden="true">|</span>
+          <nav className="footer-poster__placer-links" aria-label="Legal links">
             <Link to="/privacy">PRIVACY</Link>
+            <span className="footer-poster__placer-link-sep" aria-hidden="true">|</span>
             <Link to="/terms">TERMS</Link>
+            <span className="footer-poster__placer-link-sep" aria-hidden="true">|</span>
             <Link to="/cookies">COOKIES</Link>
-          </div>
+          </nav>
         </div>
       </div>
     </footer>

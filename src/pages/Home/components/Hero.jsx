@@ -1,6 +1,7 @@
 import { useState, useEffect, useCallback, useRef } from 'react';
 import { Link } from 'react-router-dom';
 import { getSrcSet } from '../../../utils/responsiveImage';
+import useAutoMotion from '../../../hooks/useAutoMotion';
 import './Hero.css';
 
 const bestSellers = [
@@ -47,8 +48,8 @@ const SLIDE_DURATION = 5000;
 const Hero = () => {
   const [activeIndex, setActiveIndex] = useState(0);
   const [isPaused, setIsPaused] = useState(false);
-  const [isVisible, setIsVisible] = useState(true);
   const sectionRef = useRef(null);
+  const isVisible = useAutoMotion(sectionRef);
 
   const goToSlide = useCallback((index) => {
     setActiveIndex(index);
@@ -66,41 +67,12 @@ const Hero = () => {
   useEffect(() => {
     if (isPaused || !isVisible) return;
 
-    const prefersReducedMotion =
-      window.matchMedia('(prefers-reduced-motion: reduce)').matches;
-    if (prefersReducedMotion) return;
-
     const interval = setInterval(() => {
       handleNext();
     }, SLIDE_DURATION);
 
     return () => clearInterval(interval);
   }, [isPaused, isVisible, handleNext]);
-
-  // IntersectionObserver to pause autoplay when hero is offscreen
-  useEffect(() => {
-    const section = sectionRef.current;
-    if (!section) return;
-
-    const observer = new IntersectionObserver(
-      ([entry]) => {
-        setIsVisible(entry.isIntersecting);
-      },
-      { threshold: 0 }
-    );
-    observer.observe(section);
-
-    // Pause when tab is hidden
-    const onVisibility = () => {
-      setIsVisible(!document.hidden);
-    };
-    document.addEventListener('visibilitychange', onVisibility);
-
-    return () => {
-      observer.disconnect();
-      document.removeEventListener('visibilitychange', onVisibility);
-    };
-  }, []);
 
   const currentItem = bestSellers[activeIndex];
 

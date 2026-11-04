@@ -63,3 +63,21 @@ test('receipt presentation keeps access private, preserves correction guidance a
   assert.match(malformedExpiry, /Access expiry was not included/);
   assert.doesNotMatch(malformedExpiry, /Invalid Date|object Object/);
 });
+
+test('successful receipt modal preserves actions and provides a non-destructive reopen control', async t => {
+  const vite = await createServer({ server: { middlewareMode: true, hmr: false, watch: null }, logLevel: 'error' });
+  t.after(() => vite.close());
+  const { default: ReceiptModal } = await vite.ssrLoadModule('/src/pages/Application/ApplicationReceiptModal.jsx');
+  const markup = renderToStaticMarkup(createElement(MemoryRouter, null, createElement(ReceiptModal, {
+    receipt, cleanupStatus: 'Local draft cleared from this device.', onRetryCleanup() {}, onNewApplication() {},
+  })));
+  assert.match(markup, /<dialog[^>]*aria-labelledby="receipt-title"[^>]*aria-describedby="receipt-dialog-reminder"/);
+  assert.match(markup, /aria-label="Close receipt"/);
+  assert.match(markup, /aria-haspopup="dialog">View and save your receipt/);
+  assert.match(markup, /Closing this window keeps it available here/);
+  assert.match(markup, /Received does not mean approved/);
+  assert.match(markup, /Copy application reference/);
+  assert.match(markup, /Save.*receipt/);
+  assert.match(markup, /href="\/application\/status"/);
+  assert.doesNotMatch(markup, new RegExp(receipt.accessCode));
+});

@@ -1,0 +1,78 @@
+.receipt-dialog {
+  inset: 0;
+  margin: auto;
+  width: min(66rem, calc(100% - 1.5rem));
+  max-width: none;
+  max-height: calc(100dvh - 1.5rem);
+  padding: 0;
+  border: 1px solid var(--app-border);
+  border-radius: 1.25rem;
+  background: var(--app-canvas);
+  color: var(--app-text);
+  font-family: var(--app-font);
+  overflow: auto;
+  overscroll-behavior: contain;
+}
+.receipt-dialog::backdrop { background: rgb(25 17 17 / 65%); }
+.receipt-dialog-bar {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+  padding: .5rem 1rem;
+  background: var(--app-canvas);
+  border-bottom: 1px solid var(--app-border);
+  font-size: .875rem;
+  font-weight: 600;
+}
+.receipt-dialog-bar button {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 2.75rem;
+  height: 2.75rem;
+  border: 1px solid var(--app-border);
+  border-radius: 50%;
+  background: transparent;
+  color: var(--app-red-dark);
+  font-size: 1.25rem;
+}
+.receipt-dialog-content { padding-bottom: 1.25rem; }
+.receipt-dialog-reminder {
+  padding: 1rem 1.25rem 0;
+  font-size: .8125rem;
+  line-height: 1.6;
+  color: var(--app-text-secondary);
+}
+.receipt-dialog .application-receipt { padding-top: 1rem; }
+.receipt-dialog .receipt-masthead { display: none; }
+.receipt-return {
+  max-width: 36rem;
+  margin: 3rem auto;
+  padding: 2rem 1.25rem;
+  text-align: center;
+  font-family: var(--app-font);
+}
+.receipt-return-check { color: var(--app-red-dark); width: 2.5rem; height: 2.5rem; }
+.receipt-return h1 { font-family: var(--app-font-display); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; }
+.receipt-return p { margin: 1rem 0; color: var(--app-text-secondary); line-height: 1.7; }
+.receipt-return button {
+  min-height: 3rem;
+  padding: .75rem 1.25rem;
+  border-radius: .75rem;
+  background: var(--app-red-dark);
+  color: var(--app-canvas);
+  font-weight: 600;
+}
+.receipt-return a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--app-red-dark); text-decoration: underline; }
+.receipt-dialog button:focus-visible, .receipt-dialog a:focus-visible, .receipt-return button:focus-visible, .receipt-return a:focus-visible {
+  outline: 2px solid var(--app-red-dark);
+  outline-offset: 3px;
+}
+.receipt-dialog-bar button:hover { background: var(--app-border); }
+@media (min-width: 700px) {
+  .receipt-dialog { width: min(66rem, calc(100% - 3rem)); max-height: calc(100dvh - 3rem); }
+}
