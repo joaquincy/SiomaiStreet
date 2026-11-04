@@ -93,6 +93,24 @@ test('scanner outage keeps uploaded files; retry checks them without re-uploadin
   unavailable = false; assert.equal((await send()).id, id); assert.equal(rt.counts().uploads, uploaded);
 });
 
+test('lost storage acknowledgement is reconciled before checks and cannot create duplicate applications', async () => {
+  const rt = runtime(), data = valid(), requestId = randomUUID();
+  const uploader = async (...args) => { await rt.uploader(...args); throw Object.assign(new Error('Lost storage response'), { status: 0 }); };
+  const send = () => submitFranchiseApplication({ formData: data, requestId, fetcher: rt.fetcher, uploader });
+  assert.equal((await send()).id, requestId);
+  const { uploads: uploaded, scans } = rt.counts();
+  assert.equal((await send()).id, requestId); assert.equal(rt.counts().uploads, uploaded);
+  assert.ok(scans >= Object.keys(data.documents).length); assert.equal(rt.counts().scans, scans);
+  assert.equal((await database.db.query('select count(*)::int as n from franchise_applications where id=$1', [requestId])).rows[0].n, 1);
+});
+
+test('failed upload without stored bytes keeps the original error and cannot finalize', async () => {
+  const rt = runtime(), data = valid(), requestId = randomUUID();
+  const failure = Object.assign(new Error('Storage permission rejected; draft kept'), { status: 403 });
+  await assert.rejects(submitFranchiseApplication({ formData: data, requestId, fetcher: rt.fetcher, uploader: async () => { throw failure; } }), error => error === failure);
+  assert.equal(await rt.repository.application(requestId), null); assert.equal(rt.counts().scans, 0);
+});
+
 test('real hourly limiter permits receipt replay after the new-session allowance is spent', async () => {
   const observed = [];
   const rate = createSharedApplicationRateLimit({ secret: 'synthetic-rate-secret'.repeat(2),

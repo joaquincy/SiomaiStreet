@@ -6,7 +6,7 @@ import { uploadDocument, clearUploadTransfers } from '../src/api/resumableDocume
 
 // Real tus-js-client HTTP transfers against a synthetic TUS server. Node's transport
 // is exercised here; this does not substitute for browser XHR / hosted Supabase QA.
-async function tusServer(t, { failPatch = false, hold = false } = {}) {
+async function tusServer(t, { failPatch = false, hold = false, rejectStatus = 0 } = {}) {
   const chunks = []; const methods = []; const lengths = [];
   let offset = 0; let size = 0; let failures = 0; let posts = 0;
   const server = createServer(async (req, res) => {
@@ -16,6 +16,7 @@ async function tusServer(t, { failPatch = false, hold = false } = {}) {
       assert.equal(req.headers['x-upsert'], 'false');
       assert.equal(req.headers.authorization, undefined);
       res.setHeader('Tus-Resumable', '1.0.0');
+      if (rejectStatus) { res.writeHead(rejectStatus); return res.end('Synthetic authorization failure'); }
       if (req.method === 'HEAD') {
         res.writeHead(200, { 'Upload-Offset': String(offset), 'Upload-Length': String(size) }); return res.end();
       }
@@ -51,4 +52,15 @@ test('aborting a transfer releases the promise and abort listeners without leaki
   const pending = uploadDocument(input, runtime.grant, { signal: controller.signal });
   await once(runtime.server, 'request'); controller.abort();
   await assert.rejects(pending, { name: 'AbortError' });
+});
+
+test('large file falls back once to signed PUT when the TUS endpoint rejects its token', async t => {
+  const runtime = await tusServer(t, { rejectStatus: 400 });
+  runtime.grant.signedUrl = new URL(`/storage/v1/object/upload/sign/franchise-quarantine/${runtime.grant.path}?token=${runtime.grant.signature}`, runtime.grant.endpoint).href;
+  const input = Object.assign(Buffer.alloc(7 * 1024 * 1024), { size: 7 * 1024 * 1024, name: 'synthetic.pdf', type: 'application/pdf' });
+  let puts = 0;
+  const xhrFactory = () => ({ upload: {}, open(method) { assert.equal(method, 'PUT'); }, setRequestHeader() {},
+    send(body) { puts++; assert.equal(body, input); this.status = 200; this.onload(); }, abort() {} });
+  await uploadDocument(input, runtime.grant, { xhrFactory });
+  assert.equal(puts, 1); assert.deepEqual(runtime.result().methods, ['POST']);
 });

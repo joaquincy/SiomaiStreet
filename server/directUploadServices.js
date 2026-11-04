@@ -63,12 +63,14 @@ export function createUploadStorage({ url, serviceKey, request, uploadFile, dele
     exists: path => exists('franchise-quarantine', path),
     sign: async path => {
       const result = await request(`/storage/v1/object/upload/sign/franchise-quarantine/${encodePath(path)}`, { method: 'POST', body: '{}', headers: { 'x-upsert': 'false' } });
-      const token = new URL(`${url}/storage/v1${result.url}`).searchParams.get('token');
+      const token = result.token || new URL(`${url}/storage/v1${result.url}`).searchParams.get('token');
       if (!token) throw fail('Upload authorization could not be created.');
       const endpoint = new URL(url);
       if (/^[a-z0-9-]+\.supabase\.co$/.test(endpoint.hostname)) endpoint.hostname = endpoint.hostname.replace('.supabase.co', '.storage.supabase.co');
       endpoint.pathname = '/storage/v1/upload/resumable';
-      return { endpoint: endpoint.href, signature: token };
+      const signedUrl = new URL(`/storage/v1/object/upload/sign/franchise-quarantine/${encodePath(path)}`, url);
+      signedUrl.searchParams.set('token', token);
+      return { endpoint: endpoint.href, signature: token, signedUrl: signedUrl.href };
     },
     promote: async (path, file) => {
       // Stable immutable paths make a crash between Storage and Postgres recoverable.

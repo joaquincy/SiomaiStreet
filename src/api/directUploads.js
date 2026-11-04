@@ -71,12 +71,21 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
         const grant = await request(`${endpoint}/authorize/${item.key}`, {}, session.token);
         if (grant?.state === 'ready') completed.add(item.key);
         else if (grant?.state === 'upload') {
-          await uploader(documents[item.key], grant, {
+          try { await uploader(documents[item.key], grant, {
             signal: activeSignal, onProgress: bytes => {
               transferred[item.key] = bytes;
               onProgress(`Uploading documents · ${Math.floor(Object.values(transferred).reduce((sum, value) => sum + value, 0) / total * 100)}% transferred`);
             }
-          });
+          }); } catch (error) {
+            activeSignal.throwIfAborted();
+            // A lost storage response or competing retry may have completed the file.
+            // Reconcile once before declaring failure; final server checks still verify it.
+            let recovered;
+            try { recovered = await request(`${endpoint}/authorize/${item.key}`, {}, session.token); }
+            catch { throw error; }
+            if (recovered?.state === 'ready') completed.add(item.key);
+            else if (recovered?.state !== 'uploaded') throw error;
+          }
         } else if (grant?.state !== 'uploaded') throw new Error('Upload authorization was incomplete. Keep your draft and retry.');
         transferred[item.key] = item.size;
       }
