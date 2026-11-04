@@ -21,7 +21,25 @@ test('server image re-encoding removes EXIF and preserves image dimensions',asyn
   assert.ok((await sharp(input).metadata()).exif);
   const result=await normalizeDocumentImage(new File([input],'synthetic.jpg',{type:'image/jpeg'}));
   const metadata=await sharp(Buffer.from(await result.arrayBuffer())).metadata();
-  assert.equal(metadata.exif,undefined);assert.equal(metadata.xmp,undefined);assert.equal(metadata.width,80);assert.equal(metadata.height,60);assert.equal(result.type,'image/png');
+  assert.equal(metadata.exif,undefined);assert.equal(metadata.xmp,undefined);assert.equal(metadata.width,80);assert.equal(metadata.height,60);assert.equal(result.type,'image/jpeg');
+});
+
+test('JPEG orientation is applied to pixels and PNG text scans stay lossless', async () => {
+  const input = await sharp({ create: { width: 80, height: 60, channels: 3, background: '#777777' } }).jpeg().withMetadata({ orientation: 6 }).toBuffer();
+  const rotated = await normalizeDocumentImage(new File([input], 'rotated.jpg', { type: 'image/jpeg' }));
+  const metadata = await sharp(Buffer.from(await rotated.arrayBuffer())).metadata();
+  assert.equal(metadata.width, 60); assert.equal(metadata.height, 80); assert.equal(metadata.orientation, undefined);
+  const pixels = Buffer.alloc(80 * 60 * 3);
+  for (let i = 0; i < pixels.length; i++) pixels[i] = (i * 17) % 256;
+  const png = await sharp(pixels, { raw: { width: 80, height: 60, channels: 3 } }).png().toBuffer();
+  const normalized = await normalizeDocumentImage(new File([png], 'scan.png', { type: 'image/png' }));
+  assert.equal(normalized.type, 'image/png');
+  assert.deepEqual(await sharp(Buffer.from(await normalized.arrayBuffer())).removeAlpha().raw().toBuffer(), pixels);
+});
+
+test('oversized decoded images are rejected even when compressed bytes are small', async () => {
+  const input = await sharp({ create: { width: 6000, height: 4001, channels: 3, background: '#eeeeee' } }).png().toBuffer();
+  await assert.rejects(normalizeDocumentImage(new File([input], 'oversized.png', { type: 'image/png' })), { status: 422 });
 });
 test('server rejects invalid image bytes; PDF evidence is not silently rasterized',async()=>{
   await assert.rejects(normalizeDocumentImage(new File(['fake'],'fake.png',{type:'image/png'})),{status:422});

@@ -11,9 +11,10 @@ export function createUploadRepository(request) {
   const first = async path => (await request(`/rest/v1/${path}`))?.[0] || null;
   return {
     application: id => first(`franchise_applications?select=id,request_hash,submitted_at,document_paths&id=eq.${id}&limit=1`),
-    active: (id, hash) => first(`franchise_upload_sessions?application_id=eq.${id}&request_hash=eq.${hash}&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&order=created_at.desc&limit=1`),
+    active: (id, hash) => first(`franchise_upload_sessions?select=id,request_hash,expires_at&application_id=eq.${id}&request_hash=eq.${hash}&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&order=created_at.desc&limit=1`),
     prepare: (id, hash, data, manifest, correction, retry) => rpc('prepare_franchise_upload', { p_application_id: id, p_request_hash: hash, p_data: data, p_manifest: manifest, p_correction: correction || null, p_retry: retry || null }),
-    session: id => first(`franchise_upload_sessions?id=eq.${id}&limit=1`),
+    // Authorization/check calls need session metadata, not a copy of every private answer.
+    session: id => first(`franchise_upload_sessions?select=id,application_id,request_hash,expires_at,correction_id&id=eq.${id}&limit=1`),
     items: id => request(`/rest/v1/franchise_upload_items?session_id=eq.${id}&order=document_key.asc&limit=10`),
     item: (id, key) => first(`franchise_upload_items?session_id=eq.${id}&document_key=eq.${key}&limit=1`),
     claim: (id, key, lease) => rpc('claim_franchise_upload', { p_session: id, p_key: key, p_lease: lease }),
@@ -75,13 +76,12 @@ export function createUploadStorage({ url, serviceKey, request, uploadFile, dele
     promote: async (path, file) => {
       // Stable immutable paths make a crash between Storage and Postgres recoverable.
       const sameExisting = async () => digest(await download('franchise-documents', path)) === digest(Buffer.from(await file.arrayBuffer()));
-      if (await exists('franchise-documents', path)) {
-        if (!await sameExisting()) throw fail('Stored document mismatch. The application has been kept for safe retry.');
-        return;
-      }
+      // An immutable upload (x-upsert:false) is the fast path. Only reconcile an
+      // existing object after a conflict or a lost response, not before every upload.
       try { await uploadFile('franchise-documents', path, file, file.type); }
       catch (error) {
-        if (!await exists('franchise-documents', path) || !await sameExisting()) throw error;
+        if (!await exists('franchise-documents', path)) throw error;
+        if (!await sameExisting()) throw fail('Stored document mismatch. The application has been kept for safe retry.');
       }
     },
     remove: deleteStorageObjects,

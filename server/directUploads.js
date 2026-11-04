@@ -2,6 +2,7 @@ import { createHash, createHmac, randomUUID, timingSafeEqual } from 'node:crypto
 import { CONTRACT_VERSION, DOCUMENT_KEYS, MAX_DOCUMENT_BYTES, UUID_PATTERN, documentTypes, sanitizeApplication, validateApplication } from '../shared/application.js';
 import { normalizeDocumentImage } from './documentImages.js';
 import { isAcceptedScan } from './documentScanner.js';
+import { createUploadCheckQueue } from './uploadCheckQueue.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
@@ -82,7 +83,7 @@ export function assertDocumentBytes(bytes, item) {
 
 // All paths come from a server-created session. Client paths and scan flags are ignored.
 export function createDirectUploadHandler({ repository, storage, rate, verify, verifyStorage, access, scanDocument, json, receiptDetails, corrections, allowUnscanned = false, now = Date.now }) {
-  let scanning = false;
+  const acquireCheck = createUploadCheckQueue();
   const receipt = row => ({ version: CONTRACT_VERSION, id: row.id, status: 'submitted', submittedAt: row.submitted_at, ...receiptDetails(row) });
   const expired = row => Date.parse(row.expires_at) <= now();
   return async (req, res, sessionId, action, key, correctionContext) => {
@@ -151,37 +152,48 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
       return json(res, 200, { state: 'upload', ...grant, path, bucket: 'franchise-quarantine' });
     }
     if (action !== 'check') throw fail('Unknown upload action.', 404);
-    if (scanning) throw fail('Another document is being checked. Retry shortly; uploaded files are kept.', 503);
-    scanning = true;
+    const timings = [];
+    const measure = async (stage, operation) => {
+      const started = performance.now();
+      try { return await operation(); }
+      finally {
+        timings.push(`${stage};dur=${(performance.now() - started).toFixed(1)}`);
+        // Numeric timings only: no applicant fields, document names, tokens or paths.
+        if (!res.headersSent && !res.destroyed) res.setHeader('Server-Timing', timings.join(', '));
+      }
+    };
+    // Wait for bounded local capacity before taking a database lease or reading bytes.
+    const releaseCheck = await measure('queue', () => acquireCheck(req, res));
     const lease = randomUUID();
     let claimed = false;
     try {
-      claimed = Boolean(await repository.claim(sessionId, key, lease));
+      if (expired(row)) throw fail('The upload session expired. Your draft is safe; submit again to start a new session.', 410);
+      claimed = Boolean(await measure('claim', () => repository.claim(sessionId, key, lease)));
       if (!claimed) {
         const latest = await repository.item(sessionId, key);
         if (latest?.state === 'ready') return json(res, 200, { state: 'ready' });
         if (latest?.attempts >= 8 && !(Date.parse(latest.lease_until) > now())) throw fail(`This upload session has used all 8 checks for this document. Keep your draft. This counter does not reset after a few minutes; wait for the two-hour upload session to expire (about ${Math.max(1, Math.ceil((Date.parse(row.expires_at) - now()) / 60000))} minutes remaining) before starting again, or contact support.`, 409);
         throw fail('This document is already being checked. Wait for that check to finish before retrying; uploaded files are kept. An interrupted check can remain locked for up to 5 minutes.', 409);
       }
-      const bytes = await storage.download('franchise-quarantine', path);
+      const bytes = await measure('download', () => storage.download('franchise-quarantine', path));
       assertDocumentBytes(bytes, item);
       const original = new File([bytes], item.name, { type: item.content_type });
-      const scan = await scanDocument(original);
+      const scan = await measure('scan', () => scanDocument(original));
       const rejected = ['rejected', 'infected'].includes(scan?.status);
       if (!isAcceptedScan(scan, allowUnscanned)) throw fail(rejected ? 'This document failed the security scan. Replace it with a safe file.' : 'Document scanning is temporarily unavailable. Your upload is kept for retry.', rejected ? 422 : 503);
-      const normalized = await normalizeDocumentImage(original);
+      const normalized = await measure('normalize', () => normalizeDocumentImage(original));
       // Re-encoding strips image metadata, including location. Validate the output too.
-      const finalScan = normalized === original ? scan : await scanDocument(normalized);
+      const finalScan = normalized === original ? scan : await measure('rescan', () => scanDocument(normalized));
       if (!isAcceptedScan(finalScan, allowUnscanned)) throw fail('The processed document did not pass security scanning. Please retry.', ['rejected', 'infected'].includes(finalScan?.status) ? 422 : 503);
-      await storage.promote(path, normalized);
+      await measure('promote', () => storage.promote(path, normalized));
       const document = { path, name: normalized.name, contentType: normalized.type, size: normalized.size, scan: finalScan };
-      if (!await repository.finish(sessionId, key, lease, document)) throw fail('The document check expired. Keep your draft and retry.', 409);
+      if (!await measure('finish', () => repository.finish(sessionId, key, lease, document))) throw fail('The document check expired. Keep your draft and retry.', 409);
       return json(res, 200, { state: 'ready' });
     } catch (error) {
       if (claimed) await repository.release(sessionId, key, lease, error.status === 422).catch(() => { });
       if (error.status === 422) error.validationErrors = [{ step: 6, message: `${key}: ${error.message}` }];
       throw error;
-    } finally { scanning = false; }
+    } finally { releaseCheck(); }
   };
 }
 

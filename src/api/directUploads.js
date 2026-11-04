@@ -63,6 +63,14 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
     const completed = new Set();
     const transferred = Object.fromEntries(manifest.map(item => [item.key, 0]));
     const total = manifest.reduce((sum, item) => sum + item.size, 0);
+    let lastProgress = '';
+    const reportProgress = () => {
+      if (activeSignal.aborted) return;
+      const percent = Math.floor(Object.values(transferred).reduce((sum, value) => sum + value, 0) / total * 100);
+      const message = `Uploading documents · ${percent}% transferred. Checking documents · ${completed.size} of ${manifest.length} complete.`;
+      // XHR emits many byte events; only update React/live regions when visible progress changes.
+      if (message !== lastProgress) { lastProgress = message; onProgress(message); }
+    };
     let next = 0;
     const uploadNext = async () => {
       while (next < manifest.length) {
@@ -73,8 +81,8 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
         else if (grant?.state === 'upload') {
           try { await uploader(documents[item.key], grant, {
             signal: activeSignal, onProgress: bytes => {
-              transferred[item.key] = bytes;
-              onProgress(`Uploading documents · ${Math.floor(Object.values(transferred).reduce((sum, value) => sum + value, 0) / total * 100)}% transferred`);
+              transferred[item.key] = Math.min(item.size, Math.max(0, Number.isFinite(bytes) ? bytes : 0));
+              reportProgress();
             }
           }); } catch (error) {
             activeSignal.throwIfAborted();
@@ -88,20 +96,22 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
           }
         } else if (grant?.state !== 'uploaded') throw new Error('Upload authorization was incomplete. Keep your draft and retry.');
         transferred[item.key] = item.size;
+        reportProgress();
+        // Check each document as soon as it arrives, while the other worker progresses.
+        // Two end-to-end workers bound upload bandwidth, server memory and database pressure.
+        if (!completed.has(item.key)) {
+          const checked = await request(`${endpoint}/check/${item.key}`, {}, session.token, 180000);
+          if (checked?.state !== 'ready') throw new Error('A document check was not confirmed. Keep your draft and retry.');
+          completed.add(item.key);
+          reportProgress();
+        }
       }
     };
     const workers = Array.from({ length: Math.min(2, manifest.length) }, () => uploadNext().catch(error => { controller.abort(error); throw error; }));
     const outcomes = await Promise.allSettled(workers);
     const failed = outcomes.find(outcome => outcome.status === 'rejected');
     if (failed) throw failed.reason;
-    for (const [index, item] of manifest.entries()) {
-      activeSignal.throwIfAborted();
-      onProgress(`Checking documents · ${index + 1} of ${manifest.length}. Please keep this page open.`);
-      if (!completed.has(item.key)) {
-        const checked = await request(`${endpoint}/check/${item.key}`, {}, session.token, 180000);
-        if (checked?.state !== 'ready') throw new Error('A document check was not confirmed. Keep your draft and retry.');
-      }
-    }
+    activeSignal.throwIfAborted();
     onProgress('Documents checked. Confirming your submission…');
     return confirmReceipt(await request(`${endpoint}/finalize`, {}, session.token));
   } finally { controller.abort(); finishFeedback(); }

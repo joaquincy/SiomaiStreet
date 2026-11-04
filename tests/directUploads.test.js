@@ -18,7 +18,7 @@ const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAACXBIWXM
 const valid = () => ({ ...structuredClone(fixture), documents: Object.fromEntries(REQUIRED_DOC_KEYS.map(key => [key, new File([key === 'idPhoto' ? png : '%PDF-1.4\nSYNTHETIC ONLY\n%%EOF'], `${key}.${key === 'idPhoto' ? 'png' : 'pdf'}`, { type: key === 'idPhoto' ? 'image/png' : 'application/pdf' })])) });
 const clean = () => ({ status: 'clean', engine: 'ClamAV', scannedAt: new Date().toISOString() });
 const requestStream = (body, headers = {}) => Object.assign(Readable.from([Buffer.from(body)]), { headers: { 'content-type': 'application/json', ...headers }, setTimeout() {} });
-const res = () => ({ setHeader() {} });
+const res = () => ({ headers: {}, setHeader(name, value) { this.headers[name] = value; } });
 const bodyFor = async (data = valid(), id = randomUUID()) => ({ version: 1, requestId: id, applicationData: { ...data, documents: undefined }, manifest: await documentManifest(data.documents) });
 
 function runtime(overrides = {}) {
@@ -42,7 +42,7 @@ function runtime(overrides = {}) {
     const correction = url.match(/^\/api\/application-status\/([^/]+)\/corrections\/([^/]+)\/uploads$/);
     try { await handler(req, response, match?.[1], match?.[2], match?.[3], correction ? { applicationId: correction[1], correctionId: correction[2] } : undefined); }
     catch (error) { response.status = error.status || 500; response.value = { error: error.message, validationErrors: error.validationErrors }; }
-    return Response.json(response.value, { status: response.status });
+    return Response.json(response.value, { status: response.status, headers: response.headers });
   };
   const uploader = async (file, grant, options) => {
     active++; maxActive = Math.max(maxActive, active);
@@ -87,10 +87,43 @@ test('scanner outage keeps uploaded files; retry checks them without re-uploadin
   let unavailable = true;
   const rt = runtime({ scanDocument: async () => { if (unavailable) throw Object.assign(new Error('Scanner temporarily unavailable'), { status: 503 }); return clean(); } });
   const data = valid(); const id = randomUUID();
-  const send = () => submitFranchiseApplication({ formData: data, requestId: id, fetcher: rt.fetcher, uploader: rt.uploader });
-  await assert.rejects(send(), /Scanner/); const uploaded = rt.counts().uploads;
+  const paths = [];
+  const uploader = async (...args) => { await rt.uploader(...args); paths.push(args[1].path); };
+  const send = () => submitFranchiseApplication({ formData: data, requestId: id, fetcher: rt.fetcher, uploader });
+  await assert.rejects(send(), /Scanner/);
   assert.equal(await rt.repository.application(id), null);
-  unavailable = false; assert.equal((await send()).id, id); assert.equal(rt.counts().uploads, uploaded);
+  unavailable = false; assert.equal((await send()).id, id);
+  assert.equal(new Set(paths).size, paths.length, 'retry reuses every file that arrived before the scanner failed');
+  assert.equal(paths.length, Object.keys(data.documents).length);
+});
+
+test('document checks overlap uploads, remain bounded and expose only numeric stage timings', async () => {
+  let active = 0, maximum = 0;
+  const rt = runtime({ scanDocument: async () => {
+    active++; maximum = Math.max(maximum, active);
+    try { await new Promise(resolve => setTimeout(resolve, 20)); return clean(); }
+    finally { active--; }
+  } });
+  const timingHeaders = [], progress = [];
+  const fetcher = async (...args) => {
+    const response = await rt.fetcher(...args);
+    if (args[0].includes('/check/')) timingHeaders.push(response.headers.get('Server-Timing'));
+    return response;
+  };
+  const data = valid(), id = randomUUID();
+  await submitFranchiseApplication({ formData: data, requestId: id, fetcher, uploader: rt.uploader, onProgress: message => progress.push(message) });
+  const firstCheck = rt.requests.findIndex(request => request.url.includes('/check/'));
+  const lastAuthorization = rt.requests.findLastIndex(request => request.url.includes('/authorize/'));
+  assert.ok(firstCheck < lastAuthorization, 'checks must start before all uploads are authorized');
+  assert.equal(maximum, 2); assert.equal(active, 0);
+  assert.equal(timingHeaders.length, Object.keys(data.documents).length);
+  for (const value of timingHeaders) {
+    assert.match(value, /^queue;dur=\d+\.\d, claim;dur=/);
+    assert.match(value, /normalize;dur=.*promote;dur=.*finish;dur=/);
+    assert.doesNotMatch(value, /direct\/|synthetic|token|@/);
+  }
+  assert.ok(progress.includes(`Uploading documents · 100% transferred. Checking documents · ${Object.keys(data.documents).length} of ${Object.keys(data.documents).length} complete.`));
+  assert.ok(progress.every((message, index) => index === 0 || message !== progress[index - 1]));
 });
 
 test('lost storage acknowledgement is reconciled before checks and cannot create duplicate applications', async () => {
