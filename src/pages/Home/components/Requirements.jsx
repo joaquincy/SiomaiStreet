@@ -61,8 +61,8 @@ const Requirements = () => {
       <header className="req-max__header">
         <div className="req-max__header-badge">
           <svg viewBox="0 0 100 100" className="req-max__spin-text">
-            <path id="curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
-            <text><textPath href="#curve" startOffset="0%">SIOMAI STREET FRANCHISE • SIOMAI STREET FRANCHISE • </textPath></text>
+            <path id="req-curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
+            <text><textPath href="#req-curve" startOffset="0%" textLength="214" lengthAdjust="spacing">SIOMAI STREET • FRANCHISE • </textPath></text>
           </svg>
           <div className="req-max__spin-icon" aria-hidden="true">S</div>
         </div>

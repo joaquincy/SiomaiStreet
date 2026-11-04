@@ -94,8 +94,8 @@ const CTA = () => {
           {/* Shape 4: The Accent Stamp */}
           <div className="cta-art__stamp" aria-hidden="true">
             <svg viewBox="0 0 100 100" className="cta-art__stamp-svg">
-              <path id="curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
-              <text><textPath href="#curve" startOffset="0%">EST 2015 • ORIGINAL • TASTE • EST 2015 • ORIGINAL • TASTE • </textPath></text>
+              <path id="cta-curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
+              <text><textPath href="#cta-curve" startOffset="0%" textLength="214" lengthAdjust="spacing">EST. 2015 • ORIGINAL TASTE • </textPath></text>
             </svg>
             <div className="cta-art__stamp-center">SS</div>
           </div>

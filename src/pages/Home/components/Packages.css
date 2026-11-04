@@ -222,10 +222,10 @@
 
 .pkg__spin-text text {
   font-family: var(--font-heading, 'Outfit', sans-serif);
-  font-size: 14px;
+  font-size: 10px;
   font-weight: 700;
   fill: #FFFDF5;
-  letter-spacing: 2.5px;
+  letter-spacing: 1.2px;
 }
 
 .pkg__spin-icon {

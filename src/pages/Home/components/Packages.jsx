@@ -200,7 +200,7 @@ const Packages = () => {
           <div className="pkg__header-badge" aria-hidden="true">
             <svg viewBox="0 0 100 100" className="pkg__spin-text">
               <path id="pkg-curve" d="M 50, 50 m -35, 0 a 35,35 0 1,1 70,0 a 35,35 0 1,1 -70,0" fill="transparent" />
-              <text><textPath href="#pkg-curve" startOffset="0%">SIOMAI STREET FRANCHISE • SIOMAI STREET FRANCHISE • </textPath></text>
+              <text><textPath href="#pkg-curve" startOffset="0%" textLength="214" lengthAdjust="spacing">SIOMAI STREET • FRANCHISE • </textPath></text>
             </svg>
             <div className="pkg__spin-icon">S</div>
           </div>

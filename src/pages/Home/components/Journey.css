@@ -670,21 +670,52 @@
     font-size: clamp(3rem, 15vw, 5.2rem) !important;
   }
 
+  .journey-main-title {
+    padding: 72px 18px 24px 38px;
+  }
+
+  .journey-main-title h2 {
+    font-size: clamp(2.55rem, 10vw, 3.5rem);
+    line-height: 0.94;
+    margin-top: 1.4rem;
+    margin-bottom: 2.1rem;
+    max-width: 100%;
+  }
+
+  .journey-main-title p {
+    font-size: 0.9rem;
+    max-width: 280px;
+    line-height: 1.45;
+  }
+
   .journey-pill {
-    font-size: 0.58rem;
-    padding: 0.32em 0.85em;
+    font-size: clamp(0.46rem, 1.8vw, 0.54rem);
+    padding: 0.28em 0.72em;
+    letter-spacing: 0.08em;
+    border-width: 1.5px;
+    box-shadow: 2px 2px 0 var(--journey-ink);
   }
 
   .journey-pill--1 {
-    left: 0;
+    top: -1.5rem;
+    left: 2%;
+    transform: rotate(-3.5deg);
   }
 
   .journey-pill--2 {
-    left: 22%;
+    top: -0.35rem;
+    right: 0;
+    left: auto;
+    bottom: auto;
+    box-shadow: 2px 2px 0 var(--journey-crimson);
+    transform: rotate(3.5deg);
   }
 
   .journey-pill--3 {
-    right: 0;
+    bottom: -1.35rem;
+    right: 4%;
+    top: auto;
+    transform: rotate(-3deg);
   }
 }
 
