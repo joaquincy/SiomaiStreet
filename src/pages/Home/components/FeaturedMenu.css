@@ -34,6 +34,22 @@
   z-index: 1;
 }
 
+/* ─── Siomai Street Awning / Pleated Wrapper Valance Line (Packages → Featured Menu) ─── */
+.featured-menu::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  left: 0;
+  right: 0;
+  height: 28px;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='88' height='28' viewBox='0 0 88 28'%3E%3Cpath d='M0,0 L88,0 L88,5 Q44,29 0,5 Z' fill='%23110F0D'/%3E%3Cpath d='M0,1.5 Q44,25.5 88,1.5' fill='none' stroke='rgba(245,166,35,0.5)' stroke-width='1'/%3E%3Cpath d='M0,5 Q44,29 88,5' fill='none' stroke='%23D61B22' stroke-width='1.75' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat: repeat-x;
+  background-position: top center;
+  background-size: 88px 28px;
+  pointer-events: none;
+  z-index: 3;
+}
+
 /* ══════════════════════════════════════════
    Section Intro Header
    ══════════════════════════════════════════ */

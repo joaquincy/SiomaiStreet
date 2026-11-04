@@ -27,22 +27,6 @@
   z-index: 0;
 }
 
-/* Street-Stall Awning Scallop Valance Divider (Packages #110F0D -> Featured Menu #f0e9da) */
-.pkg::before {
-  content: '';
-  position: absolute;
-  left: 0;
-  right: 0;
-  bottom: -1px;
-  height: 24px;
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='56' height='24' viewBox='0 0 56 24'%3E%3Cpath d='M0,0 C12,20 18,24 28,24 C38,24 44,20 56,0 L56,30 L0,30 Z' fill='%23f0e9da'/%3E%3C/svg%3E");
-  background-repeat: repeat-x;
-  background-position: bottom center;
-  background-size: 56px 24px;
-  pointer-events: none;
-  z-index: 4;
-}
-
 /* ─── Giant Background Typography ─── */
 .pkg__bg-type {
   position: absolute;
