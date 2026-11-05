@@ -43,11 +43,8 @@ export default function DataNoticeDialog({ onClose }) {
         if (event.clientX < bounds.left || event.clientX > bounds.right || event.clientY < bounds.top || event.clientY > bounds.bottom) onClose();
       }}>
       <header className="data-notice-dialog__header">
-        <div className="data-notice-dialog__heading">
-          <h2 id="data-notice-dialog-title">Privacy Policy</h2>
-          <p>How we handle your information.</p>
-        </div>
-        <button ref={closeButton} type="button" onClick={onClose} aria-label="Close privacy policy"><BiX aria-hidden="true" /></button>
+        <h2 id="data-notice-dialog-title">Privacy Policy</h2>
+        <button ref={closeButton} type="button" onClick={onClose} aria-label="Close privacy policy">Close <BiX aria-hidden="true" /></button>
       </header>
       <div className="data-notice-dialog__body" tabIndex={0} role="region" aria-label="Privacy policy content" aria-busy={!Page && !failed}>
         {Page ? <Page embedded /> : failed ? <div className="data-notice-dialog__message">

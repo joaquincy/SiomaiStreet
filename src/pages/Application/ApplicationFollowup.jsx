@@ -56,9 +56,11 @@ export default function ApplicationFollowup({ reference, accessCode }) {
   const uploadChange = async change => {
     const key = `change:${change.id}`;
     if (!retry.current.has(key)) retry.current.set(key, crypto.randomUUID());
-    await submitFranchiseApplication({ formData: { documents: changeFiles[change.id] || {} }, requestId: retry.current.get(key),
+    await submitFranchiseApplication({
+      formData: { documents: changeFiles[change.id] || {} }, requestId: retry.current.get(key),
       changeEvidence: { applicationId: reference, id: change.id, accessCode }, signal: controller.current.signal,
-      onProgress: text => { if (mounted.current) setMessage(text); } });
+      onProgress: text => { if (mounted.current) setMessage(text); }
+    });
     if (!mounted.current) return;
     setChangeFiles(previous => { const next = { ...previous }; delete next[change.id]; return next; });
     setMessage('Supporting documents received. Your current answers and documents stay unchanged until your reviewer accepts the request.');

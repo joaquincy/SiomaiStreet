@@ -28,9 +28,7 @@
   padding: var(--space-md);
   background: var(--color-overlay);
 }
-.data-notice-dialog__heading { min-width: 0; }
-.data-notice-dialog__header h2 { margin: 0; font-family: var(--font-heading); font-size: var(--fs-h2); font-weight: 650; letter-spacing: -.03em; line-height: 1.2; color: var(--color-text-primary); }
-.data-notice-dialog__heading p { margin: var(--space-xs) 0 0; color: var(--color-text-secondary); font-size: var(--fs-small); line-height: 1.5; }
+.data-notice-dialog__header h2 { min-width: 0; margin: 0; font-family: var(--font-heading); font-size: var(--fs-h2); font-weight: 650; letter-spacing: -.03em; line-height: 1.2; color: var(--color-text-primary); }
 .data-notice-dialog button {
   display: inline-flex;
   align-items: center;
@@ -46,7 +44,7 @@
   cursor: pointer;
   transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
 }
-.data-notice-dialog__header button { padding: var(--space-xs); }
+.data-notice-dialog__header button { gap: var(--space-xs); padding: var(--space-xs) var(--space-sm); font-size: var(--fs-small); font-weight: 600; }
 .data-notice-dialog__header svg { width: var(--space-lg); height: var(--space-lg); }
 .data-notice-dialog button:hover { background: var(--color-canvas); color: var(--color-red-dark); border-color: var(--color-red-dark); }
 .data-notice-dialog button:active { background: var(--color-overlay); }
