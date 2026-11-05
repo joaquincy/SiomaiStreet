@@ -7,6 +7,7 @@ import { DOCUMENT_POLICY, DOCUMENT_POLICY_VERSION, DOCUMENT_RECENCY_NOTICE, DOCU
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
 import DocumentPicker from '../../../components/DocumentPicker';
 import DocumentCaptureGuide from '../../../components/DocumentCaptureGuide';
+import IdentityCheck from './IdentityCheck';
 import ApplicationDisclosure from '../../../components/ApplicationDisclosure';
 import './DocumentUpload.css';
 const DOCUMENT_ICONS = { govIdFront: BiIdCard, govIdBack: BiIdCard, proofOfBilling: BiReceipt, proofOfFunds: BiWallet, idPhoto: BiUser, siteProposal: BiMap };
@@ -43,7 +44,7 @@ const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileS
   </div>;
 };
 
-const DocumentUpload = ({ formData, updateField, saveStatus }) => {
+const DocumentUpload = ({ formData, updateField, saveStatus, draftId }) => {
   const applicableDocuments = getApplicationDocuments(formData);
   const REQUIRED_DOCUMENTS = applicableDocuments.filter(doc => doc.required);
   const OPTIONAL_DOCUMENTS = applicableDocuments.filter(doc => !doc.required);
@@ -165,6 +166,7 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
           {formData.govIdType === 'Passport' && <p className="field-help">Passport selected: upload the identity page showing your photo, full name and passport number. No back image is required.</p>}
 
           <div className="upload-grid two-cols">
+            <IdentityCheck draftId={draftId} formData={formData} updateField={updateField} />
             {REQUIRED_DOCUMENTS.map((doc) => (
               <FileUploadCard
                 key={doc.key}

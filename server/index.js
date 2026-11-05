@@ -1,4 +1,6 @@
 import { createTurnstileVerifier, createTransactionalSender } from './transactionalServices.js';
+import { identityService } from './diditIdentity.js';
+import { readUploadJson } from './directUploads.js';
 import { createContactEmailMaintenance } from './contactEmailMaintenance.js';
 import { startNotificationWorker } from './notificationWorker.js';
 import { createNotificationWebhook } from './notificationWebhook.js';
@@ -48,6 +50,7 @@ for (const file of envFiles) {
 const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
+const identity = identityService();
 
 const allowedReviewTypes = new Set(REVIEW_PHOTO_TYPES);
 
@@ -329,6 +332,21 @@ const handleRequestWithFeedback = async (req, res) => {
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
+    if (url.pathname === '/api/application-identity') {
+      if (req.method === 'GET') {
+        // Only this public availability flag is cacheable. POST replies contain private session data.
+        res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'private, max-age=300' });
+        return res.end(JSON.stringify({ mode: identity.mode }));
+      }
+      if (req.method !== 'POST') return json(res, 405, { error: 'Use POST.' });
+      if (identity.mode === 'disabled') return json(res, 503, { error: 'Selfie verification is unavailable. You can choose staff review.' });
+      const input = await readUploadJson(req, 8192);
+      if (!['start', 'status'].includes(input.action)) return json(res, 400, { error: 'Unknown identity action.' });
+      const starting = input.action === 'start';
+      if (!await applicationRate(clientIP(req, trustedProxies), starting ? 'identity-start' : 'identity-status', starting ? 5 : 30))
+        return json(res, 429, { error: 'Too many attempts. Try again later or choose staff review.' });
+      return json(res, 200, await identity.run(input.action, input.draft, input.details, input.proof, input.consent));
+    }
     if (url.pathname === '/api/maintenance/contact-emails') return await handleContactEmailMaintenance(req, res);
     if (url.pathname === '/api/maintenance/application-retention') return await handleApplicationRetention(req, res);
     if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });

@@ -350,7 +350,7 @@ const ApplicationPage = () => {
       case 5:
         return <FranchisePlan formData={formData} updateField={updateField} onEditStep={goToStep} />;
       case 6:
-        return <DocumentUpload formData={formData} updateField={updateField} saveStatus={saveStatus} />;
+        return <DocumentUpload formData={formData} updateField={updateField} saveStatus={saveStatus} draftId={requestId.current} />;
       case 7:
         return <LegalConsents formData={formData} updateField={updateField} />;
       case 8:

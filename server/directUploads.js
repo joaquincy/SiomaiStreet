@@ -5,6 +5,7 @@ import { isAcceptedScan } from './documentScanner.js';
 import { createUploadCheckQueue } from './uploadCheckQueue.js';
 import { DOCUMENT_POLICY_VERSION } from '../shared/documentPolicy.js';
 import { ONBOARDING_DOCUMENT_KEY } from '../shared/applicationFollowup.js';
+import { identityService } from './diditIdentity.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
@@ -53,6 +54,10 @@ export function validateUploadRequest(body) {
   const validationErrors = validateApplication({ ...body.applicationData, documents }, { documentMetadata: true });
   if (validationErrors.length) throw fail('Please correct the application fields listed below.', 422, { validationErrors });
   const data = sanitizeApplication(body.applicationData);
+  if (data.identityProof) {
+    data.identityCheck = identityService().summary(data.identityProof, body.requestId, data);
+    delete data.identityProof;
+  }
   data.documentPolicyVersion = DOCUMENT_POLICY_VERSION;
   delete data.documents;
   data.email = data.email.trim().toLowerCase();

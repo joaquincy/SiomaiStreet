@@ -58,3 +58,10 @@
   .application-page .document-step .upload-progress-header { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .capture-guide-chevron { transition: none; } }
+
+.identity-check { grid-column: 1 / -1; align-items: flex-start; }
+.identity-check p, .identity-check label { font-size: .94rem; line-height: 1.5; }
+.identity-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
+.identity-check button, .identity-check a { padding: .6rem .9rem; border: 1px solid currentColor; border-radius: .5rem; color: #90231f; background: white; font: inherit; }
+.identity-check button:disabled { opacity: .6; }
+.identity-check p:empty { display: none; }

@@ -161,7 +161,7 @@ const fieldsByStep = [
   'totalLiquidCapital fundingStatus pendingFundingDetails investmentSources activeIncome primaryIncomeSource existingDebts neverBankruptcy noPendingCases',
   'whyInterested personalValues brandValues brandValuesExplanation discoveryDayInterest',
   'selectedPackage targetRegion targetCity siteTypes hasSpecificLocation openToAlternative planOpeningTimeline multipleUnits additionalPlanDetails',
-  'documents addressEvidenceType addressEvidenceDetails fundsEvidenceType fundsEvidenceDetails documentPolicyVersion',
+  'documents addressEvidenceType addressEvidenceDetails fundsEvidenceType fundsEvidenceDetails documentPolicyVersion identityProof',
   'consent_nda consent_backgroundCheck consent_accuracy consent_privacy privacyNoticeVersion',
   'checklist_accurate checklist_nda checklist_documents checklist_noGuarantee',
 ].map(fields => fields.split(' '));
