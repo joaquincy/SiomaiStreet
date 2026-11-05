@@ -2,6 +2,14 @@
 
 **Version:** 0.1.0 · **Prepared:** 27 October 2026 · **Status:** PROPOSED — OWNER REVIEW REQUIRED
 
+**4 November privacy decision:** the website operator confirmed public privacy
+contact `jushbisakol@gmail.com` and the 180-day declined/withdrawn-application
+retention rule measured from recorded closure, with documented holds. The
+[privacy operations guide](application-privacy-operations.md) is the current
+implementation reference for these items. It supersedes S02 and R04 for this
+scope only. Other proposed periods and business/collection decisions below remain
+proposals, including any separate treatment of active or approved records.
+
 **Purpose:** Agree on one set of franchise business requirements before changing the website, backend or reviewer workflow. The fast-food owner is the final business approver, as confirmed by the project lead. The project team prepares the proposals; the classmate owns website–app integration. Neither delegation nor this document authorizes production database changes.
 
 This document is the single requirements matrix for Phase 2. Pricing, timing, retention periods and collection changes below are proposals, not verified commercial facts, legal conclusions or public promises. Current behavior is recorded separately. Blank approval cells mean no approval. Nothing in the live application has been changed by preparing this pack.
@@ -176,6 +184,8 @@ These scopes are drafted from existing claims. Quantities, suppliers, sizes and 
 **Option catalogue rule:** preserve current choices until their decision row is approved. The approved version must record additions such as no-history, undecided-package, entity type and pending-funding alongside stored codes and display labels. Existing region options do not establish the actual service territory. A business-approved supported-region list is required before the system uses region selection as an eligibility gate.
 
 ## 6. Document policy matrix
+
+**Superseded for implementation, 4 November 2026:** use [Application document policy v1](application-document-policy-v1.md). The historical age windows in this proposal were never approved and must not be enforced. Current collection remains as described in the new policy, including Passport and pending-funding exceptions; broader staged-collection proposals below are not implemented by implication.
 
 **Stage definitions:** A initial application; V shortlisted verification; N approved onboarding before activation. “Conditional” means the reviewer records the purpose and the applicant sees the request and accepted alternatives. The recency windows below are operational proposals, not statutory periods.
 

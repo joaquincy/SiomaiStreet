@@ -1,6 +1,7 @@
 import { useEffect, useRef, useState } from 'react';
 import { BiArrowToRight, BiCheck, BiFile, BiTimeFive, BiX, BiStore } from 'react-icons/bi';
 import { APPLICATION_DOCUMENTS } from '../../../shared/application.js';
+import ApplicationPrivacyNotice from '../../components/ApplicationPrivacyNotice';
 import './ApplicationWelcome.css';
 
 const SEEN_KEY = 'siomai-application-welcome-v1';
@@ -58,12 +59,13 @@ export default function ApplicationStart({ ready = true }) {
           <div className="welcome-section-heading"><span className="welcome-eyebrow">YOUR PREPARATION GUIDE</span><h3>Three things. Then you’re ready.</h3><p>Keep these nearby as you move through the form.</p></div>
           <ol className="welcome-checklist">
             <li><span className="welcome-number" aria-hidden="true">01</span><div><h4>Your details &amp; plans</h4><p>Contact details, available investment and preferred territory. The current form requires applicants to be at least 18. Package prices are quotation-only; final eligibility is subject to owner review.</p></div></li>
-            <li><span className="welcome-number" aria-hidden="true">02</span><div><h4>Your supporting documents</h4><ul className="welcome-documents">{APPLICATION_DOCUMENTS.filter(doc => doc.required).map(doc => <li key={doc.key}><BiCheck aria-hidden="true" />{doc.label}</li>)}</ul><p className="welcome-format">PDF, JPG or PNG · Up to 10 MiB each.<br />The ID portrait must be JPG or PNG.</p></div></li>
+            <li><span className="welcome-number" aria-hidden="true">02</span><div><h4>Your supporting documents</h4><ul className="welcome-documents">{APPLICATION_DOCUMENTS.filter(doc => doc.required).map(doc => <li key={doc.key}><BiCheck aria-hidden="true" />{doc.label}{doc.key === 'govIdFront' ? ' or passport identity page' : doc.key === 'govIdBack' ? ' (not needed for Passport)' : doc.key === 'proofOfFunds' ? ' (may follow later if funding is pending; explain in Step 4)' : ''}</li>)}</ul><p className="welcome-format">PDF, JPG or PNG · Up to 10 MiB each.<br />The ID portrait must be JPG or PNG. A household or landlord bill needs an address explanation. Step 7 explains alternatives, pages and safe redactions.</p></div></li>
             <li><span className="welcome-number" aria-hidden="true">03</span><div><h4>Answers that reflect your situation</h4><p>No employment history? Choose “No employment history.” No co-applicant or secured site? Choose “No” and leave site types blank. Do not invent answers.</p></div></li>
           </ol>
           <details className="welcome-more"><summary>Saving, privacy &amp; what happens next</summary><div>
             <p>Business and site records are optional now. Additional verification or onboarding documents may be requested separately; the final list is awaiting owner approval.</p>
-            <p>Use a private device. Answers and files may be saved in this browser for seven days after your last save. Watch for Save failed notices.</p>
+            <p>Use a private device. Answers and files may be saved in this browser before submission. Drafts expire seven days after your last save and are removed when you next open the application, or after confirmed submission. Watch for Save failed notices.</p>
+            <ApplicationPrivacyNotice compact />
             <p>After submission, save your reference and private access code securely. Use Track Status to check progress and replace only documents requested by the reviewer.</p>
           </div></details>
           <div className="welcome-footer"><button type="button" onClick={dismiss}>Continue to application <BiArrowToRight aria-hidden="true" /></button><span>No commitment to purchase. Reopen this guide anytime.</span></div>

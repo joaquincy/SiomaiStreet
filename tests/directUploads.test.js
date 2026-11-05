@@ -83,6 +83,77 @@ test('invalid form, duplicate keys, huge sizes and unsupported types are rejecte
   const stream = requestStream('{broken'); await assert.rejects(rt.handler(stream, res()), /Turnstile/); assert.equal(stream.readableDidRead, false);
 });
 
+test('Passport submits four files, excludes an old back image, and retries return the same SQL receipt', async () => {
+  const rt = runtime(); const data = valid(); const requestId = randomUUID();
+  data.govIdType = 'Passport';
+  const send = () => submitFranchiseApplication({ formData: data, requestId, fetcher: rt.fetcher, uploader: rt.uploader });
+  const receipt = await send();
+  assert.equal(receipt.id, requestId);
+  assert.equal(rt.counts().uploads, 4);
+  assert.ok(rt.counts().scans >= 4, 'all four files are scanned; normalized images may be scanned again');
+  const start = rt.requests.find(item => item.url === '/api/franchise-applications/uploads');
+  assert.equal(start.body.manifest.some(doc => doc.key === 'govIdBack'), false);
+  const retried = await send();
+  assert.equal(retried.id, receipt.id);
+  assert.equal(retried.status, receipt.status);
+  assert.equal(Date.parse(retried.submittedAt), Date.parse(receipt.submittedAt), 'RPC and REST timestamp encodings represent the same receipt');
+  assert.equal(rt.counts().uploads, 4);
+  const rows = (await database.db.query('select document_paths from franchise_applications where id=$1', [requestId])).rows;
+  assert.equal(rows.length, 1);
+  assert.equal(Object.hasOwn(rows[0].document_paths, 'govIdBack'), false);
+  assert.ok(rows[0].document_paths.govIdFront);
+});
+
+test('SQL itself permits no back only for Passport and keeps function access private after reapplying migration', async () => {
+  const migration = await readFile(new URL('../supabase/migrations/20261104000000_passport_document_requirement.sql', import.meta.url), 'utf8');
+  await database.db.exec(migration);
+  await database.db.exec(await readFile(new URL('../supabase/migrations/20261104010000_application_document_policy.sql', import.meta.url), 'utf8'));
+  const repository = createUploadRepository(database.request);
+  for (const govIdType of ['Passport', "Driver's License", 'Other', null]) {
+    const body = await bodyFor();
+    body.applicationData.govIdType = govIdType;
+    body.manifest = body.manifest.filter(doc => doc.key !== 'govIdBack');
+    const session = await repository.prepare(body.requestId, 'b'.repeat(64), body.applicationData, body.manifest);
+    await database.db.query("update franchise_upload_items set state='ready', verified_document=jsonb_build_object('path', 'synthetic/' || document_key, 'scan', jsonb_build_object('status','clean')) where session_id=$1", [session.id]);
+    if (govIdType === 'Passport') assert.equal((await repository.finalize(session.id, false)).id, body.requestId);
+    else await assert.rejects(repository.finalize(session.id, false), /Required documents missing/);
+  }
+  for (const role of ['anon', 'authenticated', 'service_role']) {
+    const result = await database.db.query("select has_function_privilege($1, 'public.finalize_franchise_upload(uuid,boolean)', 'execute') as allowed", [role]);
+    assert.equal(result.rows[0].allowed, role === 'service_role');
+  }
+});
+
+test('removed partner details never reach the upload request or persisted application and retries stay unique', async () => {
+  const rt = runtime();
+  const data = valid();
+  data.hasCoApplicant = 'no';
+  data.coApplicant = { firstName: 'Removed', lastName: 'Synthetic', email: 'removed@example.invalid', phone: '00000000000' };
+  const requestId = randomUUID();
+  const send = () => submitFranchiseApplication({ formData: data, requestId, fetcher: rt.fetcher, uploader: rt.uploader });
+  assert.equal((await send()).id, requestId);
+  const start = rt.requests.find(item => item.url === '/api/franchise-applications/uploads');
+  assert.equal(Object.hasOwn(start.body.applicationData, 'coApplicant'), false);
+  const row = (await database.db.query('select application_data from franchise_applications where id=$1', [requestId])).rows[0];
+  assert.equal(Object.hasOwn(row.application_data, 'coApplicant'), false);
+  delete data.coApplicant;
+  assert.equal((await send()).id, requestId);
+  assert.equal((await database.db.query('select count(*)::int as n from franchise_applications where id=$1', [requestId])).rows[0].n, 1);
+});
+
+test('pending sessions from older code cannot finalize conflicting answers or hidden partner data', async () => {
+  for (const patch of [{ selectedPackage: 'casual-dining' }, { coApplicant: { firstName: 'Removed synthetic partner' } }]) {
+    const rt = runtime();
+    const body = await bodyFor();
+    const start = await rt.fetcher('/api/franchise-applications/uploads', { headers: { 'content-type': 'application/json' }, body: JSON.stringify(body) });
+    const session = await start.json();
+    await database.db.query('update franchise_upload_sessions set application_data=application_data || $1::jsonb where id=$2', [JSON.stringify(patch), session.sessionId]);
+    const response = await rt.fetcher(`/api/franchise-applications/uploads/${session.sessionId}/finalize`, { headers: { 'content-type': 'application/json', authorization: `Bearer ${session.token}` }, body: '{}' });
+    assert.equal(response.status, patch.coApplicant ? 409 : 422);
+    assert.equal(await rt.repository.application(body.requestId), null);
+  }
+});
+
 test('scanner outage keeps uploaded files; retry checks them without re-uploading', async () => {
   let unavailable = true;
   const rt = runtime({ scanDocument: async () => { if (unavailable) throw Object.assign(new Error('Scanner temporarily unavailable'), { status: 503 }); return clean(); } });
@@ -240,6 +311,58 @@ test('replacement uses direct uploads, retains original application and retries 
   assert.equal((await database.db.query('select status from franchise_applications where id=$1', [id])).rows[0].status, 'under_review');
 });
 
+test('deferred funding submits without a dummy file; private follow-up and human verification gate SQL approval', async () => {
+  const rt = runtime(); const id = randomUUID(); const data = valid();
+  Object.assign(data, { fundingStatus: 'pending', totalLiquidCapital: '0', liquidCapital: 'below50k', pendingFundingDetails: 'Synthetic: awaiting bank release, date unknown.', fundsEvidenceType: 'pending-evidence', investmentSources: ['bank-loan'] });
+  delete data.documents.proofOfFunds;
+  const send = () => submitFranchiseApplication({ formData: data, requestId: id, fetcher: rt.fetcher, uploader: rt.uploader });
+  assert.equal((await send()).id, id); assert.equal((await send()).id, id); assert.equal(rt.counts().uploads, 4);
+  assert.equal((await database.db.query('select funding_verification_required from franchise_applications where id=$1', [id])).rows[0].funding_verification_required, true);
+  const approve = () => database.db.query("update franchise_applications set status='approved' where id=$1", [id]);
+  await assert.rejects(approve(), /verified.*before approval/);
+  await database.db.query('update franchise_applications set funding_verification_required=false where id=$1', [id]);
+  await assert.rejects(approve(), /verified.*before approval/, 'the sticky review flag cannot be cleared');
+  const reviewer = randomUUID();
+  await database.db.query('insert into auth.users(id) values($1)', [reviewer]);
+  const verify = (actor = reviewer) => database.db.query("select record_franchise_funding_verification($1,$2,'Synthetic: release evidence reviewed; availability confirmed.',false) as result", [id, actor]);
+  await assert.rejects(verify(), /Reviewer permission/);
+  await database.db.query('insert into franchise_document_reviewers(user_id) values($1)', [reviewer]);
+  await assert.rejects(verify(), /evidence.*unavailable/);
+  const correctionId = (await database.db.query("select request_franchise_document($1,'proofOfFunds','Please provide the relevant balance or release evidence. Redact unrelated transactions and account numbers.',$2) as id", [id, reviewer])).rows[0].id;
+  await assert.rejects(verify(), /Wait for/);
+  const check = async () => (await database.db.query('select * from franchise_corrections where id=$1', [correctionId])).rows[0];
+  const replacement = runtime({ corrections: { authorize: async req => { assert.equal(req.headers.authorization, 'Bearer private-portal-code'); return check(); }, check } });
+  await submitFranchiseApplication({ formData: { documents: { proofOfFunds: valid().documents.proofOfFunds } }, requestId: randomUUID(), fetcher: replacement.fetcher, uploader: replacement.uploader,
+    correction: { id: correctionId, applicationId: id, accessCode: 'private-portal-code' } });
+  await assert.rejects(approve(), /verified.*before approval/, 'uploading evidence is not human verification');
+  const first = (await verify()).rows[0].result; const retry = (await verify()).rows[0].result;
+  assert.equal(first.id, retry.id, 'verification retries do not duplicate the record');
+  await approve();
+  await database.db.query("update franchise_applications set status='under_review' where id=$1", [id]);
+  await database.db.query("update franchise_applications set document_paths=jsonb_set(document_paths,'{proofOfFunds,path}','\"changed-synthetic-document\"'::jsonb) where id=$1", [id]);
+  await assert.rejects(approve(), /verified.*before approval/, 'a new document invalidates the previous verification');
+  await verify();
+  await database.db.query("update franchise_applications set application_data=jsonb_set(application_data,'{pendingFundingDetails}','\"Changed synthetic funding plan\"'::jsonb) where id=$1", [id]);
+  await assert.rejects(approve(), /verified.*before approval/, 'a changed funding plan requires a new review');
+  await verify(); await approve();
+  for (const role of ['anon', 'authenticated']) {
+    assert.equal((await database.db.query("select has_function_privilege($1,'public.record_franchise_funding_verification(uuid,uuid,text,boolean)','execute') as allowed", [role])).rows[0].allowed, false);
+    assert.equal((await database.db.query("select has_table_privilege($1,'public.franchise_funding_verifications','select') as allowed", [role])).rows[0].allowed, false);
+  }
+});
+
+test('SQL rejects malformed explanations, missing evidence and fake deferrals even without the JS validator', async () => {
+  const docs = Object.fromEntries(REQUIRED_DOC_KEYS.map(key => [key, { path: `synthetic/${key}` }]));
+  const assertPolicy = (data, documents = docs) => database.db.query('select assert_franchise_document_policy($1::jsonb,$2::jsonb)', [JSON.stringify(data), JSON.stringify(documents)]);
+  await assertPolicy(fixture);
+  for (const patch of [{ govIdOtherName: '' }, { govIdOtherIssuer: '' }, { addressEvidenceType: 'bill-household' }, { addressEvidenceType: 'bill-landlord' }, { fundingStatus: 'pending' }, { fundsEvidenceType: 'pending-evidence' }, { fundsEvidenceType: 'loan-approval' }, { fundsEvidenceType: 'other' }]) await assert.rejects(assertPolicy({ ...fixture, ...patch }));
+  const { proofOfFunds: _unused, ...withoutFunds } = docs;
+  await assert.rejects(assertPolicy(fixture, withoutFunds), /Required documents missing/);
+  const pending = { ...fixture, fundingStatus: 'pending', totalLiquidCapital: '0', fundsEvidenceType: 'pending-evidence', pendingFundingDetails: 'Synthetic: awaiting release.' };
+  await assertPolicy(pending, withoutFunds);
+  await assert.rejects(assertPolicy(pending), /Select the funding evidence type/);
+});
+
 test('cleanup retries failures and never deletes referenced or submitted documents', async () => {
   const rt = runtime(); const id = randomUUID();
   await submitFranchiseApplication({ formData: valid(), requestId: id, fetcher: rt.fetcher, uploader: rt.uploader });
@@ -268,6 +391,7 @@ test('staff links require a verified Auth user, explicit permission and clean do
   const handler = createReviewerDocumentHandler({ url: 'https://synthetic.invalid', serviceKey: 'server-only', rate: async () => true,
     fetcher: async () => Response.json({ id: user }), json: (response, status, value) => Object.assign(response, { status, value }),
     request: async (path, options) => {
+      if (path.includes('franchise_erasure_jobs')) return [];
       if (path.includes('franchise_document_reviewers')) return allowed ? [{ user_id: user }] : [];
       if (path.includes('franchise_applications')) return [{ document_paths: { govIdFront: { path: 'private/test', name: 'ID.pdf', scan: scanned ? clean() : { status: 'skipped' } } } }];
       if (path.includes('access_log')) { audit.push(JSON.parse(options.body)); return; }
@@ -301,6 +425,7 @@ test('scan-off staff access still enforces permissions and rejects infected or m
  const handler=createReviewerDocumentHandler({url:'https://synthetic.invalid',serviceKey:'server-only',allowUnscannedDocuments:true,rate:async()=>true,
  fetcher:async()=>Response.json({id:user}),json:(response,status,value)=>Object.assign(response,{status,value}),
  request:async path=>{
+  if(path.includes('franchise_erasure_jobs')) return [];
   if(path.includes('franchise_document_reviewers')) return allowed?[{user_id:user}]:[];
   if(path.includes('franchise_applications')) return [{document_paths:{govIdFront:{path:'private/test',scan}}}];
   if(path.includes('access_log')) return;

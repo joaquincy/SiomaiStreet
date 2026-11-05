@@ -3,6 +3,8 @@ import { CONTRACT_VERSION, DOCUMENT_KEYS, MAX_DOCUMENT_BYTES, UUID_PATTERN, docu
 import { normalizeDocumentImage } from './documentImages.js';
 import { isAcceptedScan } from './documentScanner.js';
 import { createUploadCheckQueue } from './uploadCheckQueue.js';
+import { DOCUMENT_POLICY_VERSION } from '../shared/documentPolicy.js';
+import { ONBOARDING_DOCUMENT_KEY } from '../shared/applicationFollowup.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
@@ -29,11 +31,11 @@ export async function readUploadJson(req, maxBytes = 350000) {
   } finally { req.setTimeout?.(180000); }
 }
 
-function validateManifest(value) {
+function validateManifest(value, onboarding = false) {
   if (!Array.isArray(value) || value.length < 1 || value.length > DOCUMENT_KEYS.length) throw fail('Select the required documents.', 422);
   const documents = {};
   return value.map(item => {
-    if (!item || !DOCUMENT_KEYS.includes(item.key) || Object.hasOwn(documents, item.key)
+    if (!item || !(onboarding ? item.key === ONBOARDING_DOCUMENT_KEY : DOCUMENT_KEYS.includes(item.key)) || Object.hasOwn(documents, item.key)
       || typeof item.name !== 'string' || !item.name.trim() || item.name.length > 200 || [...item.name].some(char => char.charCodeAt(0) < 32 || char.charCodeAt(0) === 127)
       || !Number.isSafeInteger(item.size) || item.size < 1 || item.size > MAX_DOCUMENT_BYTES || !documentTypes(item.key).includes(item.type)
       || typeof item.sha256 !== 'string' || !/^[a-f0-9]{64}$/.test(item.sha256)) throw fail('A document has invalid or duplicate details.', 422);
@@ -51,6 +53,7 @@ export function validateUploadRequest(body) {
   const validationErrors = validateApplication({ ...body.applicationData, documents }, { documentMetadata: true });
   if (validationErrors.length) throw fail('Please correct the application fields listed below.', 422, { validationErrors });
   const data = sanitizeApplication(body.applicationData);
+  data.documentPolicyVersion = DOCUMENT_POLICY_VERSION;
   delete data.documents;
   data.email = data.email.trim().toLowerCase();
   data.confirmEmail = data.confirmEmail.trim().toLowerCase();
@@ -82,22 +85,43 @@ export function assertDocumentBytes(bytes, item) {
 }
 
 // All paths come from a server-created session. Client paths and scan flags are ignored.
-export function createDirectUploadHandler({ repository, storage, rate, verify, verifyStorage, access, scanDocument, json, receiptDetails, corrections, allowUnscanned = false, now = Date.now }) {
+export function createDirectUploadHandler({ repository, storage, rate, verify, verifyStorage, access, scanDocument, json, receiptDetails, corrections, onboarding, changes, allowUnscanned = false, now = Date.now }) {
   const acquireCheck = createUploadCheckQueue();
   const receipt = row => ({ version: CONTRACT_VERSION, id: row.id, status: 'submitted', submittedAt: row.submitted_at, ...receiptDetails(row) });
   const expired = row => Date.parse(row.expires_at) <= now();
-  return async (req, res, sessionId, action, key, correctionContext) => {
+  return async (req, res, sessionId, action, key, correctionContext, onboardingContext, changeContext) => {
     res.setHeader('Connection', 'close');
     if (!await rate(req, sessionId ? 'upload-control' : 'upload-start', sessionId ? 100 : 20)) throw fail('Too many attempts. Keep your draft and try again later.', 429);
     if (!sessionId) {
-      let correction;
-      if (correctionContext) correction = await corrections.authorize(req, correctionContext.applicationId, correctionContext.correctionId);
+      let correction, requirement, change;
+      if (changeContext) change = await changes.authorize(req, changeContext.applicationId, changeContext.changeId);
+      else if (onboardingContext) requirement = await onboarding.authorize(req, onboardingContext.applicationId, onboardingContext.itemId);
+      else if (correctionContext) correction = await corrections.authorize(req, correctionContext.applicationId, correctionContext.correctionId);
       else await verify(req); // Public Turnstile, or private portal ownership, precedes parsing.
       await verifyStorage();
       const body = await readUploadJson(req);
       let data, manifest, hash;
-      const applicationId = correctionContext?.applicationId || body.requestId;
-      if (correction) {
+      const applicationId = changeContext?.applicationId || onboardingContext?.applicationId || correctionContext?.applicationId || body.requestId;
+      if (change) {
+        if (body.version !== CONTRACT_VERSION || !UUID_PATTERN.test(body.requestId)) throw fail('Invalid supporting-document request.');
+        manifest = validateManifest(body.manifest);
+        if (manifest.length !== change.required_documents.length || manifest.some(item => !change.required_documents.includes(item.key))) throw fail('Select all and only the supporting documents listed for this change.', 422);
+        data = {};
+        hash = sha256(JSON.stringify(canonical({ transport: 'change-evidence-v1', change: change.id, retry: body.requestId, manifest })));
+        if (change.evidence_request_id) {
+          if (change.evidence_request_id !== body.requestId || change.evidence_hash !== hash) throw fail('Supporting documents were already received. Refresh your details.', 409);
+          return json(res, 200, { receipt: { id: change.id, requestId: body.requestId, status: 'received' } });
+        }
+      } else if (requirement) {
+        if (body.version !== CONTRACT_VERSION || !UUID_PATTERN.test(body.requestId) || !Number.isSafeInteger(body.onboardingRevision)) throw fail('Invalid onboarding upload.');
+        manifest = validateManifest(body.manifest, true);
+        if (manifest.length !== 1) throw fail('Choose one supporting document.');
+        data = {};
+        hash = sha256(JSON.stringify(canonical({ transport: 'onboarding-v1', item: requirement.id, revision: body.onboardingRevision, retry: body.requestId, manifest })));
+        const received = await onboarding.retry(applicationId, requirement.id, body.requestId, hash);
+        if (received) return json(res, 200, { receipt: received });
+        if (requirement.revision !== body.onboardingRevision || !['not_started', 'needs_correction'].includes(requirement.state)) throw fail('This requirement changed. Refresh before uploading.', 409);
+      } else if (correction) {
         if (body.version !== CONTRACT_VERSION || !UUID_PATTERN.test(body.requestId)) throw fail('Invalid replacement request.');
         manifest = validateManifest(body.manifest);
         if (manifest.length !== 1 || manifest[0].key !== correction.document_key) throw fail('Select only the document requested by the reviewer.', 422);
@@ -108,15 +132,17 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
           return json(res, 200, { receipt: { id: correction.id, requestId: body.requestId, status: 'received' } });
         }
       } else ({ data, manifest, hash } = validateUploadRequest(body));
-      const existing = !correction && await repository.application(applicationId);
+      const existing = !correction && !requirement && !change && await repository.application(applicationId);
       if (existing) {
         if (existing.request_hash !== hash) throw fail('This application was already submitted with different answers. Use your original receipt to request a correction.', 409);
         return json(res, 200, { receipt: receipt(existing) });
       }
       let row = await repository.active(applicationId, hash);
       if (!row) {
-        if (!await rate(req, correction ? 'new-correction' : 'new-application', correction ? 20 : 4)) throw fail('Too many new upload sessions. Keep your answers and try again later.', 429);
-        row = await repository.prepare(applicationId, hash, data, manifest, correction?.id, correction ? body.requestId : undefined);
+        if (!await rate(req, correction || requirement || change ? 'new-correction' : 'new-application', correction || requirement || change ? 20 : 4)) throw fail('Too many new upload sessions. Keep your answers and try again later.', 429);
+        row = change ? await repository.prepareChange(applicationId, change.id, body.requestId, hash, manifest)
+          : requirement ? await repository.prepareOnboarding(applicationId, requirement.id, body.onboardingRevision, body.requestId, hash, manifest)
+          : await repository.prepare(applicationId, hash, data, manifest, correction?.id, correction ? body.requestId : undefined);
       }
       return json(res, 200, { sessionId: row.id, token: access.token(row), expiresAt: row.expires_at });
     }
@@ -125,21 +151,36 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
     const supplied = req.headers.authorization?.replace(/^Bearer /, '');
     if (!row || !access.verify(row, supplied)) throw fail('Upload permission is invalid. Retry from your saved application.', 403);
     if (row.correction_id) await corrections.check(row.application_id, row.correction_id);
+    if (row.onboarding_item_id) await onboarding.check(row.application_id, row.onboarding_item_id);
+    if (row.answer_change_id) await changes.check(row.application_id, row.answer_change_id);
     if (expired(row)) throw fail('The upload session expired. Your draft is safe; submit again to start a new session.', 410);
     await readUploadJson(req, 1024);
     if (action === 'finalize') {
-      const existing = !row.correction_id && await repository.application(row.application_id);
+      const existing = !row.correction_id && !row.onboarding_item_id && !row.answer_change_id && await repository.application(row.application_id);
       if (existing) {
         if (existing.request_hash !== row.request_hash) throw fail('This application was already received with different answers.', 409);
         return json(res, 200, receipt(existing));
       }
       const items = await repository.items(sessionId);
+      if (!row.correction_id && !row.onboarding_item_id && !row.answer_change_id) {
+        // Pending sessions may have been created before the current validation rules.
+        // Recheck before committing; already received applications above retain their receipt.
+        const savedAnswers = await repository.answers(sessionId);
+        if (!savedAnswers?.application_data) throw fail('Application answers could not be confirmed. Keep your draft and retry.', 503);
+        const data = savedAnswers.application_data;
+        const documents = Object.fromEntries(items.map(item => [item.document_key, { size: Number(item.size), type: item.content_type }]));
+        const validationErrors = validateApplication({ ...data, documents }, { documentMetadata: true });
+        if (validationErrors.length) throw fail('Please review your current application answers before submitting again.', 422, { validationErrors });
+        if (data.hasCoApplicant !== 'yes' && Object.hasOwn(data, 'coApplicant')) {
+          throw fail('This older upload contains co-applicant details that are no longer selected. Retry from your application to exclude them; your draft is kept.', 409);
+        }
+      }
       if (!items.length || items.some(item => item.state !== 'ready' || !isAcceptedScan(item.verified_document?.scan, allowUnscanned))) throw fail('Some documents still need checking. Retry this application to finish checking them.', 409);
       // The RPC repeats checks and inserts exactly once within a database transaction.
-      const result = await repository.finalize(sessionId, allowUnscanned);
-      return json(res, 201, row.correction_id ? result : receipt(result));
+      const result = row.answer_change_id ? await repository.finalizeChange(sessionId, allowUnscanned) : row.onboarding_item_id ? await repository.finalizeOnboarding(sessionId, allowUnscanned) : await repository.finalize(sessionId, allowUnscanned);
+      return json(res, 201, row.correction_id || row.onboarding_item_id || row.answer_change_id ? result : receipt(result));
     }
-    if (!DOCUMENT_KEYS.includes(key)) throw fail('Document not found.', 404);
+    if (!(row.onboarding_item_id ? key === ONBOARDING_DOCUMENT_KEY : DOCUMENT_KEYS.includes(key))) throw fail('Document not found.', 404);
     const item = await repository.item(sessionId, key);
     if (!item) throw fail('Document not included in this application.', 404);
     if (item.state === 'ready') return json(res, 200, { state: 'ready' });

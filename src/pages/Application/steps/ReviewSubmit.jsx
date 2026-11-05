@@ -1,21 +1,17 @@
 import { BiEdit, BiCheckSquare, BiCheckCircle, BiErrorCircle } from 'react-icons/bi';
 import './Steps.css';
-import { APPLICATION_DOCUMENTS, validateStep } from '../../../../shared/application.js';
+import { getApplicationDocuments, validateStep } from '../../../../shared/application.js';
 import { FRANCHISE_PACKAGES, PRICING_NOTICE } from '../../../../shared/franchiseCatalogue.js';
 import { RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
+import { CAPITAL_OPTIONS, PLAN_TIMELINE_LABELS } from '../../../../shared/applicationAnswers.js';
+import { FUNDING_STATUS_OPTIONS, ADDRESS_EVIDENCE_OPTIONS, FUNDS_EVIDENCE_OPTIONS, hasPendingFunding, needsAddressExplanation, canDeferFundsEvidence } from '../../../../shared/documentPolicy.js';
 
 /* ─── Label/value maps for Pre-Qualification ─── */
 const PRE_QUAL_FIELDS = {
   liquidCapital: {
     label: 'Liquid Capital',
-    values: {
-      below50k: 'Below ₱50k',
-      '50k-150k': '₱50k to ₱150k',
-      '150k-250k': '₱150k to ₱250k',
-      '250k-500k': '₱250k to ₱500k',
-      above500k: 'Above ₱500k',
-    },
+    values: Object.fromEntries(CAPITAL_OPTIONS.map(option => [option.value, option.label])),
   },
   ownedBusiness: {
     label: 'Owned Business Before',
@@ -63,7 +59,7 @@ const REVIEW_SECTIONS = [
     fields: [
       'firstName', 'middleName', 'lastName', 'dateOfBirth', 'citizenship',
       'address', 'primaryPhone', 'secondaryPhone', 'email', 'govIdType',
-      'govIdNumber', 'emergencyName', 'emergencyRelationship', 'emergencyPhone',
+      'govIdOtherName', 'govIdOtherIssuer', 'govIdNumber', 'emergencyName', 'emergencyRelationship', 'emergencyPhone',
       'hasCoApplicant', 'coApplicant', 'maritalStatus',
     ],
   },
@@ -82,7 +78,7 @@ const REVIEW_SECTIONS = [
     stepIndex: 3,
     title: 'Financial Capability',
     fields: [
-      'totalLiquidCapital', 'investmentSources', 'activeIncome',
+      'totalLiquidCapital', 'fundingStatus', 'pendingFundingDetails', 'investmentSources', 'activeIncome',
       'primaryIncomeSource', 'existingDebts', 'neverBankruptcy', 'noPendingCases',
     ],
   },
@@ -106,7 +102,7 @@ const REVIEW_SECTIONS = [
   {
     stepIndex: 6,
     title: 'Document Upload',
-    fields: ['documents'],
+    fields: ['addressEvidenceType', 'addressEvidenceDetails', 'fundsEvidenceType', 'fundsEvidenceDetails', 'documents'],
   },
   {
     stepIndex: 7,
@@ -117,6 +113,14 @@ const REVIEW_SECTIONS = [
 
 /* ─── Human-readable field labels ─── */
 const FIELD_LABELS = {
+  govIdOtherName: 'Other ID name',
+  govIdOtherIssuer: 'Other ID issuing authority',
+  fundingStatus: 'Funding availability',
+  pendingFundingDetails: 'Pending funding explanation',
+  addressEvidenceType: 'Address evidence',
+  addressEvidenceDetails: 'Address evidence explanation',
+  fundsEvidenceType: 'Funding evidence',
+  fundsEvidenceDetails: 'Funding evidence explanation',
   employmentHistory: 'Employment History',
   priorBusinessOwned: 'Prior Business Ownership',
   priorBusinessDescription: 'Prior Business Details',
@@ -183,9 +187,12 @@ const FIELD_LABELS = {
 };
 
 /* ─── Format a value for display ─── */
-const formatValue = (key, value) => {
+const formatValue = (key, value, formData) => {
   if (value === undefined || value === null || value === '') return null;
+  const policyOptions = { fundingStatus: FUNDING_STATUS_OPTIONS, addressEvidenceType: ADDRESS_EVIDENCE_OPTIONS, fundsEvidenceType: FUNDS_EVIDENCE_OPTIONS };
+  if (policyOptions[key]) return policyOptions[key].find(option => option.value === value)?.label || value;
   if (key === 'employmentHistory') return value === 'none' ? 'No employment history' : 'History provided';
+  if (key === 'planOpeningTimeline') return PLAN_TIMELINE_LABELS[value] || value;
   if (key === 'selectedPackage') {
     return `${FRANCHISE_PACKAGES.find((pkg) => pkg.id === value)?.name || 'Not sure yet'}; ${PRICING_NOTICE}`;
   }
@@ -219,9 +226,9 @@ const formatValue = (key, value) => {
 
   if (key === 'documents' && typeof value === 'object') {
     return (
-      APPLICATION_DOCUMENTS.filter((doc) => value[doc.key])
+      getApplicationDocuments(formData).filter((doc) => value[doc.key])
         .map((doc) => `${doc.label}: ${value[doc.key].name}`)
-        .join('; ') || null
+        .join('; ') + (canDeferFundsEvidence(formData) ? '; Funding evidence deferred: reviewer verification required before approval.' : '') || null
     );
   }
 
@@ -344,6 +351,10 @@ const ReviewSubmit = ({ formData, updateField, onEditStep }) => {
 
                 <div className="review-card-body">
                   {section.fields.map((field) => {
+                    if (['govIdOtherName', 'govIdOtherIssuer'].includes(field) && formData.govIdType !== 'Other') return null;
+                    if (field === 'pendingFundingDetails' && !hasPendingFunding(formData)) return null;
+                    if (field === 'addressEvidenceDetails' && !needsAddressExplanation(formData)) return null;
+                    if (field === 'fundsEvidenceDetails' && formData.fundsEvidenceType !== 'other') return null;
                     if (field === 'coApplicant' && formData.hasCoApplicant !== 'yes') return null;
                     if (
                       formData.employmentHistory === 'none' &&
@@ -355,7 +366,7 @@ const ReviewSubmit = ({ formData, updateField, onEditStep }) => {
                       return null;
                     }
                     const raw = formData[field];
-                    const display = formatValue(field, raw);
+                    const display = formatValue(field, raw, formData);
                     const label = FIELD_LABELS[field] || field;
                     return (
                       <div className="review-item" key={field}>

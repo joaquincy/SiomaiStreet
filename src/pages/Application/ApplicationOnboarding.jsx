@@ -14,6 +14,7 @@ const stages = [
 export default function ApplicationOnboarding() {
   return <ApplicantPortalLayout>
     <header className="app-page-header portal-page-header"><div className="app-header-left"><h1>Franchise Onboarding</h1><p>Prepare for your next steps. Your reviewer will confirm the requirements and schedule that apply to you.</p></div></header>
+    <p className="portal-small-note">Already approved? <Link to="/application/status">Sign in to Track Status</Link>, then open “Your details &amp; next steps” to load your private My onboarding checklist, send evidence and ask your reviewer questions.</p>
     <div className="portal-onboarding-layout">
 
       <section className="portal-roadmap app-form-card" aria-labelledby="onboarding-roadmap-title"><div className="portal-section-heading"><div><span className="step-eyebrow">PREPARE AT YOUR PACE</span><h2 id="onboarding-roadmap-title">Your next-step guide</h2></div><span className="portal-tag">For planning</span></div><p className="portal-roadmap-note">Suggested preparation stages. The owner must confirm the final process, fees and required documents.</p>

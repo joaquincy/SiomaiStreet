@@ -107,6 +107,14 @@ export function ApplicationField({
             })}
           </div>
         </fieldset>
+      ) : inputProps.type === 'textarea' ? (
+        <>
+          <label htmlFor={id}>{caption}</label>
+          {hint && <p id={`${id}-hint`} className="field-help">{hint}</p>}
+          <textarea id={id} name={inputProps.name} className="form-textarea" rows={4} maxLength={inputProps.maxLength}
+            value={value || ''} onChange={event => onChange(event.target.value)} onBlur={onBlur}
+            disabled={inputProps.disabled} aria-required={required} aria-invalid={hasError} aria-describedby={description} />
+        </>
       ) : inputProps.type === 'date' ? (
         <>
           <label htmlFor={id}>{caption}</label>

@@ -503,6 +503,23 @@
 }
 
 /* ─── Franchise Plan Specifics ─── */
+.franchise-plan .plan-timeline-options {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-md);
+}
+
+.franchise-plan .plan-timeline-options .toggle-option {
+  min-width: 0;
+  white-space: normal;
+}
+
+@media (min-width: 40rem) {
+  .franchise-plan .plan-timeline-options {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+
 .mb-3 {
   margin-bottom: 12px;
 }

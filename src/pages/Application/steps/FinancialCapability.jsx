@@ -14,9 +14,11 @@ import {
   ToggleOption,
   CardSelector,
 } from '../../../components/FormElements';
-import { RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
+import { ApplicationField, RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
 import './Steps.css';
+import { applicationAnswerConflicts, capitalRangeFor, capitalRangeLabel } from '../../../../shared/applicationAnswers.js';
+import { FUNDING_STATUS_OPTIONS, hasPendingFunding } from '../../../../shared/documentPolicy.js';
 
 const INVESTMENT_SOURCES = [
   { key: 'personal-savings', icon: BiWallet, title: 'Personal Savings', subtitle: 'Cash deposits or liquid personal accounts' },
@@ -31,6 +33,7 @@ const FinancialCapability = ({ formData, updateField }) => {
   const feedback = useApplicationFeedback();
   const capitalErrors = feedback.errorsFor('fc-capital');
   const sourceErrors = feedback.errorsFor('fc-investmentSources');
+  const capitalConflict = applicationAnswerConflicts(formData).some(issue => issue.id === 'fc-capital');
 
   const toggleSource = (key) => {
     const updated = investmentSources.includes(key)
@@ -66,6 +69,14 @@ const FinancialCapability = ({ formData, updateField }) => {
           <span>Available Capital</span>
         </h3>
 
+        <ApplicationField id="fc-fundingStatus" label="How much of your planned funding is available now?" required
+          options={FUNDING_STATUS_OPTIONS.map(option => option.label)} value={FUNDING_STATUS_OPTIONS.find(option => option.value === formData.fundingStatus)?.label}
+          onChange={value => updateField('fundingStatus', FUNDING_STATUS_OPTIONS.find(option => option.label === value).value)}
+          hint="Unreleased loans and promised partner/family contributions are pending funding, not available cash." />
+        {hasPendingFunding(formData) && <ApplicationField id="fc-pendingFundingDetails" name="pendingFundingDetails" type="textarea" label="Explain your pending funding" required maxLength={1000}
+          value={formData.pendingFundingDetails} onChange={value => updateField('pendingFundingDetails', value)}
+          hint="Describe the source, current stage and what must happen before funds become available. If the timing or amount is uncertain, say so. No account numbers or third-party IDs. You may submit for review; funding must be verified before approval." />}
+
         <div className={`form-field ${capitalErrors.length ? 'has-errors' : ''}`}>
           <label htmlFor="fc-capital">
             <span className="field-label-row">
@@ -74,7 +85,8 @@ const FinancialCapability = ({ formData, updateField }) => {
             </span>
           </label>
           <p className="field-help">
-            Enter a positive amount in Philippine Pesos using digits and optional commas or decimals, for example 350,000 or 500000.00.
+            Enter only money available now in Philippine Pesos, for example 350,000 or 500000.00. Exclude unreleased loans and promised contributions. Enter 0 if all funding is still pending.
+            {' '}This refines your Step 1 estimate and updates its range automatically.
           </p>
           <input
             id="fc-capital"
@@ -89,6 +101,10 @@ const FinancialCapability = ({ formData, updateField }) => {
             onChange={(e) => updateField('totalLiquidCapital', e.target.value)}
           />
           <FieldErrorList id="fc-capital" errors={capitalErrors} />
+          {capitalConflict ? <div className="field-help">
+            <p>Your earlier range was {capitalRangeLabel(formData.liquidCapital)}. Confirm the amount above, or edit it to match your current funds.</p>
+            <button type="button" className="btn-text-red" onClick={() => updateField('totalLiquidCapital', formData.totalLiquidCapital)}>Use this amount and update my range</button>
+          </div> : capitalRangeFor(formData.totalLiquidCapital) && <p className="field-help">Current capital range: {capitalRangeLabel(formData.liquidCapital)}.</p>}
         </div>
 
         <div id="fc-investmentSources" tabIndex={-1} className={`form-field ${sourceErrors.length ? 'has-errors' : ''}`}>

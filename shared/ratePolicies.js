@@ -8,6 +8,7 @@ export const RATE_POLICIES = Object.freeze({
   'new-correction': rule(20),
   'upload-control': rule(100),
   portal: rule(60),
+  'portal-write': rule(5, 300),
   'staff-documents': rule(100),
   'contact-ingress': rule(20),
   'contact-new': rule(5),

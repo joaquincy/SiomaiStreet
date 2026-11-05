@@ -1,0 +1,87 @@
+.data-notice-dialog {
+  width: calc(100% - var(--space-xl));
+  max-width: calc(var(--max-width) * .7);
+  max-height: calc(100vh - var(--space-xl));
+  max-height: calc(100dvh - var(--space-xl));
+  margin: auto;
+  padding: 0;
+  overflow: hidden;
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-xl);
+  /* The legacy navigation redefines --color-cream as red. Use the semantic
+     reading-surface tokens so navigation styling cannot recolor this modal. */
+  background: var(--color-canvas);
+  color: var(--color-text-primary);
+  font-family: var(--font-body);
+  text-align: left;
+  text-shadow: none;
+  box-shadow: var(--shadow-xl);
+}
+.data-notice-dialog[open] { display: flex; flex-direction: column; }
+.data-notice-dialog::backdrop { background: color-mix(in srgb, var(--color-ink) 60%, transparent); }
+.data-notice-dialog__header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-md);
+  flex: none;
+  padding: var(--space-md);
+  background: var(--color-overlay);
+}
+.data-notice-dialog__heading { min-width: 0; }
+.data-notice-dialog__header h2 { margin: 0; font-family: var(--font-heading); font-size: var(--fs-h2); font-weight: 650; letter-spacing: -.03em; line-height: 1.2; color: var(--color-text-primary); }
+.data-notice-dialog__heading p { margin: var(--space-xs) 0 0; color: var(--color-text-secondary); font-size: var(--fs-small); line-height: 1.5; }
+.data-notice-dialog button {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex: none;
+  min-height: var(--space-2xl);
+  min-width: var(--space-2xl);
+  padding: var(--space-xs) var(--space-md);
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  cursor: pointer;
+  transition: background-color var(--transition-fast), color var(--transition-fast), border-color var(--transition-fast);
+}
+.data-notice-dialog__header button { padding: var(--space-xs); }
+.data-notice-dialog__header svg { width: var(--space-lg); height: var(--space-lg); }
+.data-notice-dialog button:hover { background: var(--color-canvas); color: var(--color-red-dark); border-color: var(--color-red-dark); }
+.data-notice-dialog button:active { background: var(--color-overlay); }
+.data-notice-dialog :focus-visible { outline: medium solid var(--color-red-dark); outline-offset: calc(var(--space-xs) / 2); }
+.data-notice-dialog__body {
+  overflow-y: auto;
+  overscroll-behavior: contain;
+  min-height: 0;
+  padding: var(--space-lg) var(--space-md);
+  overflow-wrap: anywhere;
+  background: var(--color-canvas);
+  color: var(--color-text-secondary);
+  scrollbar-width: thin;
+  scrollbar-color: var(--color-text-muted) var(--color-canvas);
+  scrollbar-gutter: stable;
+}
+.data-notice-dialog__body:focus-visible { outline-offset: calc(var(--space-xs) * -1); }
+.data-notice-dialog .legal-container { max-width: 70ch; padding: 0; }
+.data-notice-dialog .legal-embedded { background: transparent; }
+.data-notice-dialog .legal-header { padding: 0; border: 0; margin-bottom: var(--space-lg); }
+.data-notice-dialog .legal-updated { margin: 0; color: var(--color-text-secondary); font-size: var(--fs-small); line-height: 1.6; }
+.data-notice-dialog .legal-content { color: var(--color-text-secondary); font-size: var(--text-base); line-height: 1.8; }
+.data-notice-dialog .legal-section { margin-bottom: var(--space-2xl); }
+.data-notice-dialog .legal-section h2 { border: 0; margin: 0 0 var(--space-sm); padding: 0; color: var(--color-text-primary); font-size: var(--fs-h4); font-weight: 650; line-height: 1.4; letter-spacing: -.015em; }
+.data-notice-dialog .legal-section p { margin-bottom: var(--space-md); }
+.data-notice-dialog .legal-section strong { color: var(--color-text-primary); }
+.data-notice-dialog .legal-section a { color: var(--color-red-dark); text-decoration: underline; text-underline-offset: .2em; }
+.data-notice-dialog .legal-section a:hover { color: var(--color-text-primary); }
+.data-notice-dialog .legal-section:last-child { margin-bottom: 0; }
+.data-notice-dialog__message { padding-block: var(--space-lg); font-size: var(--fs-body); line-height: 1.7; }
+.data-notice-dialog__message button { margin-top: var(--space-md); }
+@media (min-width: 48rem) {
+  .data-notice-dialog__header { padding: var(--space-lg) var(--space-xl); }
+  .data-notice-dialog__body { padding: var(--space-xl); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .data-notice-dialog button { transition: none; }
+}

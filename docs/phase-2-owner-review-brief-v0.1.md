@@ -2,6 +2,13 @@
 
 **Version 0.1 · 27 October 2026 · Proposal only, not yet approved**
 
+**4 November privacy update:** the website operator confirmed the public privacy
+contact `jushbisakol@gmail.com` and deletion of declined/withdrawn applications
+180 days after recorded closure, with documented holds. See the current
+[privacy operations and activation guide](application-privacy-operations.md).
+Those confirmed items supersede the historical contact/retention proposals below;
+other proposed periods and collection changes are not approved by this update.
+
 **Purpose:** Agree on the prices, application requirements and review process that the website, backend and admin app will follow. No website rules change until approved.
 
 ## 1. Packages and fees
@@ -54,7 +61,7 @@ Application approval does not automatically grant access to branch operations in
 
 Accept appropriate alternatives: bank certificate or relevant statement page for funds; utility bill, current lease or approved address certification for address. Require an ID back image only when needed.
 
-**Proposed recency:** address/funds/site photos within 90 days; reference letter within 6 months; CV updated within 12 months; IDs/permits valid where expiry applies. Allow redaction of unrelated transactions, full account numbers and unnecessary personal details while preserving verification information.
+**Recency update (4 November 2026):** no fixed document-age period has been approved or is enforced. The earlier proposed windows are withdrawn. Preserve dates/periods, assess current relevance and explain any request for updated evidence. See [current document policy](application-document-policy-v1.md) for submission alternatives, redactions and reviewer handling.
 
 Use private PDF/JPG/PNG uploads up to 10 MiB each. Never request passwords, bank logins or OTPs. Secure access and file checks must be implemented and tested.
 

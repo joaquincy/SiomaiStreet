@@ -3,6 +3,7 @@ import { Link } from 'react-router-dom';
 import { BiPhone, BiEnvelope, BiMap, BiTime, BiLogoFacebook, BiLogoInstagram, BiLogoTiktok } from 'react-icons/bi';
 import { SOCIALS } from '../data/siteData';
 import { getSrcSet } from '../utils/responsiveImage';
+import DataNoticeDialog from './DataNoticeDialog';
 import './Footer.css';
 
 const siomaiVariants = {
@@ -22,6 +23,7 @@ const Footer = () => {
   const sectionRef = useRef(null);
   const currentYear = new Date().getFullYear();
   const [isVisible, setIsVisible] = useState(false);
+  const [privacyOpen, setPrivacyOpen] = useState(false);
 
   useEffect(() => {
     const observer = new IntersectionObserver(
@@ -271,7 +273,7 @@ const Footer = () => {
           </span>
           <span className="footer-poster__placer-pipe" aria-hidden="true">|</span>
           <nav className="footer-poster__placer-links" aria-label="Legal links">
-            <Link to="/privacy">PRIVACY</Link>
+            <button type="button" className="footer-poster__privacy" aria-haspopup="dialog" onClick={() => setPrivacyOpen(true)}>PRIVACY</button>
             <span className="footer-poster__placer-link-sep" aria-hidden="true">|</span>
             <Link to="/terms">TERMS</Link>
             <span className="footer-poster__placer-link-sep" aria-hidden="true">|</span>
@@ -279,6 +281,7 @@ const Footer = () => {
           </nav>
         </div>
       </div>
+      {privacyOpen && <DataNoticeDialog onClose={() => setPrivacyOpen(false)} />}
     </footer>
   );
 };

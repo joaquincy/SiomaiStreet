@@ -13,6 +13,9 @@ import { contactConfiguration, publicContactConfiguration, createContactHandler 
 import { portalAccess, createPortalHandler } from './applicationPortal.js';
 import { createDirectUploadHandler, uploadSessionAccess, cleanupExpiredUploads } from './directUploads.js';
 import { createUploadRepository, createUploadStorage, createReviewerDocumentHandler, maintenanceAuthorized } from './directUploadServices.js';
+import { createFundingVerificationHandler } from './fundingVerification.js';
+import { createApplicationFollowup } from './applicationFollowup.js';
+import { createApplicationRetentionMaintenance, processApplicationRetention } from './applicationRetention.js';
 import { createApplicationAdmission, createSharedApplicationRateLimit, clientIP } from './applicationSecurity.js';
 import { isDocumentScanDisabled, createSkippedScanner, createDocumentScanner } from './documentScanner.js';
 import { createServer } from 'node:http';
@@ -110,10 +113,10 @@ const uploadFile = async (bucket, path, file, contentType) => {
   }
 };
 
-const deleteStorageObjects = async (bucket, paths) => {
+const deleteStorageObjects = async (bucket, paths, { signal } = {}) => {
   if (!paths.length) return;
   const response = await fetch(`${supabaseUrl}/storage/v1/object/${bucket}`, {
-    signal: AbortSignal.timeout(15000),
+    signal: signal ? AbortSignal.any([signal, AbortSignal.timeout(15000)]) : AbortSignal.timeout(15000),
     method: 'DELETE',
     headers: {
       apikey: serviceKey,
@@ -122,6 +125,7 @@ const deleteStorageObjects = async (bucket, paths) => {
     },
     body: JSON.stringify({ prefixes: paths }),
   });
+  await response.body?.cancel();
   if (!response.ok) throw new Error('Storage cleanup failed.');
 };
 
@@ -212,6 +216,9 @@ const verifyPublic = action => async req => {
   if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
 };
 const handleContactEmailMaintenance = createContactEmailMaintenance({ env: process.env, request: supabaseRequest, json });
+const handleApplicationRetention = createApplicationRetentionMaintenance({
+  env: process.env, request: supabaseRequest, remove: deleteStorageObjects, json,
+});
 const handleEmailWebhook = createNotificationWebhook({ secret: process.env.RESEND_WEBHOOK_SECRET, request: supabaseRequest, json });
 const access = portalAccess(process.env.APPLICATION_PORTAL_SECRET);
 const contactConfig = contactConfiguration(process.env);
@@ -257,6 +264,10 @@ const handlePortal = createPortalHandler({
 const uploadRepository = createUploadRepository(supabaseRequest);
 const uploadStorage = createUploadStorage({ url: supabaseUrl, serviceKey, request: supabaseRequest, uploadFile, deleteStorageObjects });
 const uploadAccess = uploadSessionAccess(process.env.APPLICATION_UPLOAD_SECRET || process.env.APPLICATION_PORTAL_SECRET);
+const followup = createApplicationFollowup({
+  request: supabaseRequest, access, json, url: supabaseUrl, serviceKey, allowUnscannedDocuments: scanDisabled,
+  rate: (req, scope, limit) => applicationRate(clientIP(req, trustedProxies), scope, limit),
+});
 const checkCorrectionAccess = async (id, correctionId) => {
   const application = (await supabaseRequest(`/rest/v1/franchise_applications?select=id,status,portal_access_revoked,submitted_at&id=eq.${id}&limit=1`))?.[0];
   if (!application || application.portal_access_revoked || Date.now() >= Date.parse(application.submitted_at) + 90 * 86400000) throw Object.assign(new Error('Application access has expired or was revoked.'), { status: 401 });
@@ -268,6 +279,7 @@ const checkCorrectionAccess = async (id, correctionId) => {
 const handleDirectUpload = createDirectUploadHandler({
   repository: uploadRepository, storage: uploadStorage, access: uploadAccess, json,
   receiptDetails: access.receipt, scanDocument, allowUnscanned: scanDisabled,
+  onboarding: followup.onboarding, changes: followup.changes,
   verify: verifyPublic('application'),
   corrections: {
     check: checkCorrectionAccess,
@@ -287,6 +299,10 @@ const handleDirectUpload = createDirectUploadHandler({
 const handleReviewerDocument = createReviewerDocumentHandler({
   url: supabaseUrl, serviceKey, request: supabaseRequest, json,
   allowUnscannedDocuments: scanDisabled,
+  rate: req => applicationRate(clientIP(req, trustedProxies), 'staff-documents', 100),
+});
+const handleFundingVerification = createFundingVerificationHandler({
+  url: supabaseUrl, serviceKey, request: supabaseRequest, json, allowUnscannedDocuments: scanDisabled,
   rate: req => applicationRate(clientIP(req, trustedProxies), 'staff-documents', 100),
 });
 let cleaningUploads = false;
@@ -314,6 +330,7 @@ const handleRequestWithFeedback = async (req, res) => {
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
     if (url.pathname === '/api/maintenance/contact-emails') return await handleContactEmailMaintenance(req, res);
+    if (url.pathname === '/api/maintenance/application-retention') return await handleApplicationRetention(req, res);
     if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });
     if (url.pathname === '/api/webhooks/resend' && req.method === 'POST') return await handleEmailWebhook(req, res);
     if (url.pathname === '/api/health' && req.method === 'GET') {
@@ -333,6 +350,12 @@ const handleRequestWithFeedback = async (req, res) => {
     const helpfulMatch = url.pathname.match(/^\/api\/reviews\/([0-9a-f-]{36})\/helpful$/i);
     if (helpfulMatch && req.method === 'POST') return await handleHelpful(req, res, helpfulMatch[1]);
     const portalMatch = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})(?:\/corrections\/([0-9a-f-]{36}))?$/i);
+    const followupMatch = url.pathname.match(/^\/api\/(application-status|staff\/applications)\/([0-9a-f-]{36})\/followup(?:\/(changes|onboarding|evidence|change-evidence)(?:\/([0-9a-f-]{36}))?)?$/i);
+    if (followupMatch) return await followup.handler(req, res, followupMatch[2], followupMatch[3], followupMatch[4], followupMatch[1] === 'staff/applications');
+    const changeUpload = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})\/changes\/([0-9a-f-]{36})\/uploads$/i);
+    if (changeUpload && req.method === 'POST') return await handleDirectUpload(req, res, undefined, undefined, undefined, undefined, undefined, { applicationId: changeUpload[1], changeId: changeUpload[2] });
+    const onboardingUpload = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})\/onboarding\/([0-9a-f-]{36})\/uploads$/i);
+    if (onboardingUpload && req.method === 'POST') return await handleDirectUpload(req, res, undefined, undefined, undefined, undefined, { applicationId: onboardingUpload[1], itemId: onboardingUpload[2] });
     if (portalMatch && !portalMatch[2] && req.method === 'GET') return await handlePortal(req, res, portalMatch[1]);
     if (portalMatch?.[2] && req.method === 'POST') return json(res, 410, { error: 'The document upload process has changed. Reload this page and select the replacement again.' });
     const correctionUpload = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})\/corrections\/([0-9a-f-]{36})\/uploads$/i);
@@ -340,6 +363,8 @@ const handleRequestWithFeedback = async (req, res) => {
     const uploadMatch = url.pathname.match(/^\/api\/franchise-applications\/uploads(?:\/([0-9a-f-]{36})\/(finalize|authorize|check)(?:\/([A-Za-z]+))?)?$/i);
     if (uploadMatch && req.method === 'POST') return await handleDirectUpload(req, res, uploadMatch[1], uploadMatch[2], uploadMatch[3]);
     if (url.pathname === '/api/franchise-applications' && req.method === 'POST') return json(res, 410, { error: 'The upload process has been upgraded. Keep your draft, reload this page and submit again.' });
+    const fundingMatch = url.pathname.match(/^\/api\/staff\/applications\/([0-9a-f-]{36})\/funding-verification$/i);
+    if (fundingMatch) return await handleFundingVerification(req, res, fundingMatch[1]);
     const reviewerMatch = url.pathname.match(/^\/api\/staff\/applications\/([0-9a-f-]{36})\/documents\/([A-Za-z]+)$/i);
     if (reviewerMatch && req.method === 'POST') return await handleReviewerDocument(req, res, reviewerMatch[1], reviewerMatch[2]);
     if (url.pathname === '/api/maintenance/application-uploads' && req.method === 'POST') {
@@ -395,4 +420,19 @@ if (!serverless && process.env.EMAIL_WORKER_ENABLED === 'true') {
   if (!process.env.RESEND_API_KEY || !process.env.EMAIL_FROM || !process.env.RESEND_WEBHOOK_SECRET) throw new Error('Email worker configuration is incomplete.');
   const stopNotifications = startNotificationWorker({ request: supabaseRequest, send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }) });
   apiServer.on('close', stopNotifications);
+}
+
+if (!serverless && process.env.APPLICATION_RETENTION_ENABLED === 'true') {
+  let running = false;
+  const runRetention = async () => {
+    if (running) return;
+    running = true;
+    try { await processApplicationRetention({ request: supabaseRequest, remove: deleteStorageObjects, signal: AbortSignal.timeout(25000) }); }
+    catch { console.error('Application retention needs retry or staff review.'); }
+    finally { running = false; }
+  };
+  const timer = setInterval(runRetention, 60 * 60 * 1000);
+  timer.unref();
+  apiServer.on('close', () => clearInterval(timer));
+  void runRetention();
 }

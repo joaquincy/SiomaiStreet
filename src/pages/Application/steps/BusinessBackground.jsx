@@ -15,6 +15,7 @@ import { RequirementBadge, FieldErrorList } from '../../../components/Applicatio
 import DatePickerInput from '../../../components/DatePickerInput';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
 import './Steps.css';
+import SavedAnswer from './SavedAnswer';
 
 const OPERATIONAL_AREAS = [
   'Inventory Management',
@@ -26,7 +27,7 @@ const OPERATIONAL_AREAS = [
   'Multi-Site Operations',
 ];
 
-const BusinessBackground = ({ formData, updateField }) => {
+const BusinessBackground = ({ formData, updateField, onEditStep }) => {
   const operationalExperience = formData.operationalExperience || [];
   const positions = formData.additionalPositions || [];
   const feedback = useApplicationFeedback();
@@ -359,34 +360,12 @@ const BusinessBackground = ({ formData, updateField }) => {
           <RequirementBadge required={false} />
         </h3>
 
-        <div className="form-field">
-          <span className="field-label-row">
-            <span className="field-label-text">Have you previously owned or co-owned a business?</span>
-            <RequirementBadge required={false} />
-          </span>
-          <div className="radio-inline-group">
-            <label className="native-radio">
-              <input
-                type="radio"
-                name="priorBusiness"
-                value="yes"
-                checked={formData.priorBusinessOwned === 'yes'}
-                onChange={() => updateField('priorBusinessOwned', 'yes')}
-              />
-              <span>Yes</span>
-            </label>
-            <label className="native-radio">
-              <input
-                type="radio"
-                name="priorBusiness"
-                value="no"
-                checked={formData.priorBusinessOwned !== 'yes'}
-                onChange={() => updateField('priorBusinessOwned', 'no')}
-              />
-              <span>No</span>
-            </label>
-          </div>
-        </div>
+        <SavedAnswer id="bb-priorBusinessOwned" label="Previous business ownership (from Step 1)"
+          value={formData.ownedBusiness === 'yes' ? 'Yes' : formData.ownedBusiness === 'no' ? 'No' : ''}
+          onEdit={() => onEditStep(0)}>
+          <p className="field-help">You have already answered this. Add relevant experience below, or change your answer in Step 1.</p>
+          {formData.priorBusinessOwned && formData.ownedBusiness && formData.priorBusinessOwned !== formData.ownedBusiness && <p className="field-help">This older draft also recorded {formData.priorBusinessOwned === 'yes' ? 'Yes' : 'No'} here. Confirm the answer you want to submit in Step 1.</p>}
+        </SavedAnswer>
 
         <div className="form-field">
           <label htmlFor="bb-priorBusinessDesc">

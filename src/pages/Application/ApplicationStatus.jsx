@@ -8,6 +8,7 @@ import ApplicationSupport from './ApplicationSupport';
 import DocumentPicker from '../../components/DocumentPicker';
 import { documentTypes, documentFormatLabel } from '../../../shared/application.js';
 import ApplicantPortalLayout from './ApplicantPortalLayout';
+import ApplicationFollowup from './ApplicationFollowup';
 import { BiArrowToRight, BiCheckCircle, BiFile, BiLockAlt, BiRefresh, BiShow, BiHide, BiLogOut } from 'react-icons/bi';
 
 const statuses = {submitted:'Submitted',under_review:'Under review',more_information_requested:'Documents requested',approved:'Approved',declined:'Declined',withdrawn:'Withdrawn'};
@@ -58,7 +59,7 @@ export default function ApplicationStatus() {
         <form onSubmit={e=>{e.preventDefault();run(refresh);}} aria-busy={busy}>
           <label htmlFor="tracking-reference">Application reference <span className="field-requirement required">Required</span></label><input className="form-input" id="tracking-reference" required autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="Paste your application reference" value={reference} onChange={e=>setReference(e.target.value)} disabled={busy} />
           <label htmlFor="tracking-code">Private access code <span className="field-requirement required">Required</span></label><div className="portal-password"><input className="form-input" id="tracking-code" required type={showCode?'text':'password'} autoComplete="off" autoCapitalize="none" spellCheck={false} placeholder="Paste your private access code" value={code} onChange={e=>setCode(e.target.value)} disabled={busy} aria-describedby="tracking-privacy" /><button type="button" aria-label={showCode?'Hide private access code':'Show private access code'} aria-pressed={showCode} onClick={()=>setShowCode(value=>!value)}>{showCode?<BiHide aria-hidden="true"/>:<BiShow aria-hidden="true"/>}</button></div>
-          <p id="tracking-privacy" className="portal-small-note">This session stays in memory only. Reloading or closing the page signs you out. No ID images or financial answers are displayed here.</p>
+          <p id="tracking-privacy" className="portal-small-note">This session stays in memory only. Reloading or closing the page signs you out. Loading your details displays private identity, contact and funding answers. Keep your reference and access code private, and close this page when finished.</p>
           {error&&<p className="portal-error" role="alert">{error}</p>}
           <button className="portal-primary step-nav-continue" disabled={busy}>{busy?'Checking your application…':'Check status'}<span className="btn-arrow-badge"><BiArrowToRight aria-hidden="true" /></span></button>
         </form><details className="portal-help"><summary>Can’t find your access details?</summary><p>Check your saved submission receipt. Your reference alone cannot unlock the record. Use a verified support contact for help; do not send your private access code.</p><ApplicationSupport /></details>
@@ -78,6 +79,7 @@ export default function ApplicationStatus() {
           </>}
         </section>)}</div>
       </section><div className="portal-support"><ApplicationSupport /></div>
+      <ApplicationFollowup reference={record.id} accessCode={code.trim()} />
     </div>}
     <p className="portal-message" role="status" aria-live="polite">{message}</p>
     <div className="portal-bottom-links"><Link to="/application">Back to application</Link><Link to="/application/onboarding">Explore onboarding <BiArrowToRight aria-hidden="true"/></Link></div>

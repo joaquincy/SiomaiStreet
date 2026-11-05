@@ -1,18 +1,11 @@
 /* ─── Required documents list (must match DocumentUpload.jsx) ─── */
 import { FRANCHISE_PACKAGES } from './franchiseCatalogue.js';
-export const APPLICATION_DOCUMENTS = [
-  { key: 'govIdFront', label: 'Valid Government-Issued ID (Front)', required: true },
-  { key: 'govIdBack', label: 'Valid Government-Issued ID (Back)', required: true },
-  { key: 'proofOfBilling', label: 'Proof of Billing / Address', required: true },
-  { key: 'proofOfFunds', label: 'Proof of Funds (bank certificate or statement)', required: true },
-  { key: 'idPhoto', label: '2x2 ID Photo (white background, recent)', required: true },
-  { key: 'dtiSecCert', label: 'DTI or SEC Certificate (if business owner)', required: false },
-  { key: 'businessPermit', label: 'Business Permit (latest)', required: false },
-  { key: 'resumeCv', label: 'Resume or CV', required: false },
-  { key: 'characterRef', label: 'Character Reference Letter', required: false },
-  { key: 'siteProposal', label: 'Site Proposal or Location Photos', required: false },
-];
-export const REQUIRED_DOC_KEYS = APPLICATION_DOCUMENTS.filter(doc => doc.required).map(doc => doc.key);
+import { PRIVACY_NOTICE_VERSION } from './privacy.js';
+import { parseAmount, applicationAnswerConflicts, PLAN_TIMELINE_LABELS } from './applicationAnswers.js';
+import { APPLICATION_DOCUMENTS, getApplicationDocuments, omitPassportBack } from './applicationDocuments.js';
+import { FUNDING_STATUS_OPTIONS, ADDRESS_EVIDENCE_OPTIONS, FUNDS_EVIDENCE_OPTIONS, hasPendingFunding, needsAddressExplanation, cleanConditionalEvidence } from './documentPolicy.js';
+export { APPLICATION_DOCUMENTS, REQUIRED_DOC_KEYS, getApplicationDocuments, omitPassportBack } from './applicationDocuments.js';
+export { parseAmount } from './applicationAnswers.js';
 const EMAIL_PATTERN = /^[^\s@]+@[^\s@]+\.[^\s@]+$/;
 
 const isValidPhone = (value) => {
@@ -44,7 +37,7 @@ const isPositiveCurrency = (value) => {
 };
 
 /* ─── H2: Per-step validation ─── */
-const validateExistingStep = (stepIndex, formData) => {
+const validateExistingStep = (stepIndex, formData, { deferRequiredDocuments = false } = {}) => {
   const errors = [];
   switch (stepIndex) {
     case 0: // Pre-Qualification
@@ -69,6 +62,10 @@ const validateExistingStep = (stepIndex, formData) => {
       if (formData.email && !EMAIL_PATTERN.test(formData.email)) errors.push('Valid Email Address');
       if (formData.email && formData.confirmEmail && formData.email.trim().toLowerCase() !== formData.confirmEmail.trim().toLowerCase()) errors.push('Email addresses must match');
       if (!formData.govIdType) errors.push('Government ID Type');
+      if (formData.govIdType === 'Other') {
+        if (!formData.govIdOtherName?.trim()) errors.push('Other ID name');
+        if (!formData.govIdOtherIssuer?.trim()) errors.push('Other ID issuing authority');
+      }
       if (!formData.govIdNumber?.trim()) errors.push('Government ID Number');
       if (!formData.maritalStatus) errors.push('Marital Status');
       if (formData.hasCoApplicant === 'yes') {
@@ -94,7 +91,11 @@ const validateExistingStep = (stepIndex, formData) => {
       break;
     case 3: // Financial Capability
       if (!formData.totalLiquidCapital?.trim()) errors.push('Total Liquid Capital');
-      if (formData.totalLiquidCapital && !isPositiveCurrency(formData.totalLiquidCapital)) errors.push('Valid Total Liquid Capital');
+      if (!formData.fundingStatus) errors.push('Funding status');
+      if (formData.totalLiquidCapital && !(isPositiveCurrency(formData.totalLiquidCapital) || (hasPendingFunding(formData) && parseAmount(formData.totalLiquidCapital) === 0))) errors.push('Valid Total Liquid Capital: exclude pending funds; enter 0 if all funding is pending');
+      if (formData.fundingStatus === 'pending' && parseAmount(formData.totalLiquidCapital) > 0) errors.push('Liquid capital must be 0 when none of your funding is available; otherwise choose partly pending');
+      if (formData.fundingStatus === 'partly-pending' && parseAmount(formData.totalLiquidCapital) === 0) errors.push('Liquid capital is 0; choose funding pending with none available yet');
+      if (hasPendingFunding(formData) && !formData.pendingFundingDetails?.trim()) errors.push('Pending funding explanation');
       if (!formData.investmentSources?.length) errors.push('Source of Investment Funds');
       break;
     case 4: // Brand Alignment
@@ -117,7 +118,13 @@ const validateExistingStep = (stepIndex, formData) => {
       break;
     case 6: { // Document Upload
       const docs = formData.documents || {};
-      APPLICATION_DOCUMENTS.filter(doc => doc.required && !docs[doc.key]).forEach(doc => errors.push(`Upload ${doc.label}`));
+      if (!formData.addressEvidenceType) errors.push('Address evidence type');
+      if (needsAddressExplanation(formData) && !formData.addressEvidenceDetails?.trim()) errors.push('Address evidence explanation');
+      if (!formData.fundsEvidenceType) errors.push('Funding evidence type');
+      if (formData.fundsEvidenceType === 'other' && !formData.fundsEvidenceDetails?.trim()) errors.push('Funding evidence explanation');
+      if (['pending-evidence', 'loan-approval', 'partner-commitment'].includes(formData.fundsEvidenceType) && !hasPendingFunding(formData)) errors.push('Funding evidence type: a pending document, approval or commitment is not available cash. Update funding status in Step 4 or choose evidence of funds already available.');
+      if (formData.fundsEvidenceType === 'pending-evidence' && docs.proofOfFunds) errors.push('Funding evidence type: a file is already selected. Choose its evidence type or remove it before deferring.');
+      if (!deferRequiredDocuments) getApplicationDocuments(formData).filter(doc => doc.required && !docs[doc.key]).forEach(doc => errors.push(`Upload ${doc.label}`));
       break;
     }
     case 7: // Legal Consents
@@ -149,16 +156,16 @@ export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const fieldsByStep = [
   'liquidCapital ownedBusiness franchiseType territory ownershipIntention openingTimeline',
-  'firstName middleName lastName dateOfBirth citizenship address primaryPhone secondaryPhone email confirmEmail govIdType govIdNumber emergencyName emergencyRelationship emergencyPhone hasCoApplicant maritalStatus coApplicant',
+  'firstName middleName lastName dateOfBirth citizenship address primaryPhone secondaryPhone email confirmEmail govIdType govIdOtherName govIdOtherIssuer govIdNumber emergencyName emergencyRelationship emergencyPhone hasCoApplicant maritalStatus coApplicant',
   'employmentHistory jobTitle company jobStartDate jobEndDate currentEmployment industry keyResponsibilities additionalPositions priorBusinessOwned priorBusinessDescription foodIndustryExperience largestTeamSize managementYears operationalExperience personallyOperate weeklyHours',
-  'totalLiquidCapital investmentSources activeIncome primaryIncomeSource existingDebts neverBankruptcy noPendingCases',
+  'totalLiquidCapital fundingStatus pendingFundingDetails investmentSources activeIncome primaryIncomeSource existingDebts neverBankruptcy noPendingCases',
   'whyInterested personalValues brandValues brandValuesExplanation discoveryDayInterest',
   'selectedPackage targetRegion targetCity siteTypes hasSpecificLocation openToAlternative planOpeningTimeline multipleUnits additionalPlanDetails',
-  'documents',
-  'consent_nda consent_backgroundCheck consent_accuracy consent_privacy',
+  'documents addressEvidenceType addressEvidenceDetails fundsEvidenceType fundsEvidenceDetails documentPolicyVersion',
+  'consent_nda consent_backgroundCheck consent_accuracy consent_privacy privacyNoticeVersion',
   'checklist_accurate checklist_nda checklist_documents checklist_noGuarantee',
 ].map(fields => fields.split(' '));
-const booleans = new Set(['currentEmployment', ...fieldsByStep[7], ...fieldsByStep[8]]);
+const booleans = new Set(['currentEmployment', ...fieldsByStep[7].filter(key => key.startsWith('consent_')), ...fieldsByStep[8]]);
 const arrays = new Set(['operationalExperience', 'investmentSources', 'brandValues', 'siteTypes']);
 const coFields = ['firstName', 'lastName', 'email', 'phone'];
 const positionFields = ['id', 'jobTitle', 'company', 'startDate', 'endDate', 'industry', 'keyResponsibilities'];
@@ -171,9 +178,9 @@ export function sanitizeApplication(input) {
   for (const key of fieldsByStep.flat()) {
     const value = input[key];
     if (key === 'documents') {
-      result.documents = Object.fromEntries(DOCUMENT_KEYS.filter(k => typeof File !== 'undefined' && input.documents?.[k] instanceof File).map(k => [k, input.documents[k]]));
+      result.documents = omitPassportBack(Object.fromEntries(DOCUMENT_KEYS.filter(k => typeof File !== 'undefined' && input.documents?.[k] instanceof File).map(k => [k, input.documents[k]])), input.govIdType);
     } else if (key === 'coApplicant') {
-      if (object(value)) result[key] = stringsOnly(value, coFields);
+      if (input.hasCoApplicant === 'yes' && object(value)) result[key] = stringsOnly(value, coFields);
     } else if (key === 'additionalPositions') {
       if (Array.isArray(value)) result[key] = value.slice(0, 20).filter(object).map((position, index) => ({...stringsOnly(position, positionFields), id: typeof position.id === 'string' ? position.id : `restored-${index}`, current: position.current === true}));
     } else if (arrays.has(key)) {
@@ -182,13 +189,8 @@ export function sanitizeApplication(input) {
       if (typeof value === 'boolean') result[key] = value;
     } else if (typeof value === 'string') result[key] = value.slice(0, 20000);
   }
-  return result;
-}
-
-export function parseAmount(value) {
-  if (typeof value !== 'string' || !/^(?:\d+|\d{1,3}(?:,\d{3})+)(?:\.\d{1,2})?$/.test(value.trim())) return NaN;
-  const number = Number(value.trim().replaceAll(',', ''));
-  return Number.isFinite(number) && number <= Number.MAX_SAFE_INTEGER / 100 ? number : NaN;
+  if (typeof result.totalLiquidCapital === 'string') result.totalLiquidCapital = result.totalLiquidCapital.trim();
+  return cleanConditionalEvidence(result);
 }
 
 export function validDate(value) {
@@ -198,7 +200,11 @@ export function validDate(value) {
 }
 
 const regions = ['Metro Manila (NCR)', 'Central Luzon', 'CALABARZON', 'Ilocos Region', 'Cagayan Valley', 'Bicol Region', 'Western Visayas', 'Central Visayas', 'Eastern Visayas', 'Zamboanga Peninsula', 'Northern Mindanao', 'Davao Region', 'SOCCSKSARGEN', 'Caraga', 'BARMM', 'CAR (Cordillera)', 'MIMAROPA'];
-const choices = {
+export const applicationChoices = {
+  privacyNoticeVersion: [PRIVACY_NOTICE_VERSION],
+  fundingStatus: FUNDING_STATUS_OPTIONS.map(option => option.value),
+  addressEvidenceType: ADDRESS_EVIDENCE_OPTIONS.map(option => option.value),
+  fundsEvidenceType: FUNDS_EVIDENCE_OPTIONS.map(option => option.value),
   liquidCapital: ['below50k','50k-150k','150k-250k','250k-500k','above500k'],
   franchiseType: ['food-cart','kiosk','casual-dining','not-sure'],
   territory: regions, targetRegion: regions,
@@ -213,16 +219,17 @@ const choices = {
   discoveryDayInterest: ['yes-definitely','yes-remote','not-now'],
   selectedPackage: [...FRANCHISE_PACKAGES.map(pkg => pkg.id), 'not-sure'],
   employmentHistory: ['provided', 'none'],
-  planOpeningTimeline: ['within-3-months','3-6-months','6-12-months','just-planning'], multipleUnits: ['yes','no','maybe'],
+  planOpeningTimeline: Object.keys(PLAN_TIMELINE_LABELS), multipleUnits: ['yes','no','maybe'],
   investmentSources: ['personal-savings','bank-loan','family-support','business-partner','other'],
   brandValues: ['Excellence','Customer First','Integrity','Innovation','Community','Consistency'],
   operationalExperience: ['Inventory Management','HR & Staffing','Customer Service','Sales & Marketing','Financial Reporting','Supply Chain','Multi-Site Operations'],
   siteTypes: ['SM Mall','Robinsons Mall','Puregold','Wet Market','Public Market','School','University','Office Building','Hospital','Roadside','Residential Area','Transport Terminal','Others'],
 };
+const choices = applicationChoices;
 for (const key of ['ownedBusiness','hasCoApplicant','priorBusinessOwned','foodIndustryExperience','activeIncome','existingDebts','neverBankruptcy','noPendingCases','hasSpecificLocation','openToAlternative']) choices[key] = ['yes','no'];
 const label = key => key.replace(/([A-Z])/g, ' $1').replaceAll('_', ' ');
 
-export function validateStep(step, input, { documentMetadata = false } = {}) {
+export function validateStep(step, input, { documentMetadata = false, deferRequiredDocuments = false } = {}) {
   if (!fieldsByStep[step] || !object(input)) return ['Application data is invalid.'];
   const data = sanitizeApplication(input);
   // Only the upload-session API opts into descriptors. Actual bytes are checked
@@ -230,6 +237,11 @@ export function validateStep(step, input, { documentMetadata = false } = {}) {
   if (documentMetadata && object(input.documents)) data.documents = input.documents;
   const errors = [];
   for (const key of fieldsByStep[step]) {
+    if (key === 'coApplicant' && data.hasCoApplicant !== 'yes') continue;
+    if (['govIdOtherName', 'govIdOtherIssuer'].includes(key) && data.govIdType !== 'Other') continue;
+    if (key === 'pendingFundingDetails' && !hasPendingFunding(data)) continue;
+    if (key === 'addressEvidenceDetails' && !needsAddressExplanation(data)) continue;
+    if (key === 'fundsEvidenceDetails' && data.fundsEvidenceType !== 'other') continue;
     const value = input[key];
     if (value === undefined) continue;
     const correctType = key === 'documents' || key === 'coApplicant' ? object(value)
@@ -237,6 +249,8 @@ export function validateStep(step, input, { documentMetadata = false } = {}) {
       : booleans.has(key) ? typeof value === 'boolean' : typeof value === 'string';
     if (!correctType) { errors.push(`Invalid ${label(key)} format`); continue; }
     if (typeof value === 'string' && value.length > 20000) errors.push(`${label(key)} is too long`);
+    const maximum = { govIdOtherName: 120, govIdOtherIssuer: 160, pendingFundingDetails: 1000, addressEvidenceDetails: 1000, fundsEvidenceDetails: 1000 }[key];
+    if (maximum && typeof value === 'string' && value.length > maximum) errors.push(`${label(key)} must be at most ${maximum} characters`);
     if (choices[key] && (Array.isArray(value) ? value.some(v => !choices[key].includes(v)) || new Set(value).size !== value.length : value !== '' && !choices[key].includes(value))) errors.push(`Choose a valid ${label(key)}`);
   }
   if (step === 1) {
@@ -263,7 +277,7 @@ export function validateStep(step, input, { documentMetadata = false } = {}) {
       if (!DOCUMENT_KEYS.includes(key) || !(documentMetadata ? object(file) : file instanceof File) || !Number.isSafeInteger(file?.size) || file.size <= 0 || file.size > MAX_DOCUMENT_BYTES || !documentTypes(key).includes(file.type)) errors.push(`Invalid document: ${key}. Use a nonempty ${documentFormatLabel(key)} up to 10 MiB.`);
     }
   }
-  return [...new Set([...errors, ...validateExistingStep(step, data)])];
+  return [...new Set([...errors, ...validateExistingStep(step, data, { deferRequiredDocuments }), ...applicationAnswerConflicts(data).filter(issue => issue.step === step).map(issue => issue.message)])];
 }
 
 export function validateApplication(input, options) {

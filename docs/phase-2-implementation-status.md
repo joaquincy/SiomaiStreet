@@ -2,6 +2,16 @@
 
 27 October 2026. Local implementation, not deployed. Owner approval is still pending.
 
+**Privacy update, 4 November 2026:** the operator confirmed `jushbisakol@gmail.com`
+as the monitored public privacy contact and the 180-day rule for declined/withdrawn
+applications after recorded closure. The operational notice and deletion workflow
+are implemented locally; see [activation and staff procedures](application-privacy-operations.md).
+This supersedes the historical pending-contact/retention rows below for those items
+only. Active/approved records, other business policies and production verification
+remain separate; the migration and scheduled worker must be activated.
+
+**Document-policy update, 4 November 2026:** the historical document row below is superseded by [the implemented document policy and reviewer handoff](application-document-policy-v1.md). It covers shared-household address evidence, pending funding, Other ID, redactions and no arbitrary recency cutoff. The owner still needs to approve the final business policy.
+
 The user authorized justified website improvements and explicitly selected quotation-only pricing. This is not approval of the proposed commercial, legal, document or retention policies.
 
 ## Implemented

@@ -7,6 +7,7 @@ import {
 import { useState } from 'react';
 import { RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
+import ApplicationPrivacyNotice from '../../../components/ApplicationPrivacyNotice';
 import './Steps.css';
 
 const ConsentCard = ({ id, title, content, agreed, onToggle }) => {
@@ -108,16 +109,18 @@ const LegalConsents = ({ formData, updateField }) => {
         </div>
       </section>
 
-      <section className="form-section">
-        <div className={`privacy-box ${privacyErrors.length ? 'has-errors' : ''}`}>
-          <div className="privacy-box-header">
-            <span className="consent-card-title">Data Processing &amp; Local Draft Notice</span>
+      <section className="form-section" aria-labelledby="privacy-notice-title">
+        <div className={`application-data-notice ${privacyErrors.length ? 'has-errors' : ''}`}>
+          <header className="application-data-notice-header">
+            <span className="application-notice-icon" aria-hidden="true"><BiShield /></span>
+            <div className="application-data-notice-heading">
+              <h3 id="privacy-notice-title">Data Processing &amp; Local Draft Notice</h3>
+              <p id="privacy-notice-intro">Your information is used for franchise application assessment. Review the purposes, access arrangements, retention rule and privacy-request options below before agreeing.</p>
+            </div>
             <RequirementBadge required />
-          </div>
-          <p className="privacy-notice-pending">
-            This form collects contact and identity details, business and financial information, and supporting documents for application review. Draft answers and files may remain in this browser; submission sends them to the server. Official privacy contacts, retention periods, reviewer access and the final privacy notice still require confirmation before public use. Use synthetic information for development testing. Do not submit real identity or financial documents until those arrangements are confirmed.
-          </p>
-          <label className="legal-checkbox-label" htmlFor="consent-privacy">
+          </header>
+          <ApplicationPrivacyNotice />
+          <label className="legal-checkbox-label application-privacy-consent" htmlFor="consent-privacy">
             <input
               id="consent-privacy"
               type="checkbox"
@@ -125,6 +128,7 @@ const LegalConsents = ({ formData, updateField }) => {
               checked={!!formData.consent_privacy}
               aria-required="true"
               aria-invalid={privacyErrors.length > 0}
+              aria-describedby={privacyErrors.length ? 'consent-privacy-error' : undefined}
               onChange={(e) => updateField('consent_privacy', e.target.checked)}
             />
             <span className="legal-checkbox-text">

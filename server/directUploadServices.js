@@ -14,7 +14,12 @@ export function createUploadRepository(request) {
     active: (id, hash) => first(`franchise_upload_sessions?select=id,request_hash,expires_at&application_id=eq.${id}&request_hash=eq.${hash}&expires_at=gt.${encodeURIComponent(new Date().toISOString())}&order=created_at.desc&limit=1`),
     prepare: (id, hash, data, manifest, correction, retry) => rpc('prepare_franchise_upload', { p_application_id: id, p_request_hash: hash, p_data: data, p_manifest: manifest, p_correction: correction || null, p_retry: retry || null }),
     // Authorization/check calls need session metadata, not a copy of every private answer.
-    session: id => first(`franchise_upload_sessions?select=id,application_id,request_hash,expires_at,correction_id&id=eq.${id}&limit=1`),
+    session: id => first(`franchise_upload_sessions?select=id,application_id,request_hash,expires_at,correction_id,onboarding_item_id,answer_change_id&id=eq.${id}&limit=1`),
+    prepareChange: (id, change, retry, hash, manifest) => rpc('prepare_franchise_change_upload', { p_application: id, p_change: change, p_retry: retry, p_hash: hash, p_manifest: manifest }),
+    finalizeChange: (id, allow) => rpc('finalize_franchise_change_upload', { p_session: id, p_allow_unscanned: allow }),
+    prepareOnboarding: (id, item, revision, retry, hash, manifest) => rpc('prepare_franchise_onboarding_upload', { p_application: id, p_item: item, p_revision: revision, p_retry: retry, p_hash: hash, p_manifest: manifest }),
+    finalizeOnboarding: (id, allow) => rpc('finalize_franchise_onboarding_upload', { p_session: id, p_allow_unscanned: allow }),
+    answers: id => first(`franchise_upload_sessions?select=application_data&id=eq.${id}&limit=1`),
     items: id => request(`/rest/v1/franchise_upload_items?session_id=eq.${id}&order=document_key.asc&limit=10`),
     item: (id, key) => first(`franchise_upload_items?session_id=eq.${id}&document_key=eq.${key}&limit=1`),
     claim: (id, key, lease) => rpc('claim_franchise_upload', { p_session: id, p_key: key, p_lease: lease }),
@@ -97,15 +102,9 @@ export function createReviewerDocumentHandler({ url, serviceKey, request, rate, 
   return async (req, res, id, key) => {
     if (!UUID_PATTERN.test(id) || !DOCUMENT_KEYS.includes(key)) throw fail('Document not found.', 404);
     if (!await rate(req)) throw fail('Too many document requests. Try again later.', 429);
-    const authorization = req.headers.authorization;
-    if (typeof authorization !== 'string' || !/^Bearer [A-Za-z0-9_.-]{20,4096}$/.test(authorization)) throw fail('Sign in to your staff account.', 401);
-    // Supabase validates the token; never trust roles/user IDs sent by the browser.
-    const auth = await fetcher(`${url}/auth/v1/user`, { headers: { apikey: serviceKey, authorization }, signal: AbortSignal.timeout(10000), redirect: 'error' });
-    if (!auth.ok) { await auth.body?.cancel(); throw fail('Your staff session expired. Sign in again.', 401); }
-    const user = await auth.json();
-    if (!UUID_PATTERN.test(user.id)) throw fail('Invalid staff session.', 401);
-    const permitted = await request(`/rest/v1/franchise_document_reviewers?user_id=eq.${user.id}&enabled=eq.true&limit=1`);
-    if (!permitted?.length) throw fail('You do not have permission to review application documents.', 403);
+    const user = await authorizeDocumentReviewer(req, { url, serviceKey, request, fetcher });
+    const deleting = await request(`/rest/v1/franchise_erasure_jobs?application_id=eq.${id}&limit=1&select=id`);
+    if (deleting?.length) throw fail('This application is being erased; document access is closed.', 410);
     const rows = await request(`/rest/v1/franchise_applications?select=document_paths&id=eq.${id}&limit=1`);
     const document = rows?.[0]?.document_paths?.[key];
     if (!document?.path || !isAcceptedScan(document.scan, allowUnscannedDocuments)) throw fail('This document is not available for review.', 404);
@@ -117,4 +116,17 @@ export function createReviewerDocumentHandler({ url, serviceKey, request, rate, 
       scan: document.scan, warning: document.scan.status === 'skipped' ? 'This document has not been virus-checked.' : null
     });
   };
+}
+
+export async function authorizeDocumentReviewer(req, { url, serviceKey, request, fetcher = fetch }) {
+    const authorization = req.headers.authorization;
+    if (typeof authorization !== 'string' || !/^Bearer [A-Za-z0-9_.-]{20,4096}$/.test(authorization)) throw fail('Sign in to your staff account.', 401);
+    // Supabase validates the token; never trust roles/user IDs sent by the browser.
+    const auth = await fetcher(`${url}/auth/v1/user`, { headers: { apikey: serviceKey, authorization }, signal: AbortSignal.timeout(10000), redirect: 'error' });
+    if (!auth.ok) { await auth.body?.cancel(); throw fail('Your staff session expired. Sign in again.', 401); }
+    const user = await auth.json();
+    if (!UUID_PATTERN.test(user.id)) throw fail('Invalid staff session.', 401);
+    const permitted = await request(`/rest/v1/franchise_document_reviewers?user_id=eq.${user.id}&enabled=eq.true&limit=1`);
+    if (!permitted?.length) throw fail('You do not have permission to review application documents.', 403);
+    return user;
 }

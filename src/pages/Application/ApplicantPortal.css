@@ -1,5 +1,11 @@
 /* Portal-specific layout only. Shared application classes own navigation, headings,
    form surfaces, inputs and primary actions in ApplicationExperience.css. */
+.portal-followup, .portal-followup-fields { display: grid; gap: var(--app-radius-xl); min-width: 0; }
+.portal-followup-fields { border: 0; padding: 0; margin: 0; }
+.portal-followup details > summary { cursor: pointer; padding-block: var(--app-radius-lg); }
+.portal-followup p, .portal-followup label { overflow-wrap: anywhere; }
+.portal-followup .form-input, .portal-followup .form-textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.portal-followup button:focus-visible, .portal-followup summary:focus-visible { outline: solid var(--app-red); outline-offset: var(--app-radius-xs); }
 .application-page.applicant-portal .portal-shell {
     max-width: var(--max-width, 1200px);
     margin: auto;

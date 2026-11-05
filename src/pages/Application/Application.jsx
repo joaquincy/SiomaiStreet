@@ -2,6 +2,7 @@ import { requestTurnstile } from '../../utils/turnstile';
 import { assertRateLimitReady } from '../../utils/rateLimits.js';
 import useRateCooldown from '../../utils/useRateCooldown.js';
 import { validateStep, validateApplication } from '../../../shared/application.js';
+import { updateApplicationAnswer, applicationAnswerConflicts } from '../../../shared/applicationAnswers.js';
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
 import ApplicationStart from './ApplicationStart';
@@ -80,11 +81,7 @@ const ApplicationPage = () => {
   const [formData, setFormData] = useState(() => {
     const baseData = savedDraft.formData || {};
     if (requestedPackage && !baseData.selectedPackage) {
-      return {
-        ...baseData,
-        selectedPackage: requestedPackage,
-        franchiseType: baseData.franchiseType || requestedPackage,
-      };
+      return updateApplicationAnswer(baseData, 'selectedPackage', requestedPackage);
     }
     return baseData;
   });
@@ -117,7 +114,7 @@ const ApplicationPage = () => {
   }, [submitting]);
   const requestId = useRef(savedDraft.requestId);
   const [saveStatus, setSaveStatus] = useState('Loading draft');
-  const [attempted, setAttempted] = useState({});
+  const [attempted, setAttempted] = useState(() => Object.fromEntries(applicationAnswerConflicts(savedDraft.formData).map(issue => [issue.step, true])));
   const [visited, setVisited] = useState({ [savedDraft.currentStep]: true });
   const summaryRef = useRef(null);
   const stepperRef = useRef(null);
@@ -142,7 +139,7 @@ const ApplicationPage = () => {
     loadDraftDocuments(requestId.current)
       .then((documents) => {
         if (isActive && Object.keys(documents).length > 0) {
-          setFormData((previous) => ({ ...previous, documents }));
+          setFormData((previous) => updateApplicationAnswer(previous, 'documents', documents));
         }
       })
       .catch(() => {
@@ -195,6 +192,7 @@ const ApplicationPage = () => {
   const progress = Math.round((completedStepsCount / APPLICATION_STEPS.length) * 100);
   const currentStepConfig = APPLICATION_STEPS[currentStep];
   const currentIssues = stepFeedback(currentStep, formData);
+  const answerConflicts = applicationAnswerConflicts(formData);
   const showCurrentStepErrors = !!attempted[currentStep] && currentIssues.length > 0;
   const isSaveFailed = saveStatus.startsWith('Save failed');
 
@@ -205,7 +203,7 @@ const ApplicationPage = () => {
 
   /* ─── Form helpers ─── */
   const updateField = (field, value) => {
-    setFormData((prev) => ({ ...prev, [field]: value }));
+    setFormData((prev) => updateApplicationAnswer(prev, field, value));
     // Client errors are derived from current answers. Server errors belong to the
     // submitted snapshot and must not reappear after that snapshot is edited.
     setStepErrors([]);
@@ -334,7 +332,7 @@ const ApplicationPage = () => {
   const renderStepContent = () => {
     switch (currentStep) {
       case 0:
-        return <PreQualification formData={formData} updateField={updateField} />;
+        return <PreQualification formData={formData} updateField={updateField} onEditStep={goToStep} />;
       case 1:
         return (
           <PersonalInfo
@@ -344,13 +342,13 @@ const ApplicationPage = () => {
           />
         );
       case 2:
-        return <BusinessBackground formData={formData} updateField={updateField} />;
+        return <BusinessBackground formData={formData} updateField={updateField} onEditStep={goToStep} />;
       case 3:
         return <FinancialCapability formData={formData} updateField={updateField} />;
       case 4:
         return <BrandAlignment formData={formData} updateField={updateField} />;
       case 5:
-        return <FranchisePlan formData={formData} updateField={updateField} />;
+        return <FranchisePlan formData={formData} updateField={updateField} onEditStep={goToStep} />;
       case 6:
         return <DocumentUpload formData={formData} updateField={updateField} saveStatus={saveStatus} />;
       case 7:
@@ -554,6 +552,16 @@ const ApplicationPage = () => {
             </div>
           </div>
 
+          {answerConflicts.length > 0 && (
+            <div className="package-carryover-bar" role="region" aria-label="Saved answers need review">
+              <div className="package-carryover-text">
+                <strong>Some saved answers differ.</strong>
+                <span>Choose your current answers before submitting. Your other answers and selected files are kept.</span>
+              </div>
+              <button type="button" className="package-carryover-apply" disabled={submitting} onClick={() => goToStep(answerConflicts[0].step)}>Review different answers</button>
+            </div>
+          )}
+
           {/* ── Non-Destructive Package Preference Carry-Over Prompt ── */}
           {pendingPackageChoice && (
             <div className="package-carryover-bar" role="region" aria-label="Package selection preference">
@@ -571,11 +579,7 @@ const ApplicationPage = () => {
                   type="button"
                   className="package-carryover-apply"
                   onClick={() => {
-                    setFormData((prev) => ({
-                      ...prev,
-                      selectedPackage: pendingPackageChoice,
-                      franchiseType: pendingPackageChoice,
-                    }));
+                    updateField('selectedPackage', pendingPackageChoice);
                     setPendingPackageChoice(null);
                     setSearchParams({}, { replace: true });
                   }}

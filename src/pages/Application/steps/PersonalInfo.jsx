@@ -18,7 +18,7 @@ const sections = [
     ['secondaryPhone', 'Secondary Phone Number', false, 'tel', 'Optional backup mobile or landline number.'],
     ['email', 'Email Address', true, 'email', 'We will send application updates here, for example juan@example.com.', 'email'],
     ['confirmEmail', 'Confirm Email Address', true, 'email', 'Re-enter the exact same email address to prevent typos.', 'email'],
-    ['govIdType', 'Government ID Type', true, ['Passport', "Driver's License", 'UMID', 'PhilID (National ID)', 'Postal ID', "Voter's ID", 'Other'], 'Choose the valid government ID you will upload in Step 7.'],
+    ['govIdType', 'Government ID Type', true, ['Passport', "Driver's License", 'UMID', 'PhilID (National ID)', 'Postal ID', "Voter's ID", 'Other'], 'Choose the valid government ID you will upload in Step 7. Passport needs only its identity page; choosing it removes any previously selected ID-back file.'],
     ['govIdNumber', 'Government ID Number', true, 'text', 'Enter the ID number exactly as printed on your selected ID.'],
   ]],
   ['Emergency contact', [
@@ -47,6 +47,7 @@ export default function PersonalInfo({ formData, updateField, showErrors = false
         options={Array.isArray(type) ? type : undefined}
         autoComplete={autoComplete}
         name={co ? `coApplicant.${key}` : key}
+        maxLength={key === 'govIdOtherName' ? 120 : key === 'govIdOtherIssuer' ? 160 : undefined}
         value={co ? formData.coApplicant?.[key] : formData[key]}
         errors={showErrors || touched[id] ? issues.filter((issue) => issue.id === id).map((issue) => issue.message) : []}
         onBlur={() => setTouched((previous) => ({ ...previous, [id]: true }))}
@@ -84,7 +85,10 @@ export default function PersonalInfo({ formData, updateField, showErrors = false
               <Icon className="section-icon" aria-hidden="true" />
               <span>{title}</span>
             </h3>
-            <div className="pilot-field-grid">{fields.map((field) => renderField(field))}</div>
+            <div className="pilot-field-grid">{fields.flatMap(field => field[0] === 'govIdType' && formData.govIdType === 'Other' ? [field,
+              ['govIdOtherName', 'Other ID name', true, 'text', 'Name the government-issued document. It will be assessed by a reviewer, not accepted automatically.'],
+              ['govIdOtherIssuer', 'Other ID issuing authority', true, 'text', 'Name the government office or authority that issued this ID.'],
+            ] : [field]).map((field) => renderField(field))}</div>
           </section>
         );
       })}
@@ -99,7 +103,7 @@ export default function PersonalInfo({ formData, updateField, showErrors = false
           label="Adding a co-applicant / business partner?"
           conditional="Conditional"
           options={['No', 'Yes']}
-          hint="If you select Yes, all four co-applicant details below become required."
+          hint="If you select Yes, all four details become required. Selecting No removes the co-applicant details from this application and its draft."
           value={formData.hasCoApplicant === 'yes' ? 'Yes' : 'No'}
           onChange={(value) => updateField('hasCoApplicant', value.toLowerCase())}
         />

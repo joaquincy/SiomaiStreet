@@ -6,74 +6,230 @@ import useScrollReveal from '../../hooks/useScrollReveal';
 import { getSrcSet } from '../../utils/responsiveImage';
 import './Menu.css';
 
-// Widths that exist in /public/images/responsive (see generate-responsive-images.cjs)
-const IMAGE_WIDTHS = {
-  '/images/menu-pork.png': [200, 400],
-  '/images/menu-classic.png': [300, 600],
-  '/images/menu-shrimp.png': [300, 600],
-  '/images/menu-drinks.png': [300, 600],
-  '/images/siomai 1.png': [200, 400],
-  '/images/japanese siomai.png': [400, 800],
-};
-const PHOTO_WIDTHS = [300, 500, 800];
+// Widths for menu items in /public/images/Menu/responsive
+const MENU_ITEM_WIDTHS = [300, 500];
+const HERO_WIDTHS = [300, 500, 800];
 
-const srcSetFor = (src) => getSrcSet(src, IMAGE_WIDTHS[src] || PHOTO_WIDTHS);
+const srcSetFor = (src) => {
+  if (src.startsWith('/images/Menu/') || src.startsWith('/images/menu/')) {
+    return getSrcSet(src, MENU_ITEM_WIDTHS);
+  }
+  return getSrcSet(src, HERO_WIDTHS);
+};
 
 /*
  * Menu Catalog Definition:
+ * Uses real Siomai Street products from /public/images/Menu/
  * Unified with Homepage Section Design System (Soft Steamed Cream #f0e9da + Red/Espresso accents)
  */
 const MENU_SECTIONS = [
   {
     id: 'siomai',
     eyebrow: 'CATEGORY 01 // STEAMED PERFECTION',
-    titleMain: 'Signature & Fresh',
+    titleMain: 'Signature Dim Sum &',
     titleAccent: 'Siomai',
-    description: '100% pure meat dim sum steamed hot in bamboo baskets. Served with freshly sliced calamansi and house chili garlic crisp.',
+    description: '100% pure meat dim sum steamed hot in bamboo baskets. Served with freshly sliced calamansi and house slow-simmered chili garlic crisp.',
     items: [
-      { name: 'Classic Pork Siomai', note: '4 pcs • House Staple', price: '₱35', image: '/images/menu-pork.png', cutout: false, tag: 'BEST SELLER' },
-      { name: 'Japanese Nori Siomai', note: '4 pcs • Seaweed Wrapped', price: '₱50', image: '/images/japanese siomai.png', cutout: true, tag: 'FAVORITE' },
-      { name: 'Supreme Shrimp Siomai', note: '4 pcs • Whole Shrimp Top', price: '₱45', image: '/images/menu-shrimp.png', cutout: false, tag: 'PREMIUM' },
-      { name: 'Savory Chicken Siomai', note: '4 pcs • Ginger & Scallion', price: '₱35', image: '/images/wc-siomai-3.jpg', cutout: false },
-      { name: 'Peppered Beef Siomai', note: '4 pcs • Toasted Sesame', price: '₱40', image: '/images/wc-siomai-2.jpg', cutout: false },
+      {
+        name: 'Japanese Nori Siomai',
+        note: '4 pcs • Wrapped in Roasted Nori',
+        price: '₱50',
+        image: '/images/Menu/Japanese Siomai 2.webp',
+        cutout: true,
+        tag: 'FAVORITE',
+      },
+      {
+        name: 'Siomai Steamer Bowl',
+        note: 'Signature Steamer • Chili Garlic',
+        price: '₱45',
+        image: '/images/Menu/SIOMAI BOWL.png',
+        cutout: true,
+        tag: 'BEST SELLER',
+      },
+      {
+        name: 'Crispy Lumpia Shanghai',
+        note: '5 pcs • Golden Fried Rolls',
+        price: '₱40',
+        image: '/images/Menu/Lumpia.webp',
+        cutout: true,
+        tag: 'CRISPY',
+      },
+      {
+        name: 'Dim Sum Chicken Feet',
+        note: 'Slow-Braised • Spiced Bean Sauce',
+        price: '₱55',
+        image: '/images/Menu/Chicken Feets.webp',
+        cutout: true,
+        tag: "CHEF'S SPECIAL",
+      },
+      {
+        name: 'Steamed Wonton Soup',
+        note: 'Warm Savory Broth • Pork Wontons',
+        price: '₱50',
+        image: '/images/Menu/Wonton Soup.webp',
+        cutout: true,
+      },
+      {
+        name: 'Hot Chili Dim Sum Soup',
+        note: 'Fiery Chili Broth • Dim Sum Noodles',
+        price: '₱55',
+        image: '/images/Menu/Chili Soup.webp',
+        cutout: true,
+        tag: 'HOT & SPICY',
+      },
     ],
   },
   {
-    id: 'specials',
-    eyebrow: 'CATEGORY 02 // CRISPY & CRUNCHY',
-    titleMain: 'Street Specials &',
-    titleAccent: 'Appetizers',
-    description: 'Crispy fried dim sum snacks, double-blended spiced dipping bowls, and assorted chef sampler baskets.',
+    id: 'siombo',
+    eyebrow: 'CATEGORY 02 // ALL-IN-ONE COMBOS',
+    titleMain: 'Siombo Signature',
+    titleAccent: 'Combos',
+    description: 'Siomai Street’s trademark Siombo combo platters: steamed siomai, crispy sides, and fragrant seasoned chow rice in hearty value combinations.',
     items: [
-      { name: 'Crispy Shanghai Siomai', note: '5 pcs • Golden Fried', price: '₱40', image: '/images/menu-classic.png', cutout: false, tag: 'CRISPY' },
-      { name: 'Chili Crisp Siomai', note: '4 pcs • Double Spiced', price: '₱45', image: '/images/wc-siomai-6.jpg', cutout: false, tag: 'HOT & SPICY' },
-      { name: 'Garden Tofu Siomai', note: '4 pcs • Plant-Based', price: '₱30', image: '/images/wc-siomai-5.jpg', cutout: false },
-      { name: 'Bamboo Steamer Basket', note: '6 pcs • Chef Assortment', price: '₱60', image: '/images/wc-siomai-4.jpg', cutout: false, tag: 'SAMPLER' },
+      {
+        name: 'Siombo A',
+        note: 'Steamed Siomai + Wonton + Chow Rice',
+        price: '₱75',
+        image: '/images/Menu/Siombo A.webp',
+        cutout: true,
+        tag: 'TOP COMBO',
+      },
+      {
+        name: 'Siombo B',
+        note: 'Signature Siomai + Lumpia + Chow Rice',
+        price: '₱79',
+        image: '/images/Menu/Siombo B.webp',
+        cutout: true,
+        tag: 'BEST VALUE',
+      },
+      {
+        name: 'Siombo C',
+        note: 'Special Chicken + Siomai + Chow Rice',
+        price: '₱89',
+        image: '/images/Menu/Siombo C.webp',
+        cutout: true,
+        tag: 'HEAVY MEAL',
+      },
+      {
+        name: 'Siombo D',
+        note: 'Deluxe Dim Sum Feast + Chow Rice',
+        price: '₱95',
+        image: '/images/Menu/Siombo D.webp',
+        cutout: true,
+        tag: 'DELUXE',
+      },
     ],
   },
   {
     id: 'meals',
-    eyebrow: 'CATEGORY 03 // FULL MEALS & SHARING',
-    titleMain: 'Rice Meals &',
-    titleAccent: 'Sharing Platters',
-    description: 'Hearty garlic rice pairings for daily commuters and grand woven bilao platters for neighborhood celebrations.',
+    eyebrow: 'CATEGORY 03 // HEARTY CHOW RICE',
+    titleMain: 'Chow Rice Meals &',
+    titleAccent: 'Mains',
+    description: 'Hearty street-style chow rice meals paired with fresh crispy wontons, savory embutido, golden lumpia shanghai, and tender roast chicken.',
     items: [
-      { name: 'Siomai Garlic Rice Meal', note: '4 pcs + Steamed Garlic Rice', price: '₱65', image: '/images/wc-siomai-1.jpg', cutout: false, tag: 'MEAL DEAL' },
-      { name: 'Barkada Family Platter', note: '20 pcs • Mixed Favorites', price: '₱195', image: '/images/wc-siomai-8.jpg', cutout: false, tag: 'BEST VALUE' },
-      { name: 'Dim Sum Feast Plate', note: '8 pcs + Trio Dipping Sauces', price: '₱85', image: '/images/wc-siomai-7.jpg', cutout: false },
-      { name: 'Street Solo Cup', note: '3 pcs • Skewered on the Go', price: '₱30', image: '/images/siomai 1.png', cutout: true },
+      {
+        name: 'Chow Rice with Wonton',
+        note: 'Crisp Golden Wontons + Seasoned Rice',
+        price: '₱65',
+        image: '/images/Menu/Chow Rice with Wonton.webp',
+        cutout: true,
+        tag: 'MUST TRY',
+      },
+      {
+        name: 'Lumpia Chow Rice',
+        note: 'Golden Fried Lumpia + Chow Rice',
+        price: '₱65',
+        image: '/images/Menu/Lumpia chow rice.webp',
+        cutout: true,
+      },
+      {
+        name: 'Embutido Chow Rice',
+        note: 'Savory Pork Embutido + Chow Rice',
+        price: '₱69',
+        image: '/images/Menu/Embutido Chow Rice.webp',
+        cutout: true,
+        tag: 'HOUSE SPECIAL',
+      },
+      {
+        name: 'Wonton Steamed Rice Meal',
+        note: 'Savory Dim Sum Wontons + Hot Rice',
+        price: '₱65',
+        image: '/images/Menu/Wonton Rice.webp',
+        cutout: true,
+      },
+      {
+        name: 'Roast Chicken Combo',
+        note: 'Savory Glazed Chicken + Sides & Rice',
+        price: '₱99',
+        image: '/images/Menu/Roast Chicken Combo.webp',
+        cutout: true,
+        tag: 'CHICKEN FAVORITE',
+      },
+      {
+        name: 'Lumpia Chicken Duo',
+        note: 'Crispy Lumpia + Savory Chicken Plate',
+        price: '₱95',
+        image: '/images/Menu/Lumpia with Chicken.webp',
+        cutout: true,
+      },
+    ],
+  },
+  {
+    id: 'platters',
+    eyebrow: 'CATEGORY 04 // CELEBRATION BILAOS',
+    titleMain: 'Party Bilaos &',
+    titleAccent: 'Sharing',
+    description: 'Grand woven bamboo bilaos packed with freshly steamed siomai and crispy golden lumpia. Perfect for family gatherings, office feasts, and barkada parties.',
+    items: [
+      {
+        name: 'Grand Siomai Bilao',
+        note: 'Party Bamboo Bilao • Mixed Siomai Feast',
+        price: '₱349',
+        image: '/images/Menu/SIOMAI BILAO.png',
+        cutout: true,
+        tag: 'PARTY SIZE',
+      },
+      {
+        name: 'Crispy Lumpia Bilao',
+        note: 'Celebration Bilao • Golden Lumpia Shanghai',
+        price: '₱349',
+        image: '/images/Menu/lumpia bilao.png',
+        cutout: true,
+        tag: 'BEST FOR EVENTS',
+      },
     ],
   },
   {
     id: 'drinks',
-    eyebrow: 'CATEGORY 04 // REFRESHING SIPS',
-    titleMain: 'Drinks &',
-    titleAccent: 'Street Coolers',
-    description: 'Chilled brown sugar black gulaman, sweet tropical mango shakes, and freshly pressed calamansi honey coolers.',
+    eyebrow: 'CATEGORY 05 // REFRESHING SIPS',
+    titleMain: 'Street Coolers &',
+    titleAccent: 'Pitchers',
+    description: 'Ice-cold cucumber lemonade, house specialty blends, and sharing pitchers freshly prepared to pair with your dim sum.',
     items: [
-      { name: 'Old-Style Black Gulaman', note: '16 oz • Brown Sugar & Sago', price: '₱25', image: '/images/menu-drinks.png', cutout: false, tag: 'CLASSIC' },
-      { name: 'Fresh Mango Shake', note: '16 oz • Carabao Mango', price: '₱45', image: '/images/menu-drinks.png', cutout: false, tag: 'POPULAR' },
-      { name: 'Calamansi Honey Cooler', note: '16 oz • Fresh Pressed Citrus', price: '₱25', image: '/images/menu-drinks.png', cutout: false },
+      {
+        name: 'Fresh Cucumber Cooler',
+        note: '16 oz • Chilled Fresh Cucumber Lemonade',
+        price: '₱29',
+        image: '/images/Menu/Cucumber drink.webp',
+        cutout: true,
+        tag: 'REFRESHING',
+      },
+      {
+        name: 'Cucumber Lemonade Pitcher',
+        note: 'Sharing Pitcher • Fresh Cucumber Infusion',
+        price: '₱79',
+        image: '/images/Menu/Cucumber Pitcher.webp',
+        cutout: true,
+        tag: 'BARKADA SHARE',
+      },
+      {
+        name: 'House Blend Drinks Pitcher',
+        note: 'Sharing Pitcher • Sweet Iced Street Blend',
+        price: '₱79',
+        image: '/images/Menu/Drinks Pitcher.webp',
+        cutout: true,
+        tag: 'POPULAR',
+      },
     ],
   },
 ];
@@ -329,7 +485,7 @@ const MenuCarousel = ({ section }) => {
               <div className={`food-item__plate ${item.cutout ? 'is-cutout' : 'is-photo'}`}>
                 {item.tag && <span className="food-item__tag">{item.tag}</span>}
                 <img
-                  src={item.image}
+                  src={encodeURI(item.image)}
                   srcSet={srcSetFor(item.image)}
                   sizes="(max-width: 600px) 72vw, (max-width: 900px) 42vw, 290px"
                   alt={item.name}
@@ -360,10 +516,11 @@ const MenuCarousel = ({ section }) => {
 };
 
 const MENU_CATEGORIES = [
-  { id: 'siomai', index: '01', label: 'Signature Siomai' },
-  { id: 'specials', index: '02', label: 'Street Specials' },
-  { id: 'meals', index: '03', label: 'Rice Meals & Platters' },
-  { id: 'drinks', index: '04', label: 'Drinks & Coolers' },
+  { id: 'siomai', index: '01', label: 'Signature Dim Sum' },
+  { id: 'siombo', index: '02', label: 'Siombo Combos' },
+  { id: 'meals', index: '03', label: 'Chow Rice Meals' },
+  { id: 'platters', index: '04', label: 'Party Bilaos' },
+  { id: 'drinks', index: '05', label: 'Drinks & Pitchers' },
 ];
 
 const MenuPage = () => {
@@ -389,7 +546,7 @@ const MenuPage = () => {
       <PageMeta
         title="Menu"
         path="/menu"
-        description="Browse the Siomai Street menu featuring classic pork, Japanese nori and supreme shrimp siomai, garlic rice meals, platters and street coolers."
+        description="Browse the authentic Siomai Street menu featuring signature Japanese nori and steamed siomai, Siombo combos, chow rice meals, party bilaos, and chilled cucumber coolers."
       />
 
       {/* ─── Hero Photography Banner (Unified with Dark Obsidian/Warm Gold Style) ─── */}

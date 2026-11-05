@@ -22,6 +22,10 @@ test('Vercel entry serves the raw Node API without opening its local port or loa
   assert.equal(placeSearch.headers.get('allow'),'POST');
   assert.equal(placeSearch.headers.get('cache-control'),'no-store');
   assert.equal((await fetch(`${base}/api/store-route`)).status,405);
+  assert.equal((await fetch(`${base}/api/maintenance/application-retention`)).status,405);
+  const retention = await fetch(`${base}/api/maintenance/application-retention`, {method:'POST'});
+  assert.equal(retention.status,403);
+  assert.equal(retention.headers.get('cache-control'),'no-store');
   // An API miss must never return the React app as a successful JSON request.
   assert.match((await (await fetch(`${base}/api/unknown`)).json()).error, /API route/);
   assert.equal((await fetch(`${base}/application`)).status, 404);

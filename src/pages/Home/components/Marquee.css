@@ -1,9 +1,9 @@
 /* ═══════════════════════════════════════════════════════════
    STRIKING TICKER TAPE MARQUEE
    
-   A highly aesthetic, modern brutalist "ticker tape".
-   It's smaller, extremely dense, and uses physical branding cues
-   like a slight tilt and drop shadow to pop off the page.
+   A high-energy, modern brutalist brand ticker tape.
+   Warm Amber Gold tape with obsidian ink typography,
+   vermilion badges, and seamless infinite scroll.
    ═══════════════════════════════════════════════════════════ */
 
 .street-marquee {
@@ -17,10 +17,8 @@
   flex-direction: column;
   justify-content: center;
   padding: 4rem 0;
-  /* Space to allow the tilted tape to not be clipped */
   z-index: 5;
   margin-top: -2rem;
-  /* Pull it up slightly into the previous section */
 }
 
 /* Creates a seamless black connection from the Chef Spencer section, matching the tape's tilt */
@@ -41,16 +39,14 @@
 /* ─── PHYSICAL TAPE ELEMENT ─── */
 .street-marquee__tape {
   background: #E29B24;
-  /* Striking Brand Yellow */
-  border-top: 2px solid #111;
-  border-bottom: 2px solid #111;
-  box-shadow: 0 10px 20px rgba(0, 0, 0, 0.15);
-  /* Makes it pop */
+  /* Striking Brand Warm Amber */
+  border-top: 2.5px solid #17100C;
+  border-bottom: 2.5px solid #17100C;
+  box-shadow: 0 10px 24px rgba(23, 16, 12, 0.22);
   transform: rotate(-1.5deg) scale(1.02);
-  /* Physical tape tilt */
-  padding: 0.5rem 0;
-  /* Tighter, smaller padding */
+  padding: 0.65rem 0;
   display: flex;
+  overflow: hidden;
 }
 
 /* ─── SCROLLING TRACK ─── */
@@ -58,47 +54,79 @@
   display: flex;
   align-items: center;
   white-space: nowrap;
+  width: max-content;
   will-change: transform;
-  animation: scrollLeft 45s linear infinite;
+  animation: streetMarqueeScroll 42s linear infinite;
 }
 
-.street-marquee__content {
+.street-marquee__group {
   display: flex;
   align-items: center;
+  flex-shrink: 0;
+  gap: clamp(1.25rem, 2.4vw, 2.25rem);
+  padding-right: clamp(1.25rem, 2.4vw, 2.25rem);
 }
 
-/* ─── CONTENT STYLING ─── */
+/* ─── CONTENT STYLING (Solid, High-Contrast Editorial Typography) ─── */
 .street-marquee__text {
-  font-family: 'Outfit', sans-serif;
-  font-size: clamp(1.25rem, 2vw, 1.8rem);
-  /* Much smaller, sleeker font */
-  font-weight: 900;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(1.05rem, 1.8vw, 1.45rem);
+  font-weight: 800;
   letter-spacing: 0.05em;
   text-transform: uppercase;
-  color: #110F0D;
-  margin: 0 clamp(1rem, 2vw, 2.5rem);
+  color: #17100C;
+  white-space: nowrap;
+  flex-shrink: 0;
 }
 
-/* Mix of solid and outline text for a high-end editorial feel */
-.street-marquee__text--outline {
-  color: transparent;
-  -webkit-text-stroke: 1.25px #110F0D;
+.street-marquee__text--brand {
+  font-weight: 900;
+  letter-spacing: 0.08em;
+  color: #17100C;
 }
 
+/* ─── Editorial Lacquer Pill Badges ─── */
+.street-marquee__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 0.22rem 0.65rem;
+  background: #17100C;
+  color: #FFF6E6;
+  border-radius: 4px;
+  font-family: var(--font-heading, 'Outfit', sans-serif);
+  font-size: clamp(0.72rem, 1.1vw, 0.88rem);
+  font-weight: 800;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  box-shadow: 2px 2px 0 rgba(196, 22, 28, 0.85);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+.street-marquee__badge--red {
+  background: #C4161C;
+  color: #FFFDF5;
+  box-shadow: 2px 2px 0 #17100C;
+}
+
+/* ─── Separator Accents ─── */
+.street-marquee__sep {
+  color: #C4161C;
+  font-size: clamp(0.95rem, 1.3vw, 1.25rem);
+  line-height: 1;
+  opacity: 0.95;
+  flex-shrink: 0;
+  user-select: none;
+}
+
+/* ─── Image Badges ─── */
 .street-marquee__img {
-  height: clamp(35px, 4vw, 45px);
-  /* Scaled down significantly */
+  height: clamp(34px, 4.2vw, 44px);
   width: auto;
   object-fit: contain;
-  margin: 0 clamp(0.5rem, 1vw, 1.5rem);
-  filter: drop-shadow(0 3px 6px rgba(0, 0, 0, 0.15));
-}
-
-.street-marquee__star {
-  color: #D61B22;
-  /* Red accent */
-  font-size: clamp(1rem, 1.5vw, 1.5rem);
-  opacity: 0.9;
+  border-radius: 6px;
+  filter: drop-shadow(0 2px 6px rgba(23, 16, 12, 0.28));
+  flex-shrink: 0;
 }
 
 /* Hover pause */
@@ -106,36 +134,48 @@
   animation-play-state: paused;
 }
 
-/* ─── ANIMATION ─── */
-@keyframes scrollLeft {
+/* ─── ANIMATION (Translate -50% for seamless infinite loop) ─── */
+@keyframes streetMarqueeScroll {
   0% {
-    transform: translateX(0);
+    transform: translate3d(0, 0, 0);
   }
-
   100% {
-    transform: translateX(-50%);
+    transform: translate3d(-50%, 0, 0);
   }
 }
 
 /* ─── RESPONSIVE ─── */
 @media (max-width: 768px) {
   .street-marquee {
-    padding: 2rem 0;
+    padding: 2.25rem 0;
     margin-top: -1rem;
   }
 
   .street-marquee__tape {
-    transform: rotate(-2deg) scale(1.05);
+    transform: rotate(-2deg) scale(1.04);
+    padding: 0.5rem 0;
+  }
+
+  .street-marquee__group {
+    gap: 1.1rem;
+    padding-right: 1.1rem;
   }
 
   .street-marquee__text {
-    font-size: 1.15rem;
-    margin: 0 0.75rem;
+    font-size: 0.98rem;
+  }
+
+  .street-marquee__badge {
+    font-size: 0.68rem;
+    padding: 0.18rem 0.5rem;
   }
 
   .street-marquee__img {
-    height: 30px;
-    margin: 0 0.5rem;
+    height: 28px;
+  }
+
+  .street-marquee__sep {
+    font-size: 0.85rem;
   }
 }
 
@@ -143,6 +183,6 @@
 @media (prefers-reduced-motion: reduce) {
   .street-marquee__track {
     animation: none;
-    transform: translateX(0);
+    transform: none;
   }
 }

@@ -481,15 +481,20 @@
   gap: 0.45rem;
 }
 
-.footer-poster__placer-links a {
+.footer-poster__placer-links a,
+.footer-poster__privacy {
   color: #E2D2B6;
   text-decoration: none;
   transition: color 180ms ease, opacity 180ms ease;
 }
 
-.footer-poster__placer-links a:hover {
+.footer-poster__placer-links a:hover,
+.footer-poster__privacy:hover {
   color: #FFFFFF;
 }
+
+.footer-poster__privacy { font: inherit; letter-spacing: inherit; padding: 0; border: 0; background: none; cursor: pointer; }
+.footer-poster__privacy:focus-visible { outline: medium solid currentColor; outline-offset: var(--space-xs); border-radius: var(--radius-xs); }
 
 .footer-poster__placer-link-sep {
   color: rgba(226, 210, 182, 0.6);

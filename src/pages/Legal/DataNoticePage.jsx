@@ -1,22 +1,26 @@
 import PageMeta from '../../components/PageMeta';
+import ApplicationPrivacyNotice from '../../components/ApplicationPrivacyNotice';
+import { APPLICATION_RETENTION_NOTICE, PRIVACY_CONTACT_EMAIL, PRIVACY_NOTICE_VERSION } from '../../../shared/privacy.js';
 import './Legal.css';
 
-const PrivacyPolicy = () => (
-  <main className="legal-page">
-    <PageMeta
+const DataNoticePage = ({ embedded = false }) => {
+  const Container = embedded ? 'div' : 'main';
+  return (
+  <Container className={embedded ? 'legal-embedded' : 'legal-page'}>
+    {!embedded && <PageMeta
       title="Privacy Policy"
       path="/privacy"
-      description="Learn how Siomai Street collects, uses, stores, and protects your personal information in compliance with the Philippine Data Privacy Act."
-    />
+      description="How Siomai Street handles personal information, application retention and privacy requests."
+    />}
     <div className="legal-container">
       <div className="legal-header">
-        <span className="legal-badge">Legal</span>
-        <h1>Privacy Policy</h1>
-        <p className="legal-updated">Last updated: November 3, 2026</p>
+        {!embedded && <><span className="legal-badge">Legal</span>
+        <h1>Privacy Policy</h1></>}
+        <p className="legal-updated">Last updated: November 4, 2026 · Notice {PRIVACY_NOTICE_VERSION}</p>
       </div>
 
       <div className="legal-content">
-        <section className="legal-section" id="support-inquiries">
+        <section className="legal-section" id={embedded ? undefined : 'support-inquiries'}>
           <h2>Homepage support inquiries</h2>
           <p>
             When online messaging is enabled, the contact form sends your name, reply email,
@@ -39,12 +43,13 @@ const PrivacyPolicy = () => (
             limit repeated attempts. A receipt confirms that your message was saved; it does
             not confirm staff review, a refund or franchise approval. Support contacts, service
             hours and any response target are shown in the homepage contact section only when
-            configured. A support-specific retention period and privacy contact must be approved
-            and published before online messaging is activated.
+            configured. The application retention rule below does not apply to support inquiries.
+            Support inquiries and inbox copies require a separate retention review when the concern
+            is resolved. You can request that review through our privacy contact below.
           </p>
         </section>
 
-        <section className="legal-section">
+        <section className="legal-section" id={embedded ? undefined : 'franchise-applications'}>
           <h2>1. Introduction</h2>
           <p>
             Siomai Street ("we", "our", or "us") is committed to protecting the privacy and
@@ -53,6 +58,7 @@ const PrivacyPolicy = () => (
             Philippine Data Privacy Act of 2012 (Republic Act No. 10173) and its Implementing
             Rules and Regulations.
           </p>
+          <ApplicationPrivacyNotice compact showPolicyLink={!embedded} />
         </section>
 
         <section className="legal-section">
@@ -61,7 +67,7 @@ const PrivacyPolicy = () => (
           <ul>
             <li><strong>Personal identifiers:</strong> full name, date of birth, citizenship, marital status</li>
             <li><strong>Contact information:</strong> email address, phone number, residential address</li>
-            <li><strong>Government-issued IDs:</strong> ID type, ID number, and scanned copies (front and back)</li>
+            <li><strong>Government-issued IDs:</strong> ID type, number and applicable images; a Passport needs its identity page only</li>
             <li><strong>Financial information:</strong> liquid capital, investment sources, proof of funds</li>
             <li><strong>Business background:</strong> employment history, business ownership history</li>
             <li><strong>Documents:</strong> proof of billing, ID photos, business permits, and other uploaded files</li>
@@ -84,14 +90,35 @@ const PrivacyPolicy = () => (
         <section className="legal-section">
           <h2>4. Data Storage & Security</h2>
           <p>
-            Your personal data is stored securely using industry-standard encryption at rest and
-            in transit (TLS/SSL). Documents are stored in private cloud storage buckets with
-            access restricted to authorized franchise review personnel only.
+            The website uses Vercel for hosting and Supabase for its database and document storage.
+            Documents are held in private storage. The website's document endpoint checks the
+            staff member's authenticated identity and reviewer permission, records access and
+            issues a short-lived download link. Staff must protect downloaded copies and use
+            application information only for their assigned duties.
           </p>
           <p>
-            We retain your application data for up to two (2) years after the date of submission,
-            or for the duration of your franchise agreement if approved, after which it is
-            securely deleted unless required by law.
+            {APPLICATION_RETENTION_NOTICE} The 180-day period allows follow-up and reconsideration
+            of a closed application; it is a business retention rule, not a period prescribed by law.
+            A hold must state its reason and review date. It must not be used to retain data indefinitely
+            without review. Older closed records with no reliable closure date require a staff review
+            before a deletion date can be assigned.
+          </p>
+          <p>
+            Deletion removes the application's stored documents, answers, correction and verification
+            history, associated upload sessions, document-access entries and related notification
+            queue/event copies held by this website. Failed cleanup is retried and is not reported
+            as completed. Staff separately reconcile copies in the administration app, inboxes,
+            provider records and exports. Backup copies follow the provider's applicable backup
+            lifecycle; a restoration must reapply recorded deletions before the data is used again.
+            Minimal deletion/replay records and delivery-suppression records are kept separately
+            to prevent erased applications being recreated by old retries and prevent unwanted email.
+          </p>
+          <p>
+            Local drafts are different from submitted records: answers and selected files can be
+            saved in this browser before submission. They expire seven days after the last save
+            and are removed when you next open the application, or after confirmed submission.
+            If storage cleanup is blocked, clear this site's browser data on the device. Clearing
+            browser data does not erase information already submitted to Siomai Street.
           </p>
         </section>
 
@@ -132,6 +159,14 @@ const PrivacyPolicy = () => (
             <li>Cloud service providers (for secure data storage and email delivery)</li>
             <li>Government authorities (when required by law or regulation)</li>
           </ul>
+          <p>
+            These services include Vercel, Supabase, Cloudflare Turnstile for abuse prevention,
+            and Resend for configured notifications. The administration app also handles application
+            review and status notifications. Staff must manage access and retained copies across
+            both systems. Providers may process information outside the Philippines under their
+            applicable service and data-processing arrangements. Privacy questions about these
+            arrangements can be sent to the contact below.
+          </p>
         </section>
 
         <section className="legal-section">
@@ -145,8 +180,22 @@ const PrivacyPolicy = () => (
             <li><strong>Data portability</strong> — receive your data in a structured, machine-readable format</li>
           </ul>
           <p>
-            Verified privacy-request contact details are pending confirmation. Once published,
-            use those details to request access, correction or deletion of your information.
+            Email <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>{PRIVACY_CONTACT_EMAIL}</a> with
+            your request type and application or inquiry reference, if available. Use the email
+            associated with your submission where possible. Do not send ID images, full financial
+            documents, passwords or private access codes. We will verify the request through a
+            proportionate check before releasing or changing information; knowing a reference
+            alone is not proof of identity.
+          </p>
+          <p>
+            The privacy handler records and acknowledges the request, confirms its scope, verifies
+            the requester and coordinates with authorized reviewers. Access requests are fulfilled
+            through an agreed secure channel. Corrections are checked and propagated to relevant
+            records. Objections and consent withdrawal are reviewed against the purpose and lawful
+            basis for the processing. Deletion requests are checked for justified retention or legal
+            holds. We explain the outcome, any limitation and any follow-up needed. A deletion
+            request does not automatically cancel a legal retention obligation or erase another
+            person's records. You may raise unresolved concerns with the National Privacy Commission.
           </p>
         </section>
 
@@ -170,7 +219,9 @@ const PrivacyPolicy = () => (
         <section className="legal-section">
           <h2>9. Contact Us</h2>
           <p>
-            Privacy contact details will be published once confirmed by Siomai Street.
+            Siomai Street privacy requests are monitored by the website operator at{' '}
+            <a href={`mailto:${PRIVACY_CONTACT_EMAIL}`}>{PRIVACY_CONTACT_EMAIL}</a>.
+            This contact coordinates requests with the owner and authorized application reviewers.
           </p>
           <p>
             For available customer and franchise support channels, visit the{' '}
@@ -185,7 +236,8 @@ const PrivacyPolicy = () => (
         </section>
       </div>
     </div>
-  </main>
+  </Container>
 );
+};
 
-export default PrivacyPolicy;
+export default DataNoticePage;

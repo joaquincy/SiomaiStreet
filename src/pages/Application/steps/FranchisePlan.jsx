@@ -6,18 +6,21 @@ import {
   BiCart,
   BiRestaurant,
   BiCheck,
+  BiReceipt,
 } from 'react-icons/bi';
 import {
   ToggleGroup,
   ToggleOption,
-  FormSelect,
   ChipGroup,
   Chip,
+  FormSelect,
 } from '../../../components/FormElements';
-import { REGIONS } from '../../../data/stepsConfig';
 import { RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
 import './Steps.css';
+import { PLAN_TIMELINE_LABELS } from '../../../../shared/applicationAnswers.js';
+import { REGIONS } from '../../../data/stepsConfig';
+import ApplicationDisclosure from '../../../components/ApplicationDisclosure';
 import {
   FRANCHISE_PACKAGES,
   PRICING_NOTICE,
@@ -36,8 +39,8 @@ const FranchisePlan = ({ formData, updateField }) => {
   const feedback = useApplicationFeedback();
 
   const packageErrors = feedback.errorsFor('fp-selectedPackage');
-  const regionErrors = feedback.errorsFor('fp-targetRegion');
   const cityErrors = feedback.errorsFor('fp-city');
+  const regionErrors = feedback.errorsFor('fp-targetRegion');
   const locationErrors = feedback.errorsFor('fp-hasSpecificLocation');
   const siteTypeErrors = feedback.errorsFor('fp-siteTypes');
   const altErrors = feedback.errorsFor('fp-openToAlternative');
@@ -56,7 +59,7 @@ const FranchisePlan = ({ formData, updateField }) => {
       : 'Optional until you identify a location';
 
   return (
-    <div className="step-content">
+    <div className="step-content franchise-plan">
       <header className="step-intro">
         <div className="step-intro-icon red" aria-hidden="true">
           <BiTargetLock />
@@ -67,7 +70,7 @@ const FranchisePlan = ({ formData, updateField }) => {
             Your <span className="title-highlight">Franchise Vision</span> &amp; Location Plan
           </h2>
           <p className="step-intro-subtitle">
-            Select your <strong>preferred store format</strong> and <strong>target territory</strong>. You may apply even if you have not yet secured a specific commercial space.
+            Review or update your <strong>format, location and opening timeline</strong> here. Changes update the same answers throughout your application. You may apply without a secured commercial space.
           </p>
         </div>
       </header>
@@ -78,22 +81,12 @@ const FranchisePlan = ({ formData, updateField }) => {
           <span>Package Selection</span>
         </h3>
 
-        <div id="fp-selectedPackage" tabIndex={-1} className={`form-field ${packageErrors.length ? 'has-errors' : ''}`}>
+        <div id="fp-selectedPackage" tabIndex={-1} role="group" aria-labelledby="fp-package-label" aria-describedby={`fp-package-hint${packageErrors.length ? ' fp-selectedPackage-error' : ''}`} className={`form-field ${packageErrors.length ? 'has-errors' : ''}`}>
           <span className="field-label-row">
-            <span className="field-label-text">Which franchise format interests you?</span>
+            <span id="fp-package-label" className="field-label-text">Choose your franchise format</span>
             <RequirementBadge required />
           </span>
-          <p className="field-help">{QUOTATION_GUIDANCE}</p>
-
-          <details className="quotation-checklist-details">
-            <summary>Items to confirm in your written quotation ({QUOTATION_CHECKLIST.length})</summary>
-            <ul>
-              {QUOTATION_CHECKLIST.map((item) => (
-                <li key={item}>{item}</li>
-              ))}
-            </ul>
-          </details>
-
+          <p id="fp-package-hint" className="field-help">Your current choice is highlighted. Select a different format to update it, or discuss the options with our team.</p>
           <div className="package-cards-grid">
             {FRANCHISE_PACKAGES.map((pkg, index) => {
               const Icon = [BiCart, BiStore, BiRestaurant][index];
@@ -131,8 +124,11 @@ const FranchisePlan = ({ formData, updateField }) => {
               />
             </ToggleGroup>
           </div>
-
           <FieldErrorList id="fp-selectedPackage" errors={packageErrors} />
+          <p className="field-help">{QUOTATION_GUIDANCE}</p>
+          <ApplicationDisclosure title={`Items to confirm in your written quotation (${QUOTATION_CHECKLIST.length})`} hint="Review the scope, costs and terms before committing." icon={BiReceipt}>
+            <ol className="application-quotation-list">{QUOTATION_CHECKLIST.map(item => <li key={item}>{item}</li>)}</ol>
+          </ApplicationDisclosure>
         </div>
       </section>
 
@@ -143,20 +139,12 @@ const FranchisePlan = ({ formData, updateField }) => {
         </h3>
 
         <div className="form-row two-cols">
-          <div id="fp-targetRegion" tabIndex={-1} className={`form-field ${regionErrors.length ? 'has-errors' : ''}`}>
-            <span className="field-label-row">
-              <span className="field-label-text">Target Region</span>
-              <RequirementBadge required />
-            </span>
-            <p className="field-help">Select the region for your proposed branch.</p>
-            <FormSelect
-              id="fp-targetRegion-select"
-              options={REGIONS}
-              placeholder="Select region"
-              value={formData.targetRegion}
-              onChange={(val) => updateField('targetRegion', val)}
-              ariaLabel="Target Region"
-            />
+          <div id="fp-targetRegion" tabIndex={-1} role="group" aria-labelledby="fp-region-label" aria-describedby={`fp-region-hint${regionErrors.length ? ' fp-targetRegion-error' : ''}`} className={`form-field ${regionErrors.length ? 'has-errors' : ''}`}>
+            <label id="fp-region-label" htmlFor="fp-region-select" className="field-label-row">
+              <span>Target Region</span><RequirementBadge required />
+            </label>
+            <p id="fp-region-hint" className="field-help">Choose your region here. If you change it, review the city or municipality beside it too.</p>
+            <FormSelect id="fp-region-select" value={formData.targetRegion} onChange={value => updateField('targetRegion', value)} options={REGIONS} placeholder="Select a region" icon={BiMap} ariaLabel="Target Region (required)" />
             <FieldErrorList id="fp-targetRegion" errors={regionErrors} />
           </div>
 
@@ -167,15 +155,16 @@ const FranchisePlan = ({ formData, updateField }) => {
                 <RequirementBadge required />
               </span>
             </label>
-            <p className="field-help">Enter the city or municipality, for example Quezon City.</p>
+            <p id="fp-city-hint" className="field-help">Enter a city or municipality within your selected region.</p>
             <input
               id="fp-city"
               name="targetCity"
               type="text"
               className="form-input"
-              placeholder="e.g., Quezon City, Metro Manila"
+              placeholder="Enter city or municipality"
               aria-required="true"
               aria-invalid={cityErrors.length > 0}
+              aria-describedby={`fp-city-hint${cityErrors.length ? ' fp-city-error' : ''}`}
               value={formData.targetCity || ''}
               onChange={(e) => updateField('targetCity', e.target.value)}
             />
@@ -259,32 +248,19 @@ const FranchisePlan = ({ formData, updateField }) => {
           <span>Timeline &amp; Future Plans</span>
         </h3>
 
-        <div id="fp-planOpeningTimeline" tabIndex={-1} className={`form-field ${timelineErrors.length ? 'has-errors' : ''}`}>
+        <div id="fp-planOpeningTimeline" tabIndex={-1} role="group" aria-labelledby="fp-timeline-label" aria-describedby={`fp-timeline-hint${timelineErrors.length ? ' fp-planOpeningTimeline-error' : ''}`} className={`form-field ${timelineErrors.length ? 'has-errors' : ''}`}>
           <span className="field-label-row">
-            <span className="field-label-text">When are you hoping to open?</span>
+            <span id="fp-timeline-label" className="field-label-text">When would you like to open?</span>
             <RequirementBadge required />
           </span>
-          <div className="card-selector-group four-cols-mobile">
-            <ToggleOption
-              label="Within 3 months"
-              selected={formData.planOpeningTimeline === 'within-3-months'}
-              onClick={() => updateField('planOpeningTimeline', 'within-3-months')}
-            />
-            <ToggleOption
-              label="3 to 6 months"
-              selected={formData.planOpeningTimeline === '3-6-months'}
-              onClick={() => updateField('planOpeningTimeline', '3-6-months')}
-            />
-            <ToggleOption
-              label="6 to 12 months"
-              selected={formData.planOpeningTimeline === '6-12-months'}
-              onClick={() => updateField('planOpeningTimeline', '6-12-months')}
-            />
-            <ToggleOption
-              label="Just planning for now"
-              selected={formData.planOpeningTimeline === 'just-planning'}
-              onClick={() => updateField('planOpeningTimeline', 'just-planning')}
-            />
+          <p id="fp-timeline-hint" className="field-help">Choose your current estimate. You can change it here, including if you are still exploring; this is not a confirmed opening date.</p>
+          <div className="plan-timeline-options">
+            {Object.entries(PLAN_TIMELINE_LABELS).map(([value, label]) => <ToggleOption
+              key={value}
+              label={label}
+              selected={formData.planOpeningTimeline === value}
+              onClick={() => updateField('planOpeningTimeline', value)}
+            />)}
           </div>
           <FieldErrorList id="fp-planOpeningTimeline" errors={timelineErrors} />
         </div>

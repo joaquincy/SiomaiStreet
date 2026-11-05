@@ -8,6 +8,7 @@ export const RATE_ACTIONS = Object.freeze({
   'new-correction': { label: 'New document replacement sessions', unit: 'new sessions', shared: 'network', conditional: true },
   'upload-control': { label: 'Uploading and checking documents', unit: 'document requests', shared: 'network' },
   portal: { label: 'Checking application status', unit: 'requests', shared: 'network' },
+  'portal-write': { label: 'Updating application details', unit: 'updates', shared: 'network' },
   'staff-documents': { label: 'Opening private documents', unit: 'requests', shared: 'network' },
   'contact-ingress': { label: 'Sending or retrying messages', unit: 'requests', shared: 'network' },
   'contact-new': { label: 'New support messages', unit: 'new messages', shared: 'reply email', conditional: true },
@@ -34,6 +35,8 @@ export function formatRateWait(seconds) {
 function scopesFor(path, method) {
   const clean = String(path).split('?')[0];
   if (method === 'GET' && /^\/api\/application-status\/[^/]+$/.test(clean)) return ['portal'];
+  if (/^\/api\/application-status\/[^/]+\/followup(?:\/|$)/.test(clean)) return method === 'GET' ? ['portal'] : ['portal', 'portal-write'];
+  if (method === 'POST' && /^\/api\/application-status\/[^/]+\/(?:onboarding|changes)\/[^/]+\/uploads$/.test(clean)) return ['upload-start-burst','upload-start','portal'];
   if (method !== 'POST') return [];
   if (clean === '/api/franchise-applications/uploads' || /^\/api\/application-status\/[^/]+\/corrections\/[^/]+\/uploads$/.test(clean)) return ['upload-start-burst', 'upload-start'];
   if (/^\/api\/franchise-applications\/uploads\/[^/]+\/(authorize|check|finalize)(\/[^/]+)?$/.test(clean)) return ['upload-control'];

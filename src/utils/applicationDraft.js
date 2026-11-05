@@ -1,4 +1,6 @@
 import { sanitizeApplication, UUID_PATTERN, DOCUMENT_KEYS } from '../../shared/application.js';
+import { restoreApplicationAnswers } from '../../shared/applicationAnswers.js';
+import { PRIVACY_NOTICE_VERSION } from '../../shared/privacy.js';
 const DRAFT_KEY = 'siomai-street-franchise-draft-v1';
 const DATABASE_NAME = 'siomai-street-franchise-drafts';
 const DATABASE_VERSION = 1;
@@ -51,11 +53,16 @@ const readStoredDraft = (requireAccess = false) => {
 export const loadApplicationDraft = () => {
   const candidate = readStoredDraft();
   const storedDraft = isDraftCurrent(candidate) ? candidate : null;
+  const formData = restoreApplicationAnswers(sanitizeApplication(storedDraft?.formData));
+  if (formData.consent_privacy && formData.privacyNoticeVersion !== PRIVACY_NOTICE_VERSION) {
+    formData.consent_privacy = false;
+    delete formData.privacyNoticeVersion;
+  }
 
   return {
     currentStep: Number.isInteger(storedDraft?.currentStep) ? storedDraft.currentStep : 0,
     requestId: UUID_PATTERN.test(storedDraft?.requestId) ? storedDraft.requestId : crypto.randomUUID(),
-    formData: sanitizeApplication(storedDraft?.formData),
+    formData,
     discarded: !!candidate && !storedDraft,
   };
 };

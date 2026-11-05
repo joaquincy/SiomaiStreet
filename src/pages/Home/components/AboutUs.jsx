@@ -15,6 +15,11 @@ function fade(p, start, rate) {
   return clamp01((p - start) * rate);
 }
 
+function easeOutCubic(t) {
+  const m = 1 - t;
+  return 1 - m * m * m;
+}
+
 const AboutUs = () => {
   const sectionRef = useRef(null);
   const stageRef = useRef(null);
@@ -79,26 +84,31 @@ const AboutUs = () => {
       cardRef.current.style.opacity = cardShow;
     }
 
-    // Subtitle "THE MAN BEHIND THE SIOMAI" — fade in at 22-30%
+    // Subtitle "THE MAN BEHIND THE SIOMAI" — fade in at 20-30%
     if (subtitleRef.current) {
       const subP = fade(p, 0.20, 4);
       subtitleRef.current.style.transform = `translate3d(0, ${(1 - subP) * 15}px, 0)`;
       subtitleRef.current.style.opacity = subP;
     }
 
-    // Meet Chef Spencer — fade in at 28-38%
+    // Meet Chef Spencer — fade in at 24-34%
     if (meetRef.current) {
-      const meetP = fade(p, 0.26, 3.5);
-      meetRef.current.style.transform = `translate3d(0, ${(1 - meetP) * 20}px, 0)`;
+      const meetP = fade(p, 0.24, 3.5);
+      meetRef.current.style.transform = `translate3d(0, ${(1 - meetP) * 18}px, 0)`;
       meetRef.current.style.opacity = meetP;
     }
 
-    // Description lines — staggered fade at 35%, 42%, 49%
+    // Description lines — staggered cubic-eased reveal with vertical glide + unblur
     descRefs.current.forEach((el, i) => {
       if (!el) return;
-      const dP = fade(p, 0.33 + i * 0.07, 5);
-      el.style.transform = `translate3d(0, ${(1 - dP) * 25}px, 0)`;
+      const rawP = fade(p, 0.28 + i * 0.05, 4.0);
+      const dP = easeOutCubic(rawP);
+      const slideY = (1 - dP) * 22;
+      const scale = 0.98 + dP * 0.02;
+      const blur = dP > 0 && dP < 0.98 ? ((1 - dP) * 4).toFixed(1) : 0;
+      el.style.transform = `translate3d(0, ${slideY}px, 0) scale(${scale})`;
       el.style.opacity = dP;
+      el.style.filter = blur ? `blur(${blur}px)` : 'none';
     });
 
     // Editorial line — grows
@@ -332,23 +342,35 @@ const AboutUs = () => {
         <div className="chef-card" ref={cardRef} style={{ opacity: 0 }}>
           <div className="chef-card-inner">
             <div className="chef-card-photo">
-              <p className="chef-card-photo-label">
-                Picture ni Sir<br />
-                Spencer na<br />
-                pang Chef
-              </p>
+              <img
+                src="/images/chef-spencer.jpg"
+                srcSet="/images/responsive/chef-spencer-320w.jpg 320w, /images/responsive/chef-spencer-480w.jpg 480w, /images/responsive/chef-spencer-640w.jpg 640w"
+                sizes="(max-width: 768px) 280px, 320px"
+                alt="Chef Spencer — Founder & Culinary Director"
+                className="chef-card-img"
+                width="640"
+                height="687"
+                loading="lazy"
+              />
             </div>
             <div className="chef-card-body">
-              <span className="chef-card-subtitle">The Founder</span>
+              <div className="chef-card-header-row">
+                <span className="chef-card-subtitle">The Founder</span>
+                <span className="chef-card-badge">Head Chef</span>
+              </div>
               <span className="chef-card-name">Chef Spencer</span>
-              <button className="chef-card-btn" type="button">
-                Meet Chef Spencer
-              </button>
+              <p className="chef-card-bio">
+                Mastermind behind Siomai Street's original 2015 recipe, signature chili garlic oil, and commissary steam standards.
+              </p>
+              <div className="chef-card-badges">
+                <span className="chef-card-pill">100% Pure Pork</span>
+                <span className="chef-card-pill">Zero Extenders</span>
+              </div>
             </div>
           </div>
         </div>
 
-        {/* LAYER 6 — Text reveals (LEFT COLUMN) */}
+        {/* LAYER 6 & 7 — Story Column (Beside Big Siomai) */}
         <div className="chef-text-col">
           <div className="chef-subtitle-reveal" ref={subtitleRef} style={{ opacity: 0 }}>
             <span className="chef-subtitle-text">The man behind the siomai</span>
@@ -357,25 +379,39 @@ const AboutUs = () => {
           <div className="chef-meet" ref={meetRef} style={{ opacity: 0 }}>
             <h2 className="chef-meet-name">Meet Chef Spencer</h2>
             <div className="chef-meet-line" aria-hidden="true" />
-            <p className="chef-meet-desc">
-              The visionary founder who turned a humble street-food dream
-              into the Philippines' most beloved siomai brand.
-            </p>
           </div>
-        </div>
 
-        {/* LAYER 7 — Description text (RIGHT COLUMN) */}
-        <div className="chef-desc-group">
-          {['Description', 'of Sir', 'Spencer'].map((text, i) => (
-            <span
-              key={text}
-              className="chef-desc-line"
+          <div className="chef-desc-group">
+            <p
+              className="chef-desc-line chef-desc-quote"
               style={{ opacity: 0 }}
-              ref={el => { descRefs.current[i] = el; }}
+              ref={el => { descRefs.current[0] = el; }}
             >
-              {text}
+              <span className="chef-quote-mark" aria-hidden="true">&ldquo;</span>
+              Cooking truly <span className="chef-desc-em">runs in his blood</span>—starting
+              as a kitchen helper in his family’s eatery and catering business before
+              earning his degree in <span className="chef-desc-em">BSBA Major in Marketing</span>.
+            </p>
+            <p
+              className="chef-desc-line chef-desc-quote"
+              style={{ opacity: 0 }}
+              ref={el => { descRefs.current[1] = el; }}
+            >
+              He honed his craft for <span className="chef-desc-em">10 years at Bagasbas Lighthouse</span> in
+              Camarines Norte, rising to <span className="chef-desc-em">Western Cuisine Head Chef</span> and
+              winning <span className="chef-desc-em">Regional Chefmanship</span> &amp;{' '}
+              <span className="chef-desc-em">Provincial Master Chef 1st Runner-Up</span> honors
+              before stepping out as an entrepreneur to build Siomai Street.
+              <span className="chef-quote-mark chef-quote-mark--end" aria-hidden="true">&rdquo;</span>
+            </p>
+            <span
+              className="chef-desc-line chef-desc-narrator"
+              style={{ opacity: 0 }}
+              ref={el => { descRefs.current[2] = el; }}
+            >
+              — The Story of Sir Spencer
             </span>
-          ))}
+          </div>
         </div>
 
         {/* Decorative editorial line */}

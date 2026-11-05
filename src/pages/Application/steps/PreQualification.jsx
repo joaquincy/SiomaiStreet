@@ -13,15 +13,9 @@ import {
   FormSelect,
 } from '../../../components/FormElements';
 import { REGIONS } from '../../../data/stepsConfig';
+import { CAPITAL_OPTIONS, OPENING_TIMELINE_OPTIONS, capitalRangeFor, capitalRangeLabel, parseAmount } from '../../../../shared/applicationAnswers.js';
+import SavedAnswer from './SavedAnswer';
 import './Steps.css';
-
-const CAPITAL_OPTIONS = [
-  { value: 'below50k', label: 'Below ₱50k' },
-  { value: '50k-150k', label: '₱50k to ₱150k' },
-  { value: '150k-250k', label: '₱150k to ₱250k' },
-  { value: '250k-500k', label: '₱250k to ₱500k' },
-  { value: 'above500k', label: 'Above ₱500k' },
-];
 
 const FRANCHISE_TYPES = [
   { value: 'food-cart', icon: BiCart, iconStyle: 'warm', title: 'Food Cart', subtitle: 'Compact format for high-foot-traffic areas' },
@@ -30,14 +24,8 @@ const FRANCHISE_TYPES = [
   { value: 'not-sure', icon: HiOutlineQuestionMarkCircle, iconStyle: 'blue', title: 'Not Sure Yet', subtitle: 'Compare formats with our franchise team' },
 ];
 
-const TIMELINE_OPTIONS = [
-  { value: 'within-6-months', label: 'Within 6 months' },
-  { value: '6-12-months', label: '6 to 12 months' },
-  { value: '1-2-years', label: '1 to 2 years' },
-  { value: 'just-exploring', label: 'Just exploring' },
-];
-
-const PreQualification = ({ formData, updateField }) => {
+const PreQualification = ({ formData, updateField, onEditStep }) => {
+  const hasCapitalAmount = !!capitalRangeFor(formData.totalLiquidCapital);
   return (
     <div className="step-content">
       {/* Step Header */}
@@ -57,7 +45,13 @@ const PreQualification = ({ formData, updateField }) => {
       </header>
 
       {/* Q1: Liquid Capital */}
-      <QuestionBlock
+      {hasCapitalAmount ? <SavedAnswer
+        id="pq-liquidCapital"
+        label="Available Liquid Capital"
+        value={`₱${parseAmount(formData.totalLiquidCapital).toLocaleString('en-PH')} · ${capitalRangeLabel(formData.liquidCapital)}`}
+        editLabel="Review or change amount in Step 4"
+        onEdit={() => onEditStep(3)}
+      ><p className="field-help">Your exact amount in Step 4 determines this range. Update the amount there if your funding changes.</p></SavedAnswer> : <QuestionBlock
         id="pq-liquidCapital"
         number={1}
         label="Available Liquid Capital"
@@ -74,7 +68,7 @@ const PreQualification = ({ formData, updateField }) => {
             />
           ))}
         </ChipGroup>
-      </QuestionBlock>
+      </QuestionBlock>}
 
       {/* Q2: Business Ownership */}
       <QuestionBlock
@@ -179,7 +173,7 @@ const PreQualification = ({ formData, updateField }) => {
         hint="Estimate when you would like to launch if your application is approved."
       >
         <ChipGroup>
-          {TIMELINE_OPTIONS.map((opt) => (
+          {OPENING_TIMELINE_OPTIONS.map((opt) => (
             <Chip
               key={opt.value}
               label={opt.label}

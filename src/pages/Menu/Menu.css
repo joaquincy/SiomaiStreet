@@ -597,13 +597,14 @@
 
 /* PNG cutouts sit directly on porcelain surface */
 .food-item__plate.is-cutout {
-  padding: 22px;
+  padding: 18px;
   background-color: #faf6f0;
 }
 
 .food-item__plate.is-cutout img {
   object-fit: contain;
-  border-radius: 50%;
+  border-radius: 0;
+  filter: drop-shadow(0 10px 14px rgba(41, 29, 25, 0.16));
 }
 
 /* High-Contrast Dish Tag Badge (e.g. BEST SELLER, FAVORITE) */

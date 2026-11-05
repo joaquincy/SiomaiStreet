@@ -21,7 +21,9 @@ const ReviewsPage = lazy(() => import('./pages/Reviews/Reviews'));
 const ApplicationPage = lazy(() => import('./pages/Application/Application'));
 const ApplicationStatus = lazy(() => import('./pages/Application/ApplicationStatus'));
 const ApplicationOnboarding = lazy(() => import('./pages/Application/ApplicationOnboarding'));
-const PrivacyPolicy = lazy(() => import('./pages/Legal/PrivacyPolicy'));
+// Keep the public /privacy URL; use a neutral module filename because browser
+// content filters can block PrivacyPolicy script requests before React loads them.
+const PrivacyPolicy = lazy(() => import('./pages/Legal/DataNoticePage'));
 const TermsOfService = lazy(() => import('./pages/Legal/TermsOfService'));
 const CookiePolicy = lazy(() => import('./pages/Legal/CookiePolicy'));
 

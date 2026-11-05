@@ -3,6 +3,7 @@ import { MAX_APPLICATION_BYTES } from './applicationSecurity.js';
 import { normalizeDocumentImage } from './documentImages.js';
 import { isAcceptedScan } from './documentScanner.js';
 import { CONTRACT_VERSION, DOCUMENT_KEYS, UUID_PATTERN, sanitizeApplication, validateApplication } from '../shared/application.js';
+import { DOCUMENT_POLICY_VERSION } from '../shared/documentPolicy.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
@@ -38,6 +39,7 @@ export function createApplicationHandler({ readMultipart, repository, uploadFile
     const validationErrors = validateApplication({...data, documents});
     if (validationErrors.length) throw fail('Please correct the application fields listed below.', 422, { validationErrors });
     data = sanitizeApplication(data);
+    data.documentPolicyVersion = DOCUMENT_POLICY_VERSION;
     delete data.documents;
     data.email = data.email.trim().toLowerCase();
     data.confirmEmail = data.confirmEmail.trim().toLowerCase();

@@ -10,6 +10,8 @@ const STEP_MAPPINGS = {
     [/opening timeline/i, 'pq-openingTimeline'],
   ],
   1: [
+    [/other id name|gov id other name/i, 'pi-govIdOtherName'],
+    [/other id issuing authority|gov id other issuer/i, 'pi-govIdOtherIssuer'],
     [/co-applicant first name/i, 'co-firstName'],
     [/co-applicant last name/i, 'co-lastName'],
     [/co-applicant email/i, 'co-email'],
@@ -27,6 +29,7 @@ const STEP_MAPPINGS = {
     [/marital/i, 'pi-maritalStatus'],
   ],
   2: [
+    [/business ownership answers/i, 'bb-priorBusinessOwned'],
     [/remove employment entries|employment history/i, 'bb-employmentHistory'],
     [/additional position (\d+)/i, (match) => `bb-position-${Number(match[1]) - 1}`],
     [/position (\d+)/i, (match) => {
@@ -38,6 +41,8 @@ const STEP_MAPPINGS = {
     [/company name/i, 'bb-company'],
   ],
   3: [
+    [/pending funding/i, 'fc-pendingFundingDetails'],
+    [/funding status/i, 'fc-fundingStatus'],
     [/liquid capital/i, 'fc-capital'],
     [/source of investment|investment sources/i, 'fc-investmentSources'],
   ],
@@ -58,10 +63,14 @@ const STEP_MAPPINGS = {
     [/opening timeline/i, 'fp-planOpeningTimeline'],
   ],
   6: [
-    [/govIdFront|ID \(Front\)/i, 'doc-govIdFront'],
+    [/address evidence type/i, 'doc-addressEvidenceType'],
+    [/address evidence (explanation|details)/i, 'doc-addressEvidenceDetails'],
+    [/funding evidence type|funds evidence type/i, 'doc-fundsEvidenceType'],
+    [/funding evidence (explanation|details)|funds evidence details/i, 'doc-fundsEvidenceDetails'],
+    [/govIdFront|ID \(Front\)|Passport identity page/i, 'doc-govIdFront'],
     [/govIdBack|ID \(Back\)/i, 'doc-govIdBack'],
     [/proofOfBilling|Proof of Billing/i, 'doc-proofOfBilling'],
-    [/proofOfFunds|Proof of Funds/i, 'doc-proofOfFunds'],
+    [/proofOfFunds|Proof of Funds|Funding evidence/i, 'doc-proofOfFunds'],
     [/idPhoto|2x2 ID Photo/i, 'doc-idPhoto'],
     [/dtiSecCert|DTI or SEC/i, 'doc-dtiSecCert'],
     [/businessPermit|Business Permit/i, 'doc-businessPermit'],

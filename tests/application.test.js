@@ -40,7 +40,7 @@ test('invalid numbers, dates, consent types and earlier steps are rejected witho
 
 test('exploratory applicants need no invented employment, package or secured site', () => {
   const data = valid();
-  Object.assign(data, {employmentHistory:'none', jobTitle:'', company:'', jobStartDate:'', jobEndDate:'', currentEmployment:false, industry:'', keyResponsibilities:'', additionalPositions:[], selectedPackage:'not-sure', hasSpecificLocation:'no', siteTypes:[]});
+  Object.assign(data, {employmentHistory:'none', jobTitle:'', company:'', jobStartDate:'', jobEndDate:'', currentEmployment:false, industry:'', keyResponsibilities:'', additionalPositions:[], franchiseType:'not-sure', selectedPackage:'not-sure', hasSpecificLocation:'no', siteTypes:[]});
   assert.deepEqual(validateApplication(data), []);
   assert.equal(sanitizeApplication(data).employmentHistory, 'none');
   assert.ok(validateStep(2, {...data, company:'Contradictory entry'}).length);
@@ -48,7 +48,7 @@ test('exploratory applicants need no invented employment, package or secured sit
   assert.ok(validateStep(2, {...data, employmentHistory:'provided'}).length);
   assert.ok(validateStep(5, {...data, selectedPackage:'free-franchise'}).length);
   assert.ok(validateStep(5, {...data, hasSpecificLocation:'yes'}).length);
-  assert.ok(validateStep(6, {...data, documents:{}}).some(message => message.includes('Proof of Funds')));
+  assert.ok(validateStep(6, {...data, documents:{}}).some(message => message.includes('Funding evidence')));
 });
 
 test('receipt contract rejects successful HTTP without the matching server receipt', async () => {
@@ -127,10 +127,19 @@ test('real HTTP multipart: durable unique receipt, validation, concurrency, lost
   const row=await repository.find(requestId);assert.equal(row.application_data.confirmEmail,undefined);
   assert.equal(row.applicant_email,'solo@example.invalid');
   const exploratory = valid();
-  Object.assign(exploratory, {employmentHistory:'none', jobTitle:'', company:'', jobStartDate:'', jobEndDate:'', currentEmployment:false, industry:'', keyResponsibilities:'', additionalPositions:[], selectedPackage:'not-sure', hasSpecificLocation:'no', siteTypes:[]});
+  Object.assign(exploratory, {employmentHistory:'none', jobTitle:'', company:'', jobStartDate:'', jobEndDate:'', currentEmployment:false, industry:'', keyResponsibilities:'', additionalPositions:[], franchiseType:'not-sure', selectedPackage:'not-sure', hasSpecificLocation:'no', siteTypes:[]});
   const exploratoryId = randomUUID();
   const exploratoryReceipt = await send(exploratory, exploratoryId);
   assert.deepEqual(await send(exploratory, exploratoryId), exploratoryReceipt);
   assert.equal((await repository.find(exploratoryId)).application_data.employmentHistory, 'none');
   await assert.rejects(send({...exploratory, company:'Contradictory history'}, randomUUID()), e => e.validationErrors.some(v => v.step === 2));
+  const passport = valid();
+  passport.govIdType = 'Passport';
+  delete passport.documents.govIdBack;
+  const passportId = randomUUID();
+  assert.equal((await send(passport, passportId)).id, passportId);
+  const passportRow = await repository.find(passportId);
+  assert.equal(Object.hasOwn(passportRow.document_paths, 'govIdBack'), false);
+  assert.equal(Object.keys(passportRow.document_paths).length, 4);
+  await assert.rejects(send({ ...passport, govIdType: "Driver's License" }, randomUUID()), e => e.validationErrors.some(v => v.step === 6));
 });
