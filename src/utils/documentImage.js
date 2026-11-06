@@ -20,28 +20,41 @@ export async function loadDocumentImage(file) {
   return bitmap;
 }
 
-const toBlob = (canvas, quality) => new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('Your device could not process this photo. Choose a smaller JPG.')), 'image/jpeg', quality));
+const toBlob = (canvas, quality) =>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('Your device could not process this photo. Choose a smaller JPG.')), 'image/jpeg', quality));
 
-export async function renderDocumentImage(bitmap, rotation = 0, crop = FULL_CROP) {
+// Long-edge limits keep text readable while cutting memory use on low-end
+// phones and upload size on mobile data. A 2400 px ID photo is well above
+// what a reviewer needs to read fine print; a 2x2 portrait needs far less.
+export const MAX_EDGE = { idPhoto: 1200, default: 2400 };
+// Stop at the first quality that is "small enough" instead of always using
+// the highest quality: typical phone photos land around 300–900 KB.
+const TARGET_BYTES = 1.5 * 1024 * 1024;
+const QUALITY_STEPS = [.85, .78, .7];
+
+export async function renderDocumentImage(bitmap, rotation = 0, crop = FULL_CROP, { docKey, analyze } = {}) {
   const rotated = document.createElement('canvas');
   const output = document.createElement('canvas');
   try {
     const quarter = ((rotation % 360)+360)%360;
     const sideways = quarter === 90 || quarter === 270;
-    const scale = Math.min(1, 3200 / Math.max(bitmap.width, bitmap.height));
+    const maxEdge = MAX_EDGE[docKey] || MAX_EDGE.default;
+    const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
     rotated.width=Math.max(1,Math.round((sideways?bitmap.height:bitmap.width)*scale));
     rotated.height=Math.max(1,Math.round((sideways?bitmap.width:bitmap.height)*scale));
     const context=rotated.getContext('2d');
     if(!context)throw new Error('Image editing is unavailable on this device. Upload an exported JPG or PDF instead.');
+    context.imageSmoothingQuality='high';
     context.fillStyle='#fff';context.fillRect(0,0,rotated.width,rotated.height);
     context.translate(rotated.width/2,rotated.height/2);context.rotate(quarter*Math.PI/180);
     context.drawImage(bitmap,-bitmap.width*scale/2,-bitmap.height*scale/2,bitmap.width*scale,bitmap.height*scale);
     const rectangle=cropRectangle(rotated.width,rotated.height,crop);
     output.width=rectangle.width;output.height=rectangle.height;
     output.getContext('2d').drawImage(rotated,rectangle.x,rectangle.y,rectangle.width,rectangle.height,0,0,output.width,output.height);
+    rotated.width=rotated.height=0; // release the intermediate buffer early on low-memory devices
     let blob;
-    for(const quality of [.92,.86,.8]) { blob=await toBlob(output,quality); if(blob.size<=MAX_DOCUMENT_BYTES)break; }
+    for(const quality of QUALITY_STEPS) { blob=await toBlob(output,quality); if(blob.size<=TARGET_BYTES)break; }
     if(blob.size>MAX_DOCUMENT_BYTES)throw new Error('The processed photo is still over 10 MiB. Choose a smaller image without sacrificing readable text.');
-    return {file:new File([blob],'document-photo.jpg',{type:'image/jpeg'}),width:output.width,height:output.height};
+    const quality = analyze ? analyze(output, output.width, output.height) : null;
+    return {file:new File([blob],'document-photo.jpg',{type:'image/jpeg'}),width:output.width,height:output.height,quality};
   } finally {rotated.width=rotated.height=output.width=output.height=0;}
 }

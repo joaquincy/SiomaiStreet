@@ -4,6 +4,7 @@ import { CHANGE_GROUPS, prepareApplicationChange, changeView, requiredChangeDocu
 import { readUploadJson } from './directUploads.js';
 import { authorizeDocumentReviewer } from './directUploadServices.js';
 import { isAcceptedScan } from './documentScanner.js';
+import { CORRECTION_FIELDS } from '../shared/fieldCorrections.js';
 
 const fail = (message, status = 422) => Object.assign(new Error(message), { status });
 const stable = value => Array.isArray(value) ? value.map(stable) : value && typeof value === 'object' ? Object.fromEntries(Object.keys(value).sort().map(k => [k, stable(value[k])])) : value;
@@ -38,13 +39,17 @@ export function createApplicationFollowup({ request, access, rate, json, url, se
   const requireOpen = a => { if (['declined', 'withdrawn'].includes(a.status)) throw fail('This application is closed. Contact support for corrections.', 409); };
   const requireOnboarding = a => { if (a.status !== 'approved' || a.reassessment_required) throw fail('Personal onboarding becomes available after approval and resolution of any reassessment.', 409); };
   const list = async (id, a, staff) => {
-    const [changes, items, events] = await Promise.all([
+    const [changes, items, events, fieldRequests] = await Promise.all([
       request(`/rest/v1/franchise_answer_changes?application_id=eq.${id}&order=created_at.desc&limit=200`),
       request(`/rest/v1/franchise_onboarding_items?application_id=eq.${id}&order=created_at.asc&limit=100`),
       request(`/rest/v1/franchise_onboarding_events?application_id=eq.${id}&order=created_at.desc&limit=200`),
+      request(`/rest/v1/franchise_field_requests?application_id=eq.${id}&order=created_at.desc&limit=50`),
     ]);
     return {
       id, revision: a.answer_revision, status: a.status, reassessmentRequired: a.reassessment_required,
+      fieldRequests: fieldRequests.map(r => ({ id: r.id, field: r.field_key, reason: r.reason, state: r.state, revision: r.revision,
+        current: r.field_key === 'govIdNumber' ? 'Current number kept private' : a.application_data[r.field_key] || '',
+        responseNote: r.response_note, reviewNote: r.review_note, changeId: r.change_id, receivedAt: r.received_at })),
       groups: Object.fromEntries(Object.keys(CHANGE_GROUPS).map(group => [group, changeView(a.application_data, group)])),
       changes: changes.map(c => ({ id: c.id, category: c.category, current: changeView(c.previous_values, c.category), proposed: changeView(c.proposed_values, c.category), reason: c.reason, state: c.state, reviewNote: c.review_note, createdAt: c.created_at,
         documents: (c.required_documents || []).map(key => ({ key, label: getApplicationDocuments({ ...a.application_data, ...c.proposed_values }).find(d => d.key === key)?.label || key, received: Boolean(c.evidence?.[key]), name: c.evidence?.[key]?.name || null })) })),
@@ -64,6 +69,40 @@ export function createApplicationFollowup({ request, access, rate, json, url, se
     if (!await rate(req, 'portal-write', 5)) throw fail('Too many updates. Wait before retrying; your answers are kept.', 429);
     requireOpen(a);
     const body = await readUploadJson(req, 20000);
+    if (action === 'field-corrections') {
+      if (staff && !itemId) {
+        if (!Object.hasOwn(CORRECTION_FIELDS, body.field)) throw fail('Choose an applicant answer that supports a targeted correction.');
+        return json(res, 200, await rpc('request_franchise_field_correction', { p_application: id, p_id: requestId(body.requestId), p_reviewer: actor.id, p_field: body.field, p_reason: note(body.reason, 10), p_revision: revision(body.revision) }));
+      }
+      requestId(itemId);
+      if (staff) return json(res, 200, await rpc('review_franchise_field_correction', { p_application: id, p_item: itemId, p_id: requestId(body.requestId), p_hash: followupHash(body), p_reviewer: actor.id, p_revision: revision(body.revision), p_state: body.decision, p_note: note(body.note, 10) }));
+      const r = await first(`franchise_field_requests?id=eq.${itemId}&application_id=eq.${id}&limit=1`);
+      if (!r || !Object.hasOwn(CORRECTION_FIELDS, r.field_key)) throw fail('Correction request not found.', 404);
+      const rid = requestId(body.requestId), hash = followupHash(body);
+      const previous = await first(`franchise_field_request_events?id=eq.${rid}&limit=1`);
+      if (previous) {
+        if (previous.application_id !== id || previous.field_request_id !== itemId || previous.actor_id || previous.request_hash !== hash) throw fail('This retry differs from the received response.', 409);
+        return json(res, 200, previous.receipt);
+      }
+      if (!['open', 'changes_needed'].includes(r.state)) throw fail('This response is already with your reviewer. Refresh your details.', 409);
+      const group = CORRECTION_FIELDS[r.field_key], current = checkedAnswers(a);
+      let before = null, proposed = null, required = [];
+      if (body.value !== undefined) {
+        if (typeof body.value !== 'string') throw fail('Enter a written answer.');
+        const answers = prepareApplicationChange(current, group, { [r.field_key]: body.value }, { pending: true });
+        before = rawView(a.application_data, group); proposed = rawView(answers, group);
+        if (followupHash(before) === followupHash(proposed)) proposed = null;
+        else {
+          required = requiredChangeDocuments(current, answers, group);
+          // Staff already have the submitted ID to check a spelling correction.
+          // A different ID number/document still needs fresh supporting evidence.
+          if (['firstName', 'middleName', 'lastName'].includes(r.field_key)) {
+            required = required.filter(key => !['govIdFront', 'govIdBack'].includes(key) || !current.documents[key]);
+          }
+        }
+      }
+      return json(res, 200, await rpc('respond_franchise_field_correction', { p_application: id, p_item: itemId, p_id: rid, p_hash: hash, p_revision: revision(body.revision), p_answer_revision: revision(body.answerRevision), p_note: note(body.note, 10), p_category: group, p_before: before, p_proposed: proposed, p_required: required }));
+    }
     if (action === 'changes' && !staff) {
       const rid = requestId(body.requestId), hash = followupHash(body);
       const previous = await first(`franchise_answer_changes?id=eq.${rid}&limit=1`);

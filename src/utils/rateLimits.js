@@ -2,6 +2,9 @@
 // across tabs, and when visitors share an IP. No answers or identifiers are kept.
 import { RATE_POLICIES } from '../../shared/ratePolicies.js';
 export const RATE_ACTIONS = Object.freeze({
+  'email-ingress': { label: 'Confirming your email', unit: 'requests', shared: 'network' },
+  'email-send': { label: 'Requesting email codes', unit: 'emails', shared: 'network', conditional: true },
+  'email-recipient': { label: 'Codes to this email', unit: 'emails', shared: 'email address', conditional: true },
   'upload-start-burst': { label: 'Submission attempts', unit: 'attempts', shared: 'network' },
   'upload-start': { label: 'Starting or resuming an application', unit: 'requests', shared: 'network' },
   'new-application': { label: 'New application upload sessions', unit: 'new sessions', shared: 'network', conditional: true },
@@ -38,6 +41,7 @@ function scopesFor(path, method) {
   if (/^\/api\/application-status\/[^/]+\/followup(?:\/|$)/.test(clean)) return method === 'GET' ? ['portal'] : ['portal', 'portal-write'];
   if (method === 'POST' && /^\/api\/application-status\/[^/]+\/(?:onboarding|changes)\/[^/]+\/uploads$/.test(clean)) return ['upload-start-burst','upload-start','portal'];
   if (method !== 'POST') return [];
+  if (clean === '/api/application-email') return ['email-ingress'];
   if (clean === '/api/franchise-applications/uploads' || /^\/api\/application-status\/[^/]+\/corrections\/[^/]+\/uploads$/.test(clean)) return ['upload-start-burst', 'upload-start'];
   if (/^\/api\/franchise-applications\/uploads\/[^/]+\/(authorize|check|finalize)(\/[^/]+)?$/.test(clean)) return ['upload-control'];
   if (clean === '/api/contact-inquiries') return ['contact-ingress'];

@@ -2,9 +2,10 @@ import { CONTRACT_VERSION, DOCUMENT_KEYS, MAX_DOCUMENT_BYTES, documentTypes, isV
 import { uploadDocument, clearUploadTransfers } from './resumableDocuments.js';
 import { rateAwareFetch, rateFeedback } from '../utils/rateLimits.js';
 import { ONBOARDING_DOCUMENT_KEY } from '../../shared/applicationFollowup.js';
+import { documentFingerprint } from '../utils/documentFingerprint.js';
+import { duplicateIdSides, DUPLICATE_ID_MESSAGE } from '../../shared/applicationQuality.js';
 
 const base = '/api/franchise-applications/uploads';
-const hashes = new WeakMap();
 
 export async function documentManifest(documents, signal, onboarding = false) {
   const entries = Object.entries(documents || {});
@@ -14,18 +15,12 @@ export async function documentManifest(documents, signal, onboarding = false) {
   for (const [key, file] of entries) {
     signal?.throwIfAborted();
     if (!(onboarding ? key === ONBOARDING_DOCUMENT_KEY : DOCUMENT_KEYS.includes(key)) || !(file instanceof File) || !file.size || file.size > MAX_DOCUMENT_BYTES || !documentTypes(key).includes(file.type)) throw new Error(`Select a supported document up to 10 MiB for ${key}.`);
-    if (!hashes.has(file)) {
-      const bytes = await file.arrayBuffer();
-      signal?.throwIfAborted();
-      const hash = await crypto.subtle.digest('SHA-256', bytes);
-      hashes.set(file, Array.from(new Uint8Array(hash), byte => byte.toString(16).padStart(2, '0')).join(''));
-    }
-    manifest.push({ key, name: file.name, type: file.type, size: file.size, sha256: hashes.get(file) });
+    manifest.push({ key, name: file.name, type: file.type, size: file.size, sha256: await documentFingerprint(file, signal) });
   }
   return manifest;
 }
 
-export async function submitFranchiseApplication({ formData, requestId, fetcher = rateAwareFetch, onProgress = () => { }, turnstileToken = '', signal, uploader = uploadDocument, correction, onboarding, changeEvidence }) {
+export async function submitFranchiseApplication({ formData, requestId, emailProof, fetcher = rateAwareFetch, onProgress = () => { }, turnstileToken = '', signal, uploader = uploadDocument, correction, onboarding, changeEvidence }) {
   const privateRequest = changeEvidence || onboarding || correction;
   const finishFeedback = rateFeedback.beginBatch();
   const controller = new AbortController();
@@ -59,9 +54,10 @@ export async function submitFranchiseApplication({ formData, requestId, fetcher 
     if (applicationData.hasCoApplicant !== 'yes') delete applicationData.coApplicant;
     onProgress('Preparing documents for secure upload…');
     const manifest = await documentManifest(documents, activeSignal, Boolean(onboarding));
+    if (!privateRequest && duplicateIdSides(applicationData, Object.fromEntries(manifest.map(item => [item.key, item.sha256])))) throw Object.assign(new Error(DUPLICATE_ID_MESSAGE), { validationErrors: [{ step: 6, message: DUPLICATE_ID_MESSAGE }] });
     if (privateRequest && (!UUID_PATTERN.test(privateRequest.applicationId) || !UUID_PATTERN.test(privateRequest.id))) throw new Error('Invalid document request. Refresh your application status.');
     const startEndpoint = privateRequest ? `/api/application-status/${privateRequest.applicationId}/${changeEvidence ? 'changes' : onboarding ? 'onboarding' : 'corrections'}/${privateRequest.id}/uploads` : base;
-    const session = await request(startEndpoint, { version: CONTRACT_VERSION, requestId, applicationData, manifest, ...(onboarding ? { onboardingRevision: onboarding.revision } : {}) }, privateRequest?.accessCode);
+    const session = await request(startEndpoint, { version: CONTRACT_VERSION, requestId, applicationData, manifest, ...(!privateRequest ? { emailProof } : {}), ...(onboarding ? { onboardingRevision: onboarding.revision } : {}) }, privateRequest?.accessCode);
     if (session?.receipt) return confirmReceipt(session.receipt);
     if (!UUID_PATTERN.test(session?.sessionId) || !/^[A-Za-z0-9_-]{43}$/.test(session?.token || '') || !Number.isFinite(Date.parse(session.expiresAt))) throw new Error('The service returned an invalid upload session. Your draft has been kept. Please retry.');
     const endpoint = `${base}/${session.sessionId}`;

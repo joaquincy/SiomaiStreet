@@ -296,7 +296,7 @@ const AboutUs = () => {
         {/* LAYER 3 — Storefront (upper-right) */}
         <div className="chef-storefront" ref={storefrontRef}>
           <img
-            src="/images/siomai front.png"
+            src="/images/siomai%20front.png"
             srcSet="
               /images/responsive/siomai%20front-320w.png 320w,
               /images/responsive/siomai%20front-480w.png 480w,
@@ -324,7 +324,7 @@ const AboutUs = () => {
         {/* LAYER 4 — Siomai */}
         <div className="chef-siomai" ref={siomaiRef}>
           <img
-            src="/images/siomai 1.png"
+            src="/images/siomai%201.png"
             srcSet="
               /images/responsive/siomai%201-200w.png 200w,
               /images/responsive/siomai%201-400w.png 400w

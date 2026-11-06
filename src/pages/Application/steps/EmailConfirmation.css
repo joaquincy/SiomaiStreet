@@ -1,0 +1,22 @@
+.application-page .email-confirmation {
+  display: grid;
+  grid-column: 1 / -1;
+  gap: var(--app-space-md, 1rem);
+  padding: var(--app-space-lg, 1.5rem);
+  border: thin solid var(--app-border);
+  border-radius: var(--app-radius-lg, 1rem);
+  background: var(--app-surface-input);
+  color: var(--app-text);
+  min-width: 0;
+}
+.email-confirmation-heading { display: flex; align-items: flex-start; gap: var(--app-space-sm, .75rem); }
+.email-confirmation-heading > svg { flex-shrink: 0; width: 1.5em; height: 1.5em; color: var(--app-red-dark); }
+.email-confirmation :is(h4, p) { margin: 0; overflow-wrap: anywhere; }
+.email-confirmation p { color: var(--app-text-secondary); line-height: 1.6; }
+.email-confirmation h4 { font-family: var(--app-font-display); font-size: 1.125em; margin-block-end: .375em; }
+.email-confirmation-actions { display: flex; flex-wrap: wrap; gap: var(--app-space-sm, .75rem); }
+.email-confirmation-actions button { min-height: 2.75rem; flex: 1 1 12rem; white-space: normal; }
+.email-confirmation-code { display: grid; gap: var(--app-space-sm, .75rem); }
+.email-confirmation-code input { font-family: var(--app-font-mono); letter-spacing: .35em; max-width: 14rem; }
+.email-confirmation .email-confirmation-error { color: var(--app-danger); }
+.email-confirmation .email-confirmation-footnote { font-size: .875em; }

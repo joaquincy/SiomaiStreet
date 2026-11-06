@@ -1,6 +1,7 @@
 /* ─── Required documents list (must match DocumentUpload.jsx) ─── */
 import { FRANCHISE_PACKAGES } from './franchiseCatalogue.js';
 import { PRIVACY_NOTICE_VERSION } from './privacy.js';
+import { idNumberIssue, repeatedFiller, ANSWER_QUALITY_MESSAGES, duplicateIdSides, DUPLICATE_ID_MESSAGE } from './applicationQuality.js';
 import { parseAmount, applicationAnswerConflicts, PLAN_TIMELINE_LABELS } from './applicationAnswers.js';
 import { APPLICATION_DOCUMENTS, getApplicationDocuments, omitPassportBack } from './applicationDocuments.js';
 import { FUNDING_STATUS_OPTIONS, ADDRESS_EVIDENCE_OPTIONS, FUNDS_EVIDENCE_OPTIONS, hasPendingFunding, needsAddressExplanation, cleanConditionalEvidence } from './documentPolicy.js';
@@ -67,6 +68,7 @@ const validateExistingStep = (stepIndex, formData, { deferRequiredDocuments = fa
         if (!formData.govIdOtherIssuer?.trim()) errors.push('Other ID issuing authority');
       }
       if (!formData.govIdNumber?.trim()) errors.push('Government ID Number');
+      if (idNumberIssue(formData)) errors.push(idNumberIssue(formData));
       if (!formData.maritalStatus) errors.push('Marital Status');
       if (formData.hasCoApplicant === 'yes') {
         const coApplicant = formData.coApplicant || {};
@@ -106,6 +108,7 @@ const validateExistingStep = (stepIndex, formData, { deferRequiredDocuments = fa
       if (formData.brandValues?.length !== 3) errors.push('Exactly 3 brand values');
       if (!hasMinimumWords(formData.brandValuesExplanation, 100)) errors.push('At least 100 words explaining your brand values');
       if (!formData.discoveryDayInterest) errors.push('Discovery Day preference');
+      for (const [key, message] of Object.entries(ANSWER_QUALITY_MESSAGES)) if (repeatedFiller(formData[key])) errors.push(message);
       break;
     case 5: // Franchise Plan
       if (!formData.selectedPackage) errors.push('Franchise Package');
@@ -118,6 +121,7 @@ const validateExistingStep = (stepIndex, formData, { deferRequiredDocuments = fa
       break;
     case 6: { // Document Upload
       const docs = formData.documents || {};
+      if (duplicateIdSides(formData, Object.fromEntries(Object.entries(docs).map(([key, doc]) => [key, doc?.sha256])))) errors.push(DUPLICATE_ID_MESSAGE);
       if (!formData.addressEvidenceType) errors.push('Address evidence type');
       if (needsAddressExplanation(formData) && !formData.addressEvidenceDetails?.trim()) errors.push('Address evidence explanation');
       if (!formData.fundsEvidenceType) errors.push('Funding evidence type');
@@ -156,12 +160,12 @@ export const UUID_PATTERN = /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f
 const object = value => value !== null && typeof value === 'object' && !Array.isArray(value);
 const fieldsByStep = [
   'liquidCapital ownedBusiness franchiseType territory ownershipIntention openingTimeline',
-  'firstName middleName lastName dateOfBirth citizenship address primaryPhone secondaryPhone email confirmEmail govIdType govIdOtherName govIdOtherIssuer govIdNumber emergencyName emergencyRelationship emergencyPhone hasCoApplicant maritalStatus coApplicant',
+  'firstName middleName lastName dateOfBirth citizenship address primaryPhone secondaryPhone email confirmEmail govIdType govIdOtherName govIdOtherIssuer govIdNumber govIdReviewReason emergencyName emergencyRelationship emergencyPhone hasCoApplicant maritalStatus coApplicant',
   'employmentHistory jobTitle company jobStartDate jobEndDate currentEmployment industry keyResponsibilities additionalPositions priorBusinessOwned priorBusinessDescription foodIndustryExperience largestTeamSize managementYears operationalExperience personallyOperate weeklyHours',
   'totalLiquidCapital fundingStatus pendingFundingDetails investmentSources activeIncome primaryIncomeSource existingDebts neverBankruptcy noPendingCases',
   'whyInterested personalValues brandValues brandValuesExplanation discoveryDayInterest',
   'selectedPackage targetRegion targetCity siteTypes hasSpecificLocation openToAlternative planOpeningTimeline multipleUnits additionalPlanDetails',
-  'documents addressEvidenceType addressEvidenceDetails fundsEvidenceType fundsEvidenceDetails documentPolicyVersion identityProof',
+  'documents addressEvidenceType addressEvidenceDetails fundsEvidenceType fundsEvidenceDetails documentPolicyVersion',
   'consent_nda consent_backgroundCheck consent_accuracy consent_privacy privacyNoticeVersion',
   'checklist_accurate checklist_nda checklist_documents checklist_noGuarantee',
 ].map(fields => fields.split(' '));
@@ -249,7 +253,7 @@ export function validateStep(step, input, { documentMetadata = false, deferRequi
       : booleans.has(key) ? typeof value === 'boolean' : typeof value === 'string';
     if (!correctType) { errors.push(`Invalid ${label(key)} format`); continue; }
     if (typeof value === 'string' && value.length > 20000) errors.push(`${label(key)} is too long`);
-    const maximum = { govIdOtherName: 120, govIdOtherIssuer: 160, pendingFundingDetails: 1000, addressEvidenceDetails: 1000, fundsEvidenceDetails: 1000 }[key];
+    const maximum = { govIdNumber: 80, govIdReviewReason: 500, govIdOtherName: 120, govIdOtherIssuer: 160, pendingFundingDetails: 1000, addressEvidenceDetails: 1000, fundsEvidenceDetails: 1000 }[key];
     if (maximum && typeof value === 'string' && value.length > maximum) errors.push(`${label(key)} must be at most ${maximum} characters`);
     if (choices[key] && (Array.isArray(value) ? value.some(v => !choices[key].includes(v)) || new Set(value).size !== value.length : value !== '' && !choices[key].includes(value))) errors.push(`Choose a valid ${label(key)}`);
   }

@@ -156,7 +156,7 @@ const FeaturedMenu = () => {
             {/* Left Stamp: Chicken Feet (reaches into middle of the website) */}
             <div className="fm-stamp-wrap fm-stamp-wrap--chicken-feet">
               <img
-                src="/images/chicken feet pic.png"
+                src={encodeURI("/images/chicken feet pic.png")}
                 alt="Savory chicken feet street snack"
                 className="fm-stamp-img"
                 loading="lazy"
@@ -168,7 +168,7 @@ const FeaturedMenu = () => {
             {/* Right Stamp: Wonton (elevated, behind bowl) */}
             <div className="fm-stamp-wrap fm-stamp-wrap--wonton">
               <img
-                src="/images/wonton.png"
+                src={encodeURI("/images/wonton.png")}
                 alt="Crispy wonton in savory broth"
                 className="fm-stamp-img"
                 loading="lazy"
@@ -180,7 +180,7 @@ const FeaturedMenu = () => {
             {/* Hero Bowl: Siomai Rice Bowl with Egg (Foreground, grounded on baseline) */}
             <div className="fm-hero-wrap fm-hero-wrap--bowl">
               <img
-                src="/images/siomai-bowl-hero.png"
+                src={encodeURI("/images/siomai-bowl-hero.png")}
                 alt="Classic Pork Siomai Rice Bowl with Fried Egg"
                 className="fm-hero-img fm-hero-img--bowl"
                 loading="lazy"
@@ -198,7 +198,7 @@ const FeaturedMenu = () => {
             {/* Background Bilao: Siomai Bilao (Bleeds off Left Viewport Edge) */}
             <div className="fm-bilao-wrap fm-bilao-wrap--back">
               <img
-                src="/images/SIOMAI BILAO.png"
+                src={encodeURI("/images/SIOMAI BILAO.png")}
                 alt="Siomai Bilao Party Platter"
                 className="fm-bilao-img fm-bilao-img--back"
                 loading="lazy"
@@ -209,7 +209,7 @@ const FeaturedMenu = () => {
             {/* Foreground Bilao: Lumpia Bilao (Overlaps back bilao, reaches towards center) */}
             <div className="fm-bilao-wrap fm-bilao-wrap--front">
               <img
-                src="/images/lumpia bilao.png"
+                src={encodeURI("/images/lumpia bilao.png")}
                 alt="Crispy Lumpia and Steamed Siomai Bilao with Sweet Chili Dip"
                 className="fm-bilao-img fm-bilao-img--front"
                 loading="lazy"

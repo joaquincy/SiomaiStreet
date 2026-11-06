@@ -1,12 +1,3 @@
-/* ═══════════════════════════════════════════════════════════════════
-   REVIEWS PAGE — Unified Cream Editorial System
-   Harmonized with Homepage Cream Sections (FeaturedMenu, FAQ, Testimonials)
-   and the Menu Page Design System.
-   Canvas: Soft Steamed Wrapper Cream (#f0e9da) + Authentic Paper Grain
-   Typography: Outfit 800–900 titles with #c62828 red accents, Inter body
-   Interactive: Rating breakdown, Feedback form, Tactile review cards, Franchise CTA
-   ═══════════════════════════════════════════════════════════════════ */
-
 .cfb-page {
   min-height: 100vh;
   background-color: #f0e9da;
@@ -16,10 +7,6 @@
   padding-bottom: clamp(6rem, 12vh, 10rem);
   position: relative;
 }
-
-/* ═══════════════════════════════════════════════════════════════════
-   1. HERO PHOTOGRAPHY BANNER (Harmonized with Menu & Franchise Hero)
-   ═══════════════════════════════════════════════════════════════════ */
 
 .reviews-banner {
   position: relative;
@@ -123,7 +110,7 @@
   z-index: 0;
 }
 
-.cfb-canvas > * {
+.cfb-canvas>* {
   position: relative;
   z-index: 1;
 }
@@ -269,7 +256,7 @@
   z-index: 0;
 }
 
-.cfb-card > * {
+.cfb-card>* {
   position: relative;
   z-index: 1;
 }
@@ -746,6 +733,7 @@
     opacity: 0;
     transform: translateY(-4px) scale(0.99);
   }
+
   to {
     opacity: 1;
     transform: translateY(0) scale(1);
@@ -793,6 +781,7 @@
 .branch-picker-options::-webkit-scrollbar {
   width: 5px;
 }
+
 .branch-picker-options::-webkit-scrollbar-thumb {
   background: rgba(41, 29, 25, 0.16);
   border-radius: 999px;
@@ -1155,12 +1144,38 @@
   background: #fff5f5;
   box-shadow: 0 2px 8px rgba(230, 57, 70, 0.16);
 }
-.cfb-helpful-control { display: flex; flex-wrap: wrap; align-items: center; gap: var(--space-sm); }
-.cfb-helpful-control [role='status'] { font-size: var(--text-sm); color: var(--color-text-secondary); overflow-wrap: anywhere; }
-.cfb-helpful-control [role='status']:empty { display: none; }
-.cfb-helpful-btn:disabled { cursor: default; transform: none; }
-.cfb-helpful-btn[aria-busy='true'] { opacity: .7; cursor: wait; }
-.cfb-helpful-btn:focus-visible { outline: medium solid var(--color-red); outline-offset: .2em; }
+
+.cfb-helpful-control {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-sm);
+}
+
+.cfb-helpful-control [role='status'] {
+  font-size: var(--text-sm);
+  color: var(--color-text-secondary);
+  overflow-wrap: anywhere;
+}
+
+.cfb-helpful-control [role='status']:empty {
+  display: none;
+}
+
+.cfb-helpful-btn:disabled {
+  cursor: default;
+  transform: none;
+}
+
+.cfb-helpful-btn[aria-busy='true'] {
+  opacity: .7;
+  cursor: wait;
+}
+
+.cfb-helpful-btn:focus-visible {
+  outline: medium solid var(--color-red);
+  outline-offset: .2em;
+}
 
 /* ═══════════════════════════════════════════════════════════════════
    10. RESPONSIVE BREAKPOINTS

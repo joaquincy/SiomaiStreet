@@ -1,6 +1,5 @@
 import { createTurnstileVerifier, createTransactionalSender } from './transactionalServices.js';
-import { identityService } from './diditIdentity.js';
-import { readUploadJson } from './directUploads.js';
+import { createApplicationEmail } from './applicationEmail.js';
 import { createContactEmailMaintenance } from './contactEmailMaintenance.js';
 import { startNotificationWorker } from './notificationWorker.js';
 import { createNotificationWebhook } from './notificationWebhook.js';
@@ -50,7 +49,6 @@ for (const file of envFiles) {
 const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
-const identity = identityService();
 
 const allowedReviewTypes = new Set(REVIEW_PHOTO_TYPES);
 
@@ -219,6 +217,11 @@ const verifyPublic = action => async req => {
   if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
 };
 const handleContactEmailMaintenance = createContactEmailMaintenance({ env: process.env, request: supabaseRequest, json });
+const applicationEmail = createApplicationEmail({ env: process.env, request: supabaseRequest, json,
+  send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }),
+  rate: (req, scope, limit, email) => applicationRate(email || clientIP(req, trustedProxies), scope, limit),
+  verify: verifyPublic('application_email'),
+});
 const handleApplicationRetention = createApplicationRetentionMaintenance({
   env: process.env, request: supabaseRequest, remove: deleteStorageObjects, json,
 });
@@ -272,14 +275,16 @@ const followup = createApplicationFollowup({
   rate: (req, scope, limit) => applicationRate(clientIP(req, trustedProxies), scope, limit),
 });
 const checkCorrectionAccess = async (id, correctionId) => {
-  const application = (await supabaseRequest(`/rest/v1/franchise_applications?select=id,status,portal_access_revoked,submitted_at&id=eq.${id}&limit=1`))?.[0];
+  const application = (await supabaseRequest(`/rest/v1/franchise_applications?select=id,status,portal_access_revoked,submitted_at,application_data,document_paths&id=eq.${id}&limit=1`))?.[0];
   if (!application || application.portal_access_revoked || Date.now() >= Date.parse(application.submitted_at) + 90 * 86400000) throw Object.assign(new Error('Application access has expired or was revoked.'), { status: 401 });
   const correction = (await supabaseRequest(`/rest/v1/franchise_corrections?application_id=eq.${id}&id=eq.${correctionId}&limit=1`))?.[0];
   if (!correction) throw Object.assign(new Error('Replacement request not found.'), { status: 404 });
   if (correction.status !== 'received' && (correction.status !== 'open' || application.status !== 'more_information_requested')) throw Object.assign(new Error('This replacement request is no longer open. Refresh the status.'), { status: 409 });
-  return correction;
+  return { ...correction, govIdType: application.application_data?.govIdType,
+    documentFingerprints: Object.fromEntries(['govIdFront', 'govIdBack'].map(key => [key, application.document_paths?.[key]?.sha256])) };
 };
 const handleDirectUpload = createDirectUploadHandler({
+  emailVerification: applicationEmail,
   repository: uploadRepository, storage: uploadStorage, access: uploadAccess, json,
   receiptDetails: access.receipt, scanDocument, allowUnscanned: scanDisabled,
   onboarding: followup.onboarding, changes: followup.changes,
@@ -312,7 +317,11 @@ let cleaningUploads = false;
 const cleanUploads = async () => {
   if (cleaningUploads) return 0;
   cleaningUploads = true;
-  try { return await cleanupExpiredUploads({ repository: uploadRepository, storage: uploadStorage }); }
+  try {
+    const [uploads] = await Promise.all([cleanupExpiredUploads({ repository: uploadRepository, storage: uploadStorage }),
+      supabaseRequest('/rest/v1/rpc/cleanup_application_email_challenges', { method: 'POST', body: '{}' }).catch(() => console.error('Email confirmation cleanup needs a retry.'))]);
+    return uploads;
+  }
   finally { cleaningUploads = false; }
 };
 
@@ -332,21 +341,7 @@ const handleRequestWithFeedback = async (req, res) => {
   if (req.method === 'OPTIONS') return res.writeHead(204).end();
   const url = new URL(req.url, `http://${req.headers.host || 'localhost'}`);
   try {
-    if (url.pathname === '/api/application-identity') {
-      if (req.method === 'GET') {
-        // Only this public availability flag is cacheable. POST replies contain private session data.
-        res.writeHead(200, { 'content-type': 'application/json; charset=utf-8', 'cache-control': 'private, max-age=300' });
-        return res.end(JSON.stringify({ mode: identity.mode }));
-      }
-      if (req.method !== 'POST') return json(res, 405, { error: 'Use POST.' });
-      if (identity.mode === 'disabled') return json(res, 503, { error: 'Selfie verification is unavailable. You can choose staff review.' });
-      const input = await readUploadJson(req, 8192);
-      if (!['start', 'status'].includes(input.action)) return json(res, 400, { error: 'Unknown identity action.' });
-      const starting = input.action === 'start';
-      if (!await applicationRate(clientIP(req, trustedProxies), starting ? 'identity-start' : 'identity-status', starting ? 5 : 30))
-        return json(res, 429, { error: 'Too many attempts. Try again later or choose staff review.' });
-      return json(res, 200, await identity.run(input.action, input.draft, input.details, input.proof, input.consent));
-    }
+    if (url.pathname === '/api/application-email') return await applicationEmail.handler(req, res);
     if (url.pathname === '/api/maintenance/contact-emails') return await handleContactEmailMaintenance(req, res);
     if (url.pathname === '/api/maintenance/application-retention') return await handleApplicationRetention(req, res);
     if (url.pathname === '/api/security-config' && req.method === 'GET') return json(res, 200, { enabled: turnstileEnabled, siteKey: process.env.TURNSTILE_SITE_KEY || '' });
@@ -368,7 +363,7 @@ const handleRequestWithFeedback = async (req, res) => {
     const helpfulMatch = url.pathname.match(/^\/api\/reviews\/([0-9a-f-]{36})\/helpful$/i);
     if (helpfulMatch && req.method === 'POST') return await handleHelpful(req, res, helpfulMatch[1]);
     const portalMatch = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})(?:\/corrections\/([0-9a-f-]{36}))?$/i);
-    const followupMatch = url.pathname.match(/^\/api\/(application-status|staff\/applications)\/([0-9a-f-]{36})\/followup(?:\/(changes|onboarding|evidence|change-evidence)(?:\/([0-9a-f-]{36}))?)?$/i);
+    const followupMatch = url.pathname.match(/^\/api\/(application-status|staff\/applications)\/([0-9a-f-]{36})\/followup(?:\/(changes|onboarding|evidence|change-evidence|field-corrections)(?:\/([0-9a-f-]{36}))?)?$/i);
     if (followupMatch) return await followup.handler(req, res, followupMatch[2], followupMatch[3], followupMatch[4], followupMatch[1] === 'staff/applications');
     const changeUpload = url.pathname.match(/^\/api\/application-status\/([0-9a-f-]{36})\/changes\/([0-9a-f-]{36})\/uploads$/i);
     if (changeUpload && req.method === 'POST') return await handleDirectUpload(req, res, undefined, undefined, undefined, undefined, undefined, { applicationId: changeUpload[1], changeId: changeUpload[2] });

@@ -41,7 +41,7 @@ export default function ApplicantPortalLayout({ children }) {
       <section className="franchise-banner">
         <img
           className="franchise-banner__bg"
-          src="/images/franchising hero header.png"
+          src="/images/franchising%20hero%20header.png"
           srcSet={getSrcSet('/images/franchising hero header.png', [480, 768, 1024, 1440, 1920])}
           sizes="100vw"
           alt="Siomai Street franchise storefront"

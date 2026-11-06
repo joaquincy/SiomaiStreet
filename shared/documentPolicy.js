@@ -44,6 +44,7 @@ export const DOCUMENT_POLICY = {
 export function cleanConditionalEvidence(data) {
   const next = { ...data };
   if (next.govIdType !== 'Other') { delete next.govIdOtherName; delete next.govIdOtherIssuer; }
+  if (!['PhilID (National ID)', 'UMID'].includes(next.govIdType)) delete next.govIdReviewReason;
   if (!hasPendingFunding(next)) delete next.pendingFundingDetails;
   if (!needsAddressExplanation(next)) delete next.addressEvidenceDetails;
   if (next.fundsEvidenceType !== 'other') delete next.fundsEvidenceDetails;

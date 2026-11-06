@@ -57,7 +57,7 @@ const Navbar = () => {
         <div className="navbar-inner">
           <Link to="/" className="navbar-logo" onClick={closeMenu} aria-label="Siomai Street Home">
             <img
-              src="/images/siomai street logo.png"
+              src="/images/siomai%20street%20logo.png"
               srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w"
               sizes="(max-width: 768px) 70px, 78px"
               alt="Siomai Street"

@@ -272,7 +272,7 @@ const ReviewsPage = () => {
       <section className="reviews-banner">
         <img
           className="reviews-banner__bg"
-          src="/images/reviews hero header.png"
+          src="/images/reviews%20hero%20header.png"
           srcSet={getSrcSet('/images/reviews hero header.png', [480, 768, 1024, 1440, 1920])}
           sizes="100vw"
           alt="Siomai Street customer reviews and dining experience"

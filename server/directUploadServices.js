@@ -20,6 +20,7 @@ export function createUploadRepository(request) {
     prepareOnboarding: (id, item, revision, retry, hash, manifest) => rpc('prepare_franchise_onboarding_upload', { p_application: id, p_item: item, p_revision: revision, p_retry: retry, p_hash: hash, p_manifest: manifest }),
     finalizeOnboarding: (id, allow) => rpc('finalize_franchise_onboarding_upload', { p_session: id, p_allow_unscanned: allow }),
     answers: id => first(`franchise_upload_sessions?select=application_data&id=eq.${id}&limit=1`),
+    refreshEmail: (id, stamp) => rpc('refresh_upload_email_confirmation', { p_session: id, p_stamp: stamp }),
     items: id => request(`/rest/v1/franchise_upload_items?session_id=eq.${id}&order=document_key.asc&limit=10`),
     item: (id, key) => first(`franchise_upload_items?session_id=eq.${id}&document_key=eq.${key}&limit=1`),
     claim: (id, key, lease) => rpc('claim_franchise_upload', { p_session: id, p_key: key, p_lease: lease }),

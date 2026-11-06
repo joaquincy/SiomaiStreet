@@ -20,6 +20,8 @@
 .capture-tips strong { font-size: .8125rem; font-weight: 600; color: #3b352e; }
 .capture-tips p { font-size: .75rem; line-height: 1.65; color: #756b60; margin-top: .2rem; }
 .capture-guide-note { grid-column: 1 / -1; border-top: 1px solid #e6e0d7; padding-top: .85rem; color: #756b60; font-size: .75rem; line-height: 1.65; }
+.capture-frame-guide { grid-column: 1 / -1; text-align: center; padding: .5rem 0; }
+.capture-frame-svg { display: block; width: 100%; max-width: 340px; height: auto; margin-inline: auto; }
 .application-page .document-step .upload-progress-box { background: #fff; border: 1px solid #e7e2da; border-radius: 14px; padding: 1.25rem; box-shadow: none; }
 .application-page .document-step .upload-progress-header { gap: .75rem; align-items: baseline; }
 .application-page .document-step .upload-progress-label { text-transform: none; letter-spacing: -.01em; font-family: var(--app-font); font-size: .875rem; }
@@ -58,10 +60,3 @@
   .application-page .document-step .upload-progress-header { flex-direction: column; align-items: flex-start; }
 }
 @media (prefers-reduced-motion: reduce) { .capture-guide-chevron { transition: none; } }
-
-.identity-check { grid-column: 1 / -1; align-items: flex-start; }
-.identity-check p, .identity-check label { font-size: .94rem; line-height: 1.5; }
-.identity-actions { display: flex; align-items: center; flex-wrap: wrap; gap: .75rem; }
-.identity-check button, .identity-check a { padding: .6rem .9rem; border: 1px solid currentColor; border-radius: .5rem; color: #90231f; background: white; font: inherit; }
-.identity-check button:disabled { opacity: .6; }
-.identity-check p:empty { display: none; }

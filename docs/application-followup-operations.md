@@ -1,5 +1,8 @@
 # Application updates and personal onboarding
 
+For the newer targeted answer-correction requests and application inbox
+confirmation, also follow [application-quality-activation.md](./application-quality-activation.md).
+
 Implemented locally, updated 5 November 2026. Apply the migrations and connect the reviewer
 app before treating this as live. No production database was changed.
 

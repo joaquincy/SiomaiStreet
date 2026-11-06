@@ -15,6 +15,9 @@ export default function ApplicationPrivacyNotice({ compact = false, showPolicyLi
       <NoticeSection title="Who can access it">
       <p>Assigned franchise reviewers use the administration app. Document access through this website requires an authorized staff account and is logged. Hosting, database/storage, anti-abuse and notification providers process the information needed to deliver those services.</p>
       </NoticeSection>
+      <NoticeSection title="On-device processing">
+      <p>Your browser may check photo quality (brightness, blur, resolution) and optionally read text from your ID photo to help pre-fill your details. These checks run entirely on your device and the image is never sent to Siomai Street or any third party for analysis. You can skip ID reading and type your details manually.</p>
+      </NoticeSection>
       <NoticeSection title="Drafts on this device">
       <p>Draft answers and selected files may be saved on this device before submission. They expire seven days after the last save and are removed when you next open the application, or after confirmed submission. If cleanup fails, files may remain until you clear this site's browser data. Clearing browser data does not delete a submitted application.</p>
       </NoticeSection>

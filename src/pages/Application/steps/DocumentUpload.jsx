@@ -1,4 +1,6 @@
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
+import { documentFingerprint } from '../../../utils/documentFingerprint.js';
+import { duplicateIdSides, DUPLICATE_ID_MESSAGE } from '../../../../shared/applicationQuality.js';
 import { BiFile, BiIdCard, BiMap, BiReceipt, BiUser, BiWallet, BiShield } from 'react-icons/bi';
 import './Steps.css';
 import { getApplicationDocuments } from '../../../../shared/application.js';
@@ -7,7 +9,7 @@ import { DOCUMENT_POLICY, DOCUMENT_POLICY_VERSION, DOCUMENT_RECENCY_NOTICE, DOCU
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
 import DocumentPicker from '../../../components/DocumentPicker';
 import DocumentCaptureGuide from '../../../components/DocumentCaptureGuide';
-import IdentityCheck from './IdentityCheck';
+import OcrAutofill from '../../../components/OcrAutofill';
 import ApplicationDisclosure from '../../../components/ApplicationDisclosure';
 import './DocumentUpload.css';
 const DOCUMENT_ICONS = { govIdFront: BiIdCard, govIdBack: BiIdCard, proofOfBilling: BiReceipt, proofOfFunds: BiWallet, idPhoto: BiUser, siteProposal: BiMap };
@@ -25,7 +27,7 @@ const DOCUMENT_HINTS = {
   siteProposal: 'Photos, floor plan, or sketch of your proposed branch location.',
 };
 
-const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileSelect, onFileRemove, fileError, onError, saveStatus }) => {
+const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileSelect, onFileRemove, fileError, onError, saveStatus, children }) => {
   const feedback = useApplicationFeedback();
   const cardId = 'doc-'+docKey;
   const errors = [...(fileError ? [fileError] : []), ...feedback.errorsFor(cardId)];
@@ -40,18 +42,37 @@ const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileS
       </ApplicationDisclosure>
       <DocumentPicker docKey={docKey} label={label} file={file} onConfirm={selected=>onFileSelect(docKey,selected)} onRemove={()=>onFileRemove(docKey)} onError={message=>onError(docKey,message)}
         status={saveStatus==='Saved on this device'?'Selected on this device · Saved in this browser · Submit to upload or retry':saveStatus?.startsWith('Save failed')?'Selected on this device · Save failed; keep this page open · Submit to upload or retry':'Selected on this device · Saving not yet confirmed · Submit to upload or retry'} />
+      {children}
     </div><FieldErrorList id={cardId} errors={errors}/>
   </div>;
 };
 
-const DocumentUpload = ({ formData, updateField, saveStatus, draftId }) => {
+const DocumentUpload = ({ formData, updateField, saveStatus }) => {
   const applicableDocuments = getApplicationDocuments(formData);
   const REQUIRED_DOCUMENTS = applicableDocuments.filter(doc => doc.required);
   const OPTIONAL_DOCUMENTS = applicableDocuments.filter(doc => !doc.required);
   const documents = formData.documents || {};
   const [fileErrors,setFileErrors]=useState({});
-  const applicableFileErrors = Object.entries(fileErrors).filter(([key, message]) => message && applicableDocuments.some(doc => doc.key === key));
+  const [idSidesError, setIdSidesError] = useState('');
+  const visibleFileErrors = { ...fileErrors, govIdBack: [fileErrors.govIdBack, idSidesError].filter(Boolean).join(' ') };
+  const applicableFileErrors = Object.entries(visibleFileErrors).filter(([key, message]) => message && applicableDocuments.some(doc => doc.key === key));
   const reportError=(key,message)=>setFileErrors(previous=>({...previous,[key]:message}));
+  useEffect(() => {
+    let active = true;
+    const check = async () => {
+      let message = '';
+      if (formData.govIdType !== 'Passport' && documents.govIdFront && documents.govIdBack && documents.govIdFront.size === documents.govIdBack.size) {
+        try {
+          const front = await documentFingerprint(documents.govIdFront);
+          const back = await documentFingerprint(documents.govIdBack);
+          if (duplicateIdSides({ govIdType: formData.govIdType }, { govIdFront: front, govIdBack: back })) message = DUPLICATE_ID_MESSAGE;
+        } catch { message = 'Could not compare the ID sides. Keep your files selected and retry before submitting.'; }
+      }
+      if (active) setIdSidesError(message);
+    };
+    check();
+    return () => { active = false; };
+  }, [documents.govIdFront, documents.govIdBack, formData.govIdType]);
 
   const handleFileSelect = (docKey, file) => {
     updateField('documents', { ...documents, [docKey]: file });
@@ -166,19 +187,22 @@ const DocumentUpload = ({ formData, updateField, saveStatus, draftId }) => {
           {formData.govIdType === 'Passport' && <p className="field-help">Passport selected: upload the identity page showing your photo, full name and passport number. No back image is required.</p>}
 
           <div className="upload-grid two-cols">
-            <IdentityCheck draftId={draftId} formData={formData} updateField={updateField} />
             {REQUIRED_DOCUMENTS.map((doc) => (
               <FileUploadCard
                 key={doc.key}
                 docKey={doc.key}
                 label={doc.label}
                 required={doc.required}
-                hint={doc.key === 'govIdFront' && formData.govIdType === 'Passport' ? 'Clear photo or scan of your passport identity page. Keep all four corners and identity details readable.' : undefined}
+                hint={doc.key === 'govIdFront' && formData.govIdType === 'Passport' ? 'Clear photo or scan of your passport identity page. Keep all four corners and identity details readable.' : doc.key === 'govIdBack' && formData.govIdType === 'PhilID (National ID)' ? 'Photograph the reverse side and permanently cover the private 12-digit PSN. The reviewer uses the PCN from the front.' : undefined}
                 file={documents[doc.key]}
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
-                fileError={fileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
-              />
+                fileError={visibleFileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
+              >
+                {doc.key === 'govIdFront' && documents.govIdFront && (
+                  <OcrAutofill file={documents.govIdFront} formData={formData} updateField={updateField} />
+                )}
+              </FileUploadCard>
             ))}
           </div>
         </div>
@@ -202,7 +226,7 @@ const DocumentUpload = ({ formData, updateField, saveStatus, draftId }) => {
                 file={documents[doc.key]}
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
-                fileError={fileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
+                fileError={visibleFileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
               />
             ))}
           </div>

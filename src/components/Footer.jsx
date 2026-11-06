@@ -154,7 +154,7 @@ const Footer = () => {
             <span className="footer-sign-word footer-sign-word--left" data-text="Siomai">Siomai</span>
           </div>
           <img
-            src="/images/siomai street logo.png"
+            src="/images/siomai%20street%20logo.png"
             srcSet="/images/responsive/siomai%20street%20logo-100w.png 100w, /images/responsive/siomai%20street%20logo-200w.png 200w, /images/responsive/siomai%20street%20logo-400w.png 400w"
             sizes="(max-width: 768px) 17vw, 10.5vw"
             alt="Siomai Street" className="footer-sign-logo"

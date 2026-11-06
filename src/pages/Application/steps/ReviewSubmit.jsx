@@ -59,7 +59,7 @@ const REVIEW_SECTIONS = [
     fields: [
       'firstName', 'middleName', 'lastName', 'dateOfBirth', 'citizenship',
       'address', 'primaryPhone', 'secondaryPhone', 'email', 'govIdType',
-      'govIdOtherName', 'govIdOtherIssuer', 'govIdNumber', 'emergencyName', 'emergencyRelationship', 'emergencyPhone',
+      'govIdOtherName', 'govIdOtherIssuer', 'govIdNumber', 'govIdReviewReason', 'emergencyName', 'emergencyRelationship', 'emergencyPhone',
       'hasCoApplicant', 'coApplicant', 'maritalStatus',
     ],
   },
@@ -114,6 +114,7 @@ const REVIEW_SECTIONS = [
 /* ─── Human-readable field labels ─── */
 const FIELD_LABELS = {
   govIdOtherName: 'Other ID name',
+  govIdReviewReason: 'ID format for staff review',
   govIdOtherIssuer: 'Other ID issuing authority',
   fundingStatus: 'Funding availability',
   pendingFundingDetails: 'Pending funding explanation',

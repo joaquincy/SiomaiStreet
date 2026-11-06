@@ -30,10 +30,11 @@ export function validEmailSender(value) {
   return Boolean(match && match[1].trim() && emailPattern.test(match[2]));
 }
 export function createTransactionalSender({ apiKey, from, replyTo, fetchImpl = fetch }) {
-  return async ({ eventId, to, kind, reference, inquiry, signal }) => {
+  return async ({ eventId, to, kind, reference, inquiry, code, signal }) => {
     if (!apiKey || !validEmailSender(from) || (replyTo && !emailPattern.test(replyTo))) throw failure('Email delivery is not configured.');
     if (!emailPattern.test(to || '') || !/^[a-zA-Z0-9_-]{1,120}$/.test(eventId || '') || !/^[a-zA-Z0-9-]{1,100}$/.test(reference || '')) throw failure('Invalid notification.', 400);
     const templates = {
+      email_code: ['Confirm your application email', 'Confirm access to this inbox.'],
       inquiry_received: ['We received your inquiry', 'Your inquiry has been received. Keep this reference for follow-up.'],
       inquiry_staff: ['New contact inquiry', 'A customer has sent a contact inquiry.'],
       application_received: ['We received your franchise application', 'Your application has been received. This receipt is not franchise approval.'],
@@ -43,6 +44,10 @@ export function createTransactionalSender({ apiKey, from, replyTo, fetchImpl = f
     const [subject, message] = templates[kind];
     let text = `${message}\n\nReference: ${reference}\n\nPlease do not email identity documents or financial records.`;
     let effectiveReplyTo = replyTo;
+    if (kind === 'email_code') {
+      if (!/^\d{6}$/.test(code || '')) throw failure('Invalid confirmation code.', 400);
+      text = `Your Siomai Street email confirmation code is ${code}.\n\nEnter it only on the Siomai Street application page you opened. It expires in 10 minutes and can be used once. Staff will never ask you to send them this code.\n\nThis confirms access to your email, not franchise approval. If you did not request this code, ignore this email.`;
+    }
     if (kind === 'inquiry_staff') {
       const limits = { name: 100, email: 254, channel: 20, topic: 50, branch: 150, order_reference: 80, message: 2000 };
       if (!inquiry || Object.entries(limits).some(([key, limit]) => typeof inquiry[key] !== 'string' || inquiry[key].length > limit)

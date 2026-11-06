@@ -17,7 +17,7 @@ const valid = patch => {
   return data;
 };
 const validate = data => validateApplication(data, { documentMetadata: true });
-const body = data => ({ version: 1, requestId: randomUUID(), applicationData: data, manifest: Object.entries(data.documents).map(([key, doc]) => ({ key, ...doc, name: `${key}.jpg`, sha256: 'a'.repeat(64) })) });
+const body = data => ({ version: 1, requestId: randomUUID(), applicationData: data, manifest: Object.entries(data.documents).map(([key, doc], index) => ({ key, ...doc, name: `${key}.jpg`, sha256: String(index).repeat(64) })) });
 const pending = { fundingStatus: 'pending', totalLiquidCapital: '0', liquidCapital: 'below50k', investmentSources: ['bank-loan'], pendingFundingDetails: 'Synthetic: awaiting release of the approved facility; timing is unknown.', fundsEvidenceType: 'pending-evidence' };
 
 test('address alternatives require an explanation only where needed and remain reviewable evidence', () => {

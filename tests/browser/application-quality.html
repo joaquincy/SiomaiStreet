@@ -1,0 +1,29 @@
+<!doctype html>
+<html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Application checks · Synthetic QA</title></head>
+<body><main id="root" class="application-page"></main>
+<script type="module">
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import EmailConfirmation from '/src/pages/Application/steps/EmailConfirmation.jsx';
+import '/src/index.css';
+import '/src/pages/Application/ApplicationExperience.css';
+import '/src/pages/Application/steps/Steps.css';
+const address = 'applicant@example.invalid';
+const expiry = () => new Date(Date.now() + 600000).toISOString();
+window.fetch = async (path, options) => {
+  if (path === '/api/security-config') return Response.json({ enabled: false });
+  if (path !== '/api/application-email') throw Error('This fixture only simulates email confirmation.');
+  const body = JSON.parse(options.body);
+  if (body.action === 'send') return Response.json({ challengeId: 'synthetic', expiresAt: expiry() });
+  if (body.code !== '012345') return Response.json({ error: 'The email code is incorrect. Check the latest email.' }, { status: 422 });
+  return Response.json({ status: 'confirmed', proof: 'synthetic-only', expiresAt: expiry(), email: address });
+};
+function Fixture() {
+  const [confirmation, onConfirmed] = React.useState(null), [challenge, onChallenge] = React.useState(null);
+  return React.createElement('div', { style: {maxWidth:'42rem',margin:'auto',padding:'1rem'} },
+    React.createElement('h1',null,'Synthetic email check'),
+    React.createElement('p',null,'Use 012345. This local fixture does not send email.'),
+    React.createElement(EmailConfirmation,{email:address,confirmEmail:address,draftId:'synthetic',confirmation,onConfirmed,challenge,onChallenge}));
+}
+createRoot(document.getElementById('root')).render(React.createElement(Fixture));
+</script></body></html>

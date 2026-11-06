@@ -40,3 +40,6 @@ Thumbs.db
 .phase1-local-test/
 .vercel/
 .vercel
+
+# On-device OCR engine, copied from node_modules by scripts/copy-ocr-assets.mjs
+public/ocr/

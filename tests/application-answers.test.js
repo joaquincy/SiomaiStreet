@@ -9,7 +9,7 @@ import { loadApplicationDraft, saveApplicationDraft } from '../src/utils/applica
 import { validateUploadRequest } from '../server/directUploads.js';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/applicant.json', import.meta.url), 'utf8'));
-const manifest = REQUIRED_DOC_KEYS.map(key => ({ key, name: `${key}.jpg`, type: 'image/jpeg', size: 100, sha256: '0'.repeat(64) }));
+const manifest = REQUIRED_DOC_KEYS.map((key, index) => ({ key, name: `${key}.jpg`, type: 'image/jpeg', size: 100, sha256: String(index).repeat(64) }));
 const valid = patch => ({ ...structuredClone(fixture), documents: Object.fromEntries(manifest.map(doc => [doc.key, doc])), ...patch });
 const validate = data => validateApplication(data, { documentMetadata: true });
 const request = data => ({ version: 1, requestId: randomUUID(), applicationData: data, manifest });

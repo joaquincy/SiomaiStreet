@@ -13,7 +13,7 @@ import { prepareApplicationChange, requiredChangeDocuments } from '../shared/app
 import { REQUIRED_DOC_KEYS } from '../shared/application.js';
 
 const fixture = JSON.parse(await readFile(new URL('./fixtures/applicant.json', import.meta.url)));
-const migrationFiles = ['20261031010000_contact_inquiries.sql','20261101000000_transactional_outbox.sql','20261104020000_application_privacy_retention.sql','20261104030000_application_followup.sql','20261105000000_followup_evidence_and_staff_access.sql'];
+const migrationFiles = ['20261031010000_contact_inquiries.sql','20261101000000_transactional_outbox.sql','20261104020000_application_privacy_retention.sql','20261104030000_application_followup.sql','20261105000000_followup_evidence_and_staff_access.sql','20261105010000_application_email_confirmation.sql','20261105020000_application_field_corrections.sql'];
 async function setup(t) {
  const env=await uploadDatabase();t.after(()=>env.db.close());
  await env.db.exec('alter table storage.objects add column name text');
@@ -24,6 +24,55 @@ async function setup(t) {
 const stream=(body,token)=>Object.assign(Readable.from(body ? [Buffer.from(JSON.stringify(body))] : []),{method:body?'POST':'GET',headers:{authorization:'Bearer '+token,'content-type':'application/json'},setTimeout(){}});
 const response=()=>({setHeader(){}});
 const clean={status:'clean',engine:'ClamAV',scannedAt:new Date().toISOString()};
+
+test('a reviewer requests only a surname, applicant replies once, and staff verifies the existing ID before accepting', async t => {
+ const { db, request, rpc } = await setup(t);
+ const staff = randomUUID(), id = randomUUID(), itemId = randomUUID(), access = portalAccess('portal'.repeat(10));
+ await db.query('insert into auth.users values($1)', [staff]);
+ await db.query('insert into franchise_document_reviewers values($1,true)', [staff]);
+ const docs = Object.fromEntries(REQUIRED_DOC_KEYS.map(key => [key, { path: id+'/'+key, size: 20, contentType: key === 'idPhoto' ? 'image/png' : 'application/pdf', scan: clean }]));
+ await db.query("insert into franchise_applications(id,applicant_name,applicant_email,status,application_data,document_paths) values($1,'Synthetic','test@example.invalid','submitted',$2,$3)", [id,JSON.stringify(fixture),JSON.stringify(docs)]);
+ const row = (await request('/rest/v1/franchise_applications?id=eq.' + id))[0], token = access.receipt(row).accessCode;
+ const staffToken = 'synthetic-staff-token-for-test';
+ const { handler } = createApplicationFollowup({ request, access, rate: async () => true, json: (res,status,value) => Object.assign(res,{status,value}), url:'https://synthetic.invalid', serviceKey:'synthetic', fetcher: async (_url,options) => options.headers.authorization === 'Bearer '+staffToken ? Response.json({id:staff}) : new Response('',{status:401}) });
+ const call = async (body,item,actor=token,isStaff=false,action='field-corrections') => {
+   const res=response(); await handler(stream(body,actor),res,id,action,item,isStaff); return res.value;
+ };
+ const ask = {requestId:itemId,field:'lastName',reason:'Please confirm the surname printed on your ID.',revision:1};
+ await assert.rejects(call(ask,null,token,true));
+ assert.equal((await call(ask,null,staffToken,true)).state,'open');
+ assert.equal((await call(ask,null,staffToken,true)).state,'open');
+ await assert.rejects(call({...ask,field:'status',requestId:randomUUID()},null,staffToken,true), /supports/);
+ await assert.rejects(db.query("update franchise_applications set status='approved' where id=$1",[id]), /corrections/);
+ const reply = {requestId:randomUUID(),revision:1,answerRevision:1,value:'Corrected',note:'I corrected the surname using the ID already on file.'};
+ assert.equal((await call(reply,itemId)).state,'received');
+ assert.equal((await call(reply,itemId)).changeId,reply.requestId);
+ await assert.rejects(call({...reply,value:'Other'},itemId), /differs/);
+ const before=(await request('/rest/v1/franchise_applications?id=eq.'+id))[0];
+ assert.equal(before.application_data.lastName,fixture.lastName);
+ const change=(await request('/rest/v1/franchise_answer_changes?id=eq.'+reply.requestId))[0];
+ assert.deepEqual(change.required_documents,[]);
+ const close={requestId:randomUUID(),revision:2,decision:'resolved',note:'Matched against the existing document.'};
+ await assert.rejects(call(close,itemId,staffToken,true), /unavailable/);
+ const review={revision:1,decision:'accepted',note:'Reviewed the ID already on file.',verification:{identityChecked:true,method:'Compared the issued identity document.'}};
+ await call(review,reply.requestId,staffToken,true,'changes');
+ assert.equal((await call(close,itemId,staffToken,true)).state,'resolved');
+ const after=(await request('/rest/v1/franchise_applications?id=eq.'+id))[0];
+ assert.equal(after.application_data.lastName,'Corrected');assert.equal(after.application_data.targetCity,fixture.targetCity);
+ assert.deepEqual(after.document_paths,docs);
+ await assert.rejects(db.query("update franchise_applications set document_paths=jsonb_set(jsonb_set(document_paths,'{govIdFront,sha256}',to_jsonb($2::text)),'{govIdBack,sha256}',to_jsonb($2::text)) where id=$1",[id,'a'.repeat(64)]), /different files/);
+ await db.exec('set role anon'); await assert.rejects(db.query('select * from franchise_field_request_events'),/permission/); await db.exec('reset role');
+ await db.query("insert into application_email_challenges(id,draft_id,email_hash,code_hash) values($1,$2,$3,$3)",[randomUUID(),id,'c'.repeat(64)]);
+ await db.query('insert into franchise_privacy_officers values($1,true)',[staff]);
+ await db.query("update franchise_applications set submitted_at=now()-interval '300 days',status='declined' where id=$1",[id]);
+ await rpc('review_franchise_retention',{p_application:id,p_officer:staff,p_closed_at:new Date(Date.now()-181*86400000).toISOString()});
+ assert.ok(await rpc('start_franchise_erasure',{p_application:id}));
+ assert.equal((await db.query('select count(*)::int as n from application_email_challenges where draft_id=$1',[id])).rows[0].n,0);
+ // Simulate the existing worker's final record deletion after private objects are removed.
+ await db.query('delete from franchise_applications where id=$1',[id]);
+ assert.equal((await db.query('select count(*)::int as n from franchise_field_requests where application_id=$1',[id])).rows[0].n,0);
+ assert.equal((await db.query('select count(*)::int as n from franchise_field_request_events where application_id=$1',[id])).rows[0].n,0);
+});
 
 test('document-dependent changes retain current records until checked evidence and staff acceptance; retries and erasure',async t=>{
  const {db,request,rpc}=await setup(t),staff=randomUUID();
@@ -58,7 +107,7 @@ test('document-dependent changes retain current records until checked evidence a
   assert.deepEqual(change.required_documents,category==='identity'?['govIdFront','govIdBack']:['proofOfFunds']);
   const review={revision:1,decision:'accepted',note:'Synthetic reviewer checked these files',verification:{identityChecked:true,method:'Synthetic identity verification'}};
   await assert.rejects(followup.handler(stream(review,'staff-token-long-enough'),response(),id,'changes',changeId,true),/Supporting documents/);
-  const files=Object.fromEntries(change.required_documents.map(k=>[k,new File(['%PDF-1.4\nSynthetic only\n%%EOF'],k+'.pdf',{type:'application/pdf'})]));
+  const files=Object.fromEntries(change.required_documents.map(k=>[k,new File([`%PDF-1.4\nSynthetic only ${k}\n%%EOF`],k+'.pdf',{type:'application/pdf'})]));
   const options={formData:{documents:files},requestId:randomUUID(),changeEvidence:{applicationId:id,id:changeId,accessCode:token},fetcher:uploadFetch,uploader};
   await assert.rejects(submitFranchiseApplication({...options,changeEvidence:{...options.changeEvidence,accessCode:'invalid'}}),/invalid/);
   await assert.rejects(submitFranchiseApplication({...options,changeEvidence:{...options.changeEvidence,id:randomUUID()}}),/no longer/);

@@ -26,6 +26,10 @@ test('all nine steps render synthetic complete and empty/error states without cr
       const markup = renderToStaticMarkup(createElement(ApplicationFeedbackContext.Provider, { value: feedback },
         createElement(Step, { formData, updateField() {}, onEditStep() {}, showErrors: true })));
       assert.match(markup, /step-content/, name);
+      if (name === 'DocumentUpload') {
+        assert.match(markup, /id="doc-govIdFront"/);
+        assert.doesNotMatch(markup, /Didit|Selfie-to-ID|Verify my identity|identity-check|identity-dialog/);
+      }
       if (name === 'LegalConsents') {
         assert.ok(markup.includes(`mailto:${PRIVACY_CONTACT_EMAIL}`));
         assert.match(markup, /180 days after their recorded closure/);
@@ -116,6 +120,24 @@ test('all nine steps render synthetic complete and empty/error states without cr
     assert.doesNotMatch(await renderStep(1, passport), /id="pi-govIdOtherName"/);
   });
   const { FormSelect } = await vite.ssrLoadModule('/src/components/FormElements.jsx');
+  await t.test('email controls expose pending, code-entry, expired and confirmed states without exposing proof', async () => {
+    const { default: EmailConfirmation } = await vite.ssrLoadModule('/src/pages/Application/steps/EmailConfirmation.jsx');
+    const email = 'synthetic@example.invalid';
+    const props = { email, confirmEmail: email, draftId: 'synthetic', onConfirmed() {}, onChallenge() {} };
+    const render = extra => renderToStaticMarkup(createElement(EmailConfirmation, { ...props, ...extra }));
+    assert.match(render(), /Send confirmation code/);
+    assert.match(render({ confirmEmail: 'different@example.invalid' }), /disabled=""/);
+    const challenge = { challengeId: 'synthetic', expiresAt: new Date(Date.now() + 600000).toISOString() };
+    const entry = render({ challenge });
+    assert.match(entry, /inputMode="numeric"|inputmode="numeric"/);
+    assert.match(entry, /autoComplete="one-time-code"|autocomplete="one-time-code"/);
+    assert.match(entry, /for="application-email-code"/);
+    assert.match(entry, /aria-describedby="application-email-code-hint"/);
+    assert.match(render({ challenge: { ...challenge, expiresAt: '2000-01-01T00:00:00Z' } }), /This code expired/);
+    const confirmed = render({ confirmation: { email, proof: 'NEVER_RENDER_PROOF', expiresAt: challenge.expiresAt } });
+    assert.match(confirmed, /Email confirmed/);
+    assert.doesNotMatch(confirmed, /NEVER_RENDER_PROOF|Send confirmation code/);
+  });
   const select = renderToStaticMarkup(createElement(FormSelect, { id: 'test-select', options: ['One', 'Two'], ariaLabel: 'Synthetic selection', onChange() {} }));
   assert.match(select, /role="combobox"/);
   assert.match(select, /aria-expanded="false"/);

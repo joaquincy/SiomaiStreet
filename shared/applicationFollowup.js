@@ -6,7 +6,7 @@ export const CHANGE_GROUPS = {
   contact: { label: 'Phone and contact preference', fields: ['primaryPhone', 'secondaryPhone', 'preferredContactMethod'], immediate: true },
   plan: { label: 'Location, package and opening plans', fields: ['selectedPackage', 'targetRegion', 'targetCity', 'hasSpecificLocation', 'siteTypes', 'openToAlternative', 'planOpeningTimeline', 'multipleUnits', 'additionalPlanDetails'] },
   funding: { label: 'Funding plans', fields: ['totalLiquidCapital', 'fundingStatus', 'pendingFundingDetails', 'investmentSources', 'fundsEvidenceType', 'fundsEvidenceDetails'] },
-  identity: { label: 'Name and identity details', fields: ['firstName', 'middleName', 'lastName', 'dateOfBirth', 'citizenship', 'address', 'govIdType', 'govIdOtherName', 'govIdOtherIssuer', 'govIdNumber', 'maritalStatus'], verification: true },
+  identity: { label: 'Name and identity details', fields: ['firstName', 'middleName', 'lastName', 'dateOfBirth', 'citizenship', 'address', 'govIdType', 'govIdOtherName', 'govIdOtherIssuer', 'govIdNumber', 'govIdReviewReason', 'maritalStatus'], verification: true },
   coApplicant: { label: 'Co-applicant', fields: ['hasCoApplicant', 'coApplicant'], verification: true },
   email: { label: 'Registered email', fields: ['email'], verification: true },
 };
@@ -62,6 +62,7 @@ export function prepareApplicationChange(current, group, patch, { pending = fals
     if (errors.length) throw invalid(errors.join('. '));
   }
   const { documents: _omitted, confirmEmail: _confirmation, ...answers } = next;
+  if (current.emailVerification && next.email === current.email) answers.emailVerification = current.emailVerification;
   return answers;
 }
 

@@ -1,7 +1,10 @@
-import { useState } from 'react';
+import { Fragment, useState } from 'react';
 import { BiUser, BiEnvelope, BiGroup, BiHeart } from 'react-icons/bi';
 import { ApplicationField } from '../../../components/ApplicationField';
 import { personalFeedback } from '../../../utils/personalFeedback';
+import { ID_NUMBER_GUIDANCE, hasIssuerFormat } from '../../../../shared/applicationQuality.js';
+import EmailConfirmation from './EmailConfirmation';
+import ApplicationDisclosure from '../../../components/ApplicationDisclosure';
 import './Steps.css';
 
 const sections = [
@@ -30,7 +33,7 @@ const sections = [
 
 const sectionIcons = [BiUser, BiEnvelope, BiGroup];
 
-export default function PersonalInfo({ formData, updateField, showErrors = false }) {
+export default function PersonalInfo({ formData, updateField, showErrors = false, draftId, emailConfirmation, onEmailConfirmed, emailChallenge, onEmailChallenge }) {
   const [touched, setTouched] = useState({});
   const issues = personalFeedback(formData);
 
@@ -42,12 +45,12 @@ export default function PersonalInfo({ formData, updateField, showErrors = false
         id={id}
         label={label}
         required={required}
-        hint={hint}
+        hint={key === 'govIdNumber' ? ID_NUMBER_GUIDANCE[formData.govIdType] || hint : hint}
         type={Array.isArray(type) ? undefined : type}
         options={Array.isArray(type) ? type : undefined}
         autoComplete={autoComplete}
         name={co ? `coApplicant.${key}` : key}
-        maxLength={key === 'govIdOtherName' ? 120 : key === 'govIdOtherIssuer' ? 160 : undefined}
+        maxLength={key === 'govIdNumber' ? 80 : key === 'govIdOtherName' ? 120 : key === 'govIdOtherIssuer' ? 160 : undefined}
         value={co ? formData.coApplicant?.[key] : formData[key]}
         errors={showErrors || touched[id] ? issues.filter((issue) => issue.id === id).map((issue) => issue.message) : []}
         onBlur={() => setTouched((previous) => ({ ...previous, [id]: true }))}
@@ -88,7 +91,13 @@ export default function PersonalInfo({ formData, updateField, showErrors = false
             <div className="pilot-field-grid">{fields.flatMap(field => field[0] === 'govIdType' && formData.govIdType === 'Other' ? [field,
               ['govIdOtherName', 'Other ID name', true, 'text', 'Name the government-issued document. It will be assessed by a reviewer, not accepted automatically.'],
               ['govIdOtherIssuer', 'Other ID issuing authority', true, 'text', 'Name the government office or authority that issued this ID.'],
-            ] : [field]).map((field) => renderField(field))}</div>
+            ] : [field]).map(field => <Fragment key={field[0]}>
+              {renderField(field)}
+              {field[0] === 'confirmEmail' && <EmailConfirmation key={(formData.email || '').trim().toLowerCase()} email={(formData.email || '').trim().toLowerCase()} confirmEmail={formData.confirmEmail} draftId={draftId} confirmation={emailConfirmation} onConfirmed={onEmailConfirmed} challenge={emailChallenge} onChallenge={onEmailChallenge} />}
+            </Fragment>)}</div>
+            {index === 1 && hasIssuerFormat(formData.govIdType) && <ApplicationDisclosure compact title="My printed ID number has a different format">
+              <ApplicationField id="pi-govIdReviewReason" label="Explain the printed format for staff review" hint="Describe the edition or issuing authority. Do not include your private PSN. Format review does not verify identity." maxLength={500} value={formData.govIdReviewReason || ''} errors={showErrors ? issues.filter(issue => issue.id === 'pi-govIdReviewReason').map(issue => issue.message) : []} onChange={value => updateField('govIdReviewReason', value)} />
+            </ApplicationDisclosure>}
           </section>
         );
       })}

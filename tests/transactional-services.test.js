@@ -23,6 +23,18 @@ test('Email uses stable idempotency and fixed minimal content, reporting accepta
   await assert.rejects(send({ eventId: 'event-1', to: 'synthetic@example.test', kind: 'unknown', reference: 'SS-TEST-1' }), { status: 400 });
 });
 
+test('email confirmation sends only the code and safety guidance through the existing sender', async () => {
+  let message;
+  const send = createTransactionalSender({ apiKey: 'synthetic', from: 'sender@example.invalid',
+    fetchImpl: async (_url, options) => { message = JSON.parse(options.body); return Response.json({ id: 'synthetic-provider-id' }); } });
+  await send({ eventId: 'code-synthetic', to: 'applicant@example.invalid', kind: 'email_code', reference: 'synthetic', code: '012345' });
+  assert.deepEqual(message.to, ['applicant@example.invalid']);
+  assert.match(message.text, /012345/);
+  assert.match(message.text, /10 minutes/);
+  assert.doesNotMatch(message.text, /Reference:|private access|document_paths/);
+  await assert.rejects(send({ eventId: 'code-synthetic', to: 'applicant@example.invalid', kind: 'email_code', reference: 'synthetic', code: '12' }), { status: 400 });
+});
+
 test('Provider outages fail closed without exposing provider responses', async () => {
   const fetchImpl = async () => { throw new Error('sensitive provider detail'); };
   await assert.rejects(createTurnstileVerifier({ secret: 'test', hostnames: ['example.test'], fetchImpl })({ token: 'token', action: 'inquiry' }), /temporarily unavailable/);

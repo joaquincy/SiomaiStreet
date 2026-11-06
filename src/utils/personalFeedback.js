@@ -12,6 +12,7 @@ const STEP_MAPPINGS = {
   1: [
     [/other id name|gov id other name/i, 'pi-govIdOtherName'],
     [/other id issuing authority|gov id other issuer/i, 'pi-govIdOtherIssuer'],
+    [/gov id review reason/i, 'pi-govIdReviewReason'],
     [/co-applicant first name/i, 'co-firstName'],
     [/co-applicant last name/i, 'co-lastName'],
     [/co-applicant email/i, 'co-email'],

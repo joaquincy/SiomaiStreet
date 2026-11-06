@@ -8,6 +8,8 @@ import { BiCheck, BiChevronDown, BiEditAlt, BiLockAlt, BiRefresh, BiHistory, BiL
 import { FUNDING_STATUS_OPTIONS, FUNDS_EVIDENCE_OPTIONS, DOCUMENT_POLICY, DOCUMENT_REDACTION_NOTICE } from '../../../shared/documentPolicy.js';
 import { PLAN_TIMELINE_LABELS } from '../../../shared/applicationAnswers.js';
 import './ApplicationFollowup.css';
+import { CORRECTION_FIELDS, FIELD_CORRECTION_STATES } from '../../../shared/fieldCorrections.js';
+import { hasIssuerFormat } from '../../../shared/applicationQuality.js';
 
 const optionLabel = value => [...FUNDING_STATUS_OPTIONS, ...FUNDS_EVIDENCE_OPTIONS].find(option => option.value !== 'other' && option.value === value)?.label || PLAN_TIMELINE_LABELS[value] || ({ 'food-cart': 'Food Cart', kiosk: 'Kiosk', 'casual-dining': 'Casual Dining', 'not-sure': 'Not sure yet', 'personal-savings': 'Personal savings', 'bank-loan': 'Bank loan', 'family-support': 'Family support', 'business-partner': 'Business partner', other: 'Other', email: 'Email', phone: 'Phone', yes: 'Yes', no: 'No', maybe: 'Maybe' }[value]) || value;
 const display = value => Array.isArray(value) ? value.map(optionLabel).join(', ') || 'Not provided' : value && typeof value === 'object' ? Object.entries(value).map(([k, v]) => `${followupLabel(k)}: ${v || 'Not provided'}`).join(' · ') : optionLabel(value) || 'Not provided';
@@ -26,6 +28,7 @@ export default function ApplicationFollowup({ reference, accessCode }) {
   const errorSummary = useRef(null);
   const historyDetails = useRef(null);
   const [changeFiles, setChangeFiles] = useState({});
+  const [fieldReplies, setFieldReplies] = useState({});
   useEffect(() => { mounted.current = true; return () => { mounted.current = false; controller.current?.abort(); }; }, []);
   useEffect(() => { if (error) errorSummary.current?.focus(); }, [error]);
   const call = async (path = '', body) => {
@@ -40,6 +43,18 @@ export default function ApplicationFollowup({ reference, accessCode }) {
     if (!receipt.id || !changeStates[receipt.state]) throw new Error('Update receipt could not be confirmed. Retry with the same answers.');
     setPatch({}); setReason(''); setMessage(receipt.state === 'accepted' ? 'Contact details updated.' : 'Change request received. Your current answers remain until accepted.'); await load();
     if (historyDetails.current) { historyDetails.current.open = true; historyDetails.current.querySelector('summary')?.focus(); }
+  };
+  const replyToField = async item => {
+    const reply = fieldReplies[item.id] || {};
+    const body = { revision: item.revision, answerRevision: data.revision, note: reply.note || '', ...(reply.edit ? { value: reply.value ?? item.current } : {}) };
+    const result = await call(`/field-corrections/${item.id}`, { ...body, requestId: idFor({ item: item.id, ...body }) });
+    if (result.id !== item.id || result.state !== 'received') throw new Error('Response receipt could not be confirmed. Retry the same response.');
+    setFieldReplies(previous => { const next = { ...previous }; delete next[item.id]; return next; });
+    setMessage(reply.edit && CORRECTION_FIELDS[item.field] === 'contact'
+      ? 'Response received. Valid phone corrections are saved. Your reviewer will confirm that the requested item is resolved.'
+      : 'Response received. Your other answers are kept. Any proposed change stays with your reviewer until accepted.');
+    await load();
+    if (result.changeId && historyDetails.current) { historyDetails.current.open = true; historyDetails.current.querySelector('summary')?.focus(); }
   };
   const act = async (item, action) => {
     const body = { revision: item.revision, action, note: notes[item.id] || '' }; const result = await call(`/onboarding/${item.id}`, { ...body, requestId: idFor({ item: item.id, ...body }) });
@@ -71,6 +86,7 @@ export default function ApplicationFollowup({ reference, accessCode }) {
   const values = { ...data?.groups[category], ...patch };
   const visibleFields = spec.fields.filter(key =>
     (key !== 'coApplicant' || values.hasCoApplicant === 'yes') &&
+    (key !== 'govIdReviewReason' || hasIssuerFormat(values.govIdType)) &&
     (!['govIdOtherName', 'govIdOtherIssuer'].includes(key) || values.govIdType === 'Other') &&
     (key !== 'pendingFundingDetails' || ['pending', 'partly-pending'].includes(values.fundingStatus)) &&
     (key !== 'fundsEvidenceDetails' || values.fundsEvidenceType === 'other'));
@@ -106,6 +122,29 @@ export default function ApplicationFollowup({ reference, accessCode }) {
     {data && <>
       {data.reassessmentRequired && <p className="portal-error">A material change needs reassessment. Onboarding is paused until your reviewer resolves it.</p>}
       {closed && <p className="followup-feedback">This application is closed. Contact support if a correction is needed.</p>}
+      {!!data.fieldRequests?.length && <section className="followup-panel" aria-labelledby="requested-corrections-title"><div className="followup-panel-body">
+        <h2 id="requested-corrections-title">Requested corrections</h2>
+        <p className="followup-policy">Reply only to the requested item. Your other answers and files stay in place.</p>
+        <ol className="followup-history">{data.fieldRequests.map(item => {
+          const reply = fieldReplies[item.id] || {};
+          const editable = !closed && ['open', 'changes_needed'].includes(item.state);
+          const setReply = patch => setFieldReplies(previous => ({ ...previous, [item.id]: { ...previous[item.id], ...patch } }));
+          return <li key={item.id}><article className="followup-change">
+            <header className="followup-item-heading"><h3>{followupLabel(item.field)}</h3><span className={`followup-state followup-state--${item.state}`}>{FIELD_CORRECTION_STATES[item.state]}</span></header>
+            <p className="followup-reviewer"><strong>Please check</strong>{item.reason}</p>
+            <p className="followup-current"><span>Current answer</span> {item.current || 'Not provided'}</p>
+            {item.reviewNote && <p className="followup-reviewer"><strong>Reviewer feedback</strong>{item.reviewNote}</p>}
+            {item.responseNote && <p><strong>Your received response</strong> {item.responseNote}</p>}
+            {editable && <fieldset disabled={busy} className="portal-followup-fields">
+              <label className="followup-field"><span><input type="checkbox" checked={!!reply.edit} onChange={e => setReply({ edit: e.target.checked, ...(item.field === 'govIdNumber' ? { value: '' } : {}) })} /> Propose a corrected answer</span></label>
+              {reply.edit && <div className="followup-field"><label htmlFor={`field-value-${item.id}`}>Proposed {followupLabel(item.field).toLowerCase()}</label><input id={`field-value-${item.id}`} className="form-input" value={reply.value ?? item.current} maxLength={item.field === 'govIdNumber' ? 80 : 2000} onChange={e => setReply({ value: e.target.value })} /></div>}
+              <div className="followup-field"><label htmlFor={`field-note-${item.id}`}>Your explanation</label><textarea id={`field-note-${item.id}`} className="form-textarea" rows={3} maxLength={1000} value={reply.note || ''} onChange={e => setReply({ note: e.target.value })} aria-describedby={`field-help-${item.id}`} /><small id={`field-help-${item.id}`}>10 to 1,000 characters. You may confirm that the current answer is correct. If evidence is needed, use the secure document request, not this text box.</small></div>
+              <button type="button" className="portal-primary step-nav-continue" disabled={busy || (reply.note || '').trim().length < 10} onClick={() => run(() => replyToField(item))}>{busy ? 'Sending…' : 'Send response for review'}</button>
+            </fieldset>}
+            {item.changeId && <p className="followup-policy">See the linked update and any supporting documents in your change history below. Reviewer confirmation is still required.</p>}
+          </article></li>;
+        })}</ol>
+      </div></section>}
       <details className="followup-panel">
         <summary><span className="followup-summary-icon"><BiEditAlt aria-hidden="true" /></span><span><strong>Update my application details</strong><small>Change an answer without starting again</small></span><BiChevronDown className="followup-chevron" aria-hidden="true" /></summary>
         <div className="followup-panel-body"><form onSubmit={e => { e.preventDefault(); run(sendChange); }}>

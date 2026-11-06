@@ -2,6 +2,8 @@ import { requestTurnstile } from '../../utils/turnstile';
 import { assertRateLimitReady } from '../../utils/rateLimits.js';
 import useRateCooldown from '../../utils/useRateCooldown.js';
 import { validateStep, validateApplication } from '../../../shared/application.js';
+import { DUPLICATE_ID_MESSAGE } from '../../../shared/applicationQuality.js';
+import { documentFingerprint } from '../../utils/documentFingerprint.js';
 import { updateApplicationAnswer, applicationAnswerConflicts } from '../../../shared/applicationAnswers.js';
 import { useState, useEffect, useRef, Fragment } from 'react';
 import { useSearchParams, useNavigate } from 'react-router-dom';
@@ -85,6 +87,9 @@ const ApplicationPage = () => {
     }
     return baseData;
   });
+  // Confirmation proof stays in memory, never in local drafts or document storage.
+  const [emailConfirmation, setEmailConfirmation] = useState(null);
+  const [emailChallenge, setEmailChallenge] = useState(null);
   const [pendingPackageChoice, setPendingPackageChoice] = useState(() =>
     requestedPackage &&
       savedDraft.formData?.selectedPackage &&
@@ -203,6 +208,7 @@ const ApplicationPage = () => {
 
   /* ─── Form helpers ─── */
   const updateField = (field, value) => {
+    if (field === 'email' && value.trim().toLowerCase() !== (formData.email || '').trim().toLowerCase()) { setEmailConfirmation(null); setEmailChallenge(null); }
     setFormData((prev) => updateApplicationAnswer(prev, field, value));
     // Client errors are derived from current answers. Server errors belong to the
     // submitted snapshot and must not reappear after that snapshot is edited.
@@ -235,7 +241,19 @@ const ApplicationPage = () => {
     goToStep(stepIndex, true);
   };
 
-  const handleReturnToReview = () => {
+  const idSidesNeedAttention = async () => {
+    const front = formData.documents?.govIdFront, back = formData.documents?.govIdBack;
+    if (formData.govIdType === 'Passport' || !front || !back || front.size !== back.size) return false;
+    let error;
+    try { if (await documentFingerprint(front) === await documentFingerprint(back)) error = DUPLICATE_ID_MESSAGE; }
+    catch { error = 'The ID sides could not be compared. Reselect the files and try again.'; }
+    if (!error) return false;
+    setCurrentStep(6); setStepErrors([error]);
+    requestAnimationFrame(() => document.getElementById('doc-govIdBack')?.focus());
+    return true;
+  };
+  const handleReturnToReview = async () => {
+    if (currentStep === 6 && await idSidesNeedAttention()) return;
     const currentStepValidation = validateStep(currentStep, formData);
     if (currentStepValidation.length > 0) {
       setAttempted((previous) => ({ ...previous, [currentStep]: true }));
@@ -250,6 +268,7 @@ const ApplicationPage = () => {
     if (submitLock.current || !draftRestored) return;
     setSubmissionError('');
     const finalStep = currentStep === APPLICATION_STEPS.length - 1;
+    if ((currentStep === 6 || finalStep) && await idSidesNeedAttention()) return;
     const allErrors = finalStep
       ? validateApplication(formData)
       : validateStep(currentStep, formData).map((message) => ({ step: currentStep, message }));
@@ -269,8 +288,16 @@ const ApplicationPage = () => {
       goToStep(currentStep + 1);
       return;
     }
+    if (emailConfirmation?.email !== formData.email?.trim().toLowerCase() || !(Date.parse(emailConfirmation?.expiresAt) > Date.now())) {
+      setCurrentStep(1);
+      setReturnToReview(true);
+      setStepErrors(['Confirm your email address below before submitting. Your answers and documents are kept.']);
+      requestAnimationFrame(() => document.getElementById('pi-email-confirmation')?.focus());
+      return;
+    }
 
     // Synchronous lock closes the double-click window before React renders disabled controls.
+    if (submitLock.current) return;
     submitLock.current = true;
     setSubmitting(true);
     const controller = new AbortController();
@@ -280,7 +307,7 @@ const ApplicationPage = () => {
       assertRateLimitReady('/api/franchise-applications/uploads', { method: 'POST' });
       const turnstileToken = await requestTurnstile('application');
       controller.signal.throwIfAborted();
-      const result = await submitFranchiseApplication({ turnstileToken, formData, requestId: requestId.current, signal: controller.signal, onProgress: setTransferStatus });
+      const result = await submitFranchiseApplication({ turnstileToken, formData, emailProof: emailConfirmation.proof, requestId: requestId.current, signal: controller.signal, onProgress: setTransferStatus });
       controller.signal.throwIfAborted();
       setPortalReceipt(result);
       setSubmitted(true);
@@ -290,6 +317,7 @@ const ApplicationPage = () => {
       setSubmissionError(error.message || 'Your application could not be submitted. Please retry.');
       if (Array.isArray(error.validationErrors) && error.validationErrors.length) {
         const firstStep = error.validationErrors[0].step;
+        if (firstStep === 1 && /confirm.*email|email confirmation/i.test(error.validationErrors[0].message)) setEmailConfirmation(null);
         if (
           Number.isInteger(firstStep) &&
           firstStep >= 0 &&
@@ -336,6 +364,7 @@ const ApplicationPage = () => {
       case 1:
         return (
           <PersonalInfo
+            draftId={requestId.current} emailConfirmation={emailConfirmation} emailChallenge={emailChallenge} onEmailChallenge={setEmailChallenge} onEmailConfirmed={confirmation => { setEmailConfirmation(confirmation); setStepErrors([]); setSubmissionError(''); }}
             formData={formData}
             updateField={updateField}
             showErrors={!!attempted[1]}
@@ -350,7 +379,7 @@ const ApplicationPage = () => {
       case 5:
         return <FranchisePlan formData={formData} updateField={updateField} onEditStep={goToStep} />;
       case 6:
-        return <DocumentUpload formData={formData} updateField={updateField} saveStatus={saveStatus} draftId={requestId.current} />;
+        return <DocumentUpload formData={formData} updateField={updateField} saveStatus={saveStatus} />;
       case 7:
         return <LegalConsents formData={formData} updateField={updateField} />;
       case 8:
@@ -382,6 +411,8 @@ const ApplicationPage = () => {
           onRetryCleanup={cleanupDraft}
           onNewApplication={() => {
             requestId.current = crypto.randomUUID();
+            setEmailConfirmation(null);
+            setEmailChallenge(null);
             setFormData({});
             setCurrentStep(0);
             setPortalReceipt(null);
@@ -410,7 +441,7 @@ const ApplicationPage = () => {
       <section className="franchise-banner">
         <img
           className="franchise-banner__bg"
-          src="/images/franchising hero header.png"
+          src="/images/franchising%20hero%20header.png"
           srcSet={getSrcSet('/images/franchising hero header.png', [480, 768, 1024, 1440, 1920])}
           sizes="100vw"
           alt="Siomai Street franchise storefront"
@@ -643,6 +674,9 @@ const ApplicationPage = () => {
                         onClick={(event) => {
                           event.preventDefault();
                           const target = document.getElementById(issue.id);
+                          for (let parent = target?.parentElement; parent; parent = parent.parentElement) {
+                            if (parent.tagName === 'DETAILS') parent.open = true;
+                          }
                           const focusTarget =
                             target?.matches('input, button, textarea, select, [tabindex]')
                               ? target

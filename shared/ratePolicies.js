@@ -2,8 +2,9 @@
 // Limits are never accepted from an HTTP request or client-supplied headers.
 const rule = (limit, windowSeconds = 3600) => Object.freeze({ limit, windowSeconds });
 export const RATE_POLICIES = Object.freeze({
-  'identity-start': rule(5),
-  'identity-status': rule(30),
+  'email-ingress': rule(20, 300),
+  'email-send': rule(5),
+  'email-recipient': rule(5),
   'upload-start-burst': rule(5, 300),
   'upload-start': rule(20),
   'new-application': rule(4),

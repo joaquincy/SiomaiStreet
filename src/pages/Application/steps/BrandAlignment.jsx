@@ -7,6 +7,7 @@ import {
 import './Steps.css';
 import { WordCounter, RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
 import { useApplicationFeedback } from '../../../components/applicationFeedbackContext';
+import { repeatedFiller, ANSWER_QUALITY_MESSAGES } from '../../../../shared/applicationQuality.js';
 
 const BRAND_VALUES = [
   'Excellence',
@@ -21,10 +22,11 @@ const BrandAlignment = ({ formData, updateField }) => {
   const brandValues = formData.brandValues || [];
   const feedback = useApplicationFeedback();
 
-  const whyErrors = feedback.errorsFor('ba-whyInterested');
-  const personalValuesErrors = feedback.errorsFor('ba-personalValues');
+  const withQuality = (id, key) => [...new Set([...feedback.errorsFor(id), ...(repeatedFiller(formData[key]) ? [ANSWER_QUALITY_MESSAGES[key]] : [])])];
+  const whyErrors = withQuality('ba-whyInterested', 'whyInterested');
+  const personalValuesErrors = withQuality('ba-personalValues', 'personalValues');
   const brandValuesErrors = feedback.errorsFor('ba-brandValues');
-  const explanationErrors = feedback.errorsFor('ba-explanation');
+  const explanationErrors = withQuality('ba-explanation', 'brandValuesExplanation');
   const discoveryErrors = feedback.errorsFor('ba-discoveryDay');
 
   const toggleBrandValue = (value) => {
@@ -48,6 +50,7 @@ const BrandAlignment = ({ formData, updateField }) => {
           </h2>
           <p className="step-intro-subtitle">
             Share your <strong>motivation</strong>, <strong>leadership principles</strong>, and how you plan to uphold Siomai Street standards in your community.
+            {' '}Filipino, English and Taglish are welcome. Use your own examples; spelling and grammar are not scored.
           </p>
         </div>
       </header>
@@ -71,6 +74,7 @@ const BrandAlignment = ({ formData, updateField }) => {
             placeholder="Share your motivation and goals (minimum 100 words)..."
             aria-required="true"
             aria-invalid={whyErrors.length > 0}
+            aria-describedby={whyErrors.length ? 'ba-whyInterested-error' : undefined}
             value={formData.whyInterested || ''}
             onChange={(e) => updateField('whyInterested', e.target.value)}
           />
@@ -96,6 +100,7 @@ const BrandAlignment = ({ formData, updateField }) => {
             placeholder="Describe your leadership and business principles (minimum 50 words)..."
             aria-required="true"
             aria-invalid={personalValuesErrors.length > 0}
+            aria-describedby={personalValuesErrors.length ? 'ba-personalValues-error' : undefined}
             value={formData.personalValues || ''}
             onChange={(e) => updateField('personalValues', e.target.value)}
           />
@@ -156,6 +161,7 @@ const BrandAlignment = ({ formData, updateField }) => {
             placeholder="Explain how your 3 selected values guide your operations (minimum 100 words)..."
             aria-required="true"
             aria-invalid={explanationErrors.length > 0}
+            aria-describedby={explanationErrors.length ? 'ba-explanation-error' : undefined}
             value={formData.brandValuesExplanation || ''}
             onChange={(e) => updateField('brandValuesExplanation', e.target.value)}
           />

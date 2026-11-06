@@ -9,13 +9,14 @@ import { documentManifest, submitFranchiseApplication } from '../src/api/directU
 import { REQUIRED_DOC_KEYS } from '../shared/application.js';
 import { uploadDatabase } from './helpers/uploadDatabase.js';
 import { createSharedApplicationRateLimit } from '../server/applicationSecurity.js';
+import { createApplicationEmail } from '../server/applicationEmail.js';
 
 let database;
-before(async () => { database = await uploadDatabase(); });
+before(async () => { database = await uploadDatabase(); await database.db.exec(await readFile(new URL('../supabase/migrations/20261105010000_application_email_confirmation.sql', import.meta.url), 'utf8')); });
 after(async () => { await database?.db.close(); });
 const fixture = JSON.parse(await readFile(new URL('./fixtures/applicant.json', import.meta.url), 'utf8'));
 const png = Buffer.from('iVBORw0KGgoAAAANSUhEUgAAACAAAAAgCAIAAAD8GO2jAAAACXBIWXMAAAPoAAAD6AG1e1JrAAAAMklEQVRIie3QMQ0AAAjAMPxrQxQSdvG1BpZs9tkIFIuSRcmiZFGyKFmULEoWJYvS+6IDceSQiMhl3nAAAAAASUVORK5CYII=', 'base64');
-const valid = () => ({ ...structuredClone(fixture), documents: Object.fromEntries(REQUIRED_DOC_KEYS.map(key => [key, new File([key === 'idPhoto' ? png : '%PDF-1.4\nSYNTHETIC ONLY\n%%EOF'], `${key}.${key === 'idPhoto' ? 'png' : 'pdf'}`, { type: key === 'idPhoto' ? 'image/png' : 'application/pdf' })])) });
+const valid = () => ({ ...structuredClone(fixture), documents: Object.fromEntries(REQUIRED_DOC_KEYS.map(key => [key, new File([key === 'idPhoto' ? png : `%PDF-1.4\nSYNTHETIC ONLY ${key}\n%%EOF`], `${key}.${key === 'idPhoto' ? 'png' : 'pdf'}`, { type: key === 'idPhoto' ? 'image/png' : 'application/pdf' })])) });
 const clean = () => ({ status: 'clean', engine: 'ClamAV', scannedAt: new Date().toISOString() });
 const requestStream = (body, headers = {}) => Object.assign(Readable.from([Buffer.from(body)]), { headers: { 'content-type': 'application/json', ...headers }, setTimeout() {} });
 const res = () => ({ headers: {}, setHeader(name, value) { this.headers[name] = value; } });
@@ -32,6 +33,7 @@ function runtime(overrides = {}) {
     remove: async (bucket, paths) => paths.forEach(path => objects.delete(`${bucket}/${path}`)),
   };
   const handler = createDirectUploadHandler({ repository, storage, rate: async () => true, verify: async () => {}, verifyStorage: async () => {},
+    emailVerification: { assertProof: async () => ({ synthetic: true }), assertSaved: async () => {} },
     access: uploadSessionAccess('synthetic-only-secret'.repeat(3)), scanDocument: async () => { scans++; return clean(); }, json: (response, status, value) => Object.assign(response, { status, value }), receiptDetails: () => ({}), ...overrides });
   const fetcher = async (url, options) => {
     assert.equal(options.headers['content-type'], 'application/json');
@@ -53,6 +55,44 @@ function runtime(overrides = {}) {
   };
   return { repository, storage, objects, handler, fetcher, uploader, requests, counts: () => ({ uploads, maxActive, scans }) };
 }
+
+test('retired identity proofs are ignored during submission and retries', async () => {
+  const rt = runtime(), formData = valid(), requestId = randomUUID();
+  formData.identityProof = 'expired-provider-proof';
+  formData.identityCheck = { status: 'passed', mode: 'sandbox' };
+  const receipt = await submitFranchiseApplication({ formData, requestId, fetcher: rt.fetcher, uploader: rt.uploader });
+  assert.equal(receipt.id, requestId);
+  const row = (await database.db.query('select application_data from franchise_applications where id=$1', [requestId])).rows[0];
+  assert.equal(row.application_data.identityProof, undefined);
+  assert.equal(row.application_data.identityCheck, undefined);
+  delete formData.identityProof;
+  delete formData.identityCheck;
+  const retry = await submitFranchiseApplication({ formData, requestId, fetcher: rt.fetcher, uploader: rt.uploader });
+  assert.equal(retry.id, receipt.id);
+});
+
+test('public upload rejects fabricated inbox flags and accepts a real one-time proof through receipt and retry', async () => {
+  let delivered;
+  const emailVerification = createApplicationEmail({ env: { APPLICATION_PORTAL_SECRET: 'synthetic-only'.repeat(4), RESEND_API_KEY: 'test', EMAIL_FROM: 'sender@example.invalid' },
+    request: database.request, rate: async () => true, verify: async () => {},
+    send: async job => { delivered = job; return { providerId: randomUUID() }; }, json: (_res,_status,value) => value });
+  const rt = runtime({ emailVerification }), formData = valid(), id = randomUUID(), response = res();
+  formData.emailVerification = { method: 'email_code', challengeId: randomUUID() };
+  const options = { formData, requestId: id, fetcher: rt.fetcher, uploader: rt.uploader };
+  await assert.rejects(submitFranchiseApplication(options), /Confirm your email/);
+  assert.equal(rt.counts().uploads, 0);
+  const call = body => emailVerification.handler(Object.assign(requestStream(JSON.stringify({draftId:id,email:formData.email,...body})),{method:'POST'}),response);
+  const challenge = await call({action:'send'});
+  const verified = await call({action:'confirm',challengeId:challenge.challengeId,code:delivered.code});
+  const received = await submitFranchiseApplication({...options,emailProof:verified.proof});
+  assert.equal(received.id,id);
+  const retried = await submitFranchiseApplication({...options,emailProof:verified.proof});
+  assert.equal(retried.id, received.id);
+  assert.equal(Date.parse(retried.submittedAt), Date.parse(received.submittedAt));
+  const row = (await database.db.query('select application_data from franchise_applications where id=$1',[id])).rows[0];
+  assert.equal(row.application_data.emailVerification.challengeId,challenge.challengeId);
+  assert.ok(!JSON.stringify(row).includes(verified.proof));
+});
 
 test('8 MiB document uses direct storage; repeat/lost-receipt retry reuses one SQL application', async () => {
   const rt = runtime(); const data = valid(); const requestId = randomUUID(); const progress = [];
@@ -302,10 +342,19 @@ test('replacement uses direct uploads, retains original application and retries 
   const original = runtime(); const id = randomUUID();
   await submitFranchiseApplication({ formData: valid(), requestId: id, fetcher: original.fetcher, uploader: original.uploader });
   const correctionId = (await database.db.query("select request_franchise_document($1,'govIdFront','Synthetic replacement request','synthetic-reviewer') as id", [id])).rows[0].id;
-  const check = async () => (await database.db.query('select * from franchise_corrections where id=$1', [correctionId])).rows[0];
+  const check = async () => {
+    const correction = (await database.db.query('select * from franchise_corrections where id=$1', [correctionId])).rows[0];
+    const application = (await database.db.query('select application_data,document_paths from franchise_applications where id=$1', [id])).rows[0];
+    return { ...correction, govIdType: application.application_data.govIdType,
+      documentFingerprints: Object.fromEntries(['govIdFront','govIdBack'].map(key => [key, application.document_paths[key]?.sha256])) };
+  };
   const rt = runtime({ corrections: { authorize: async req => { assert.equal(req.headers.authorization, 'Bearer private-portal-code'); return check(); }, check } });
   const data = { documents: { govIdFront: valid().documents.govIdFront } }; const retry = randomUUID();
   const send = () => submitFranchiseApplication({ formData: data, requestId: retry, fetcher: rt.fetcher, uploader: rt.uploader, correction: { id: correctionId, applicationId: id, accessCode: 'private-portal-code' } });
+  data.documents.govIdFront = valid().documents.govIdBack;
+  await assert.rejects(send(), /same file as the other side/);
+  assert.equal(rt.counts().uploads, 0);
+  data.documents.govIdFront = valid().documents.govIdFront;
   const receipt = await send(); assert.deepEqual(receipt, { id: correctionId, requestId: retry, status: 'received' });
   const count = rt.counts().uploads; assert.deepEqual(await send(), receipt); assert.equal(rt.counts().uploads, count);
   assert.equal((await database.db.query('select status from franchise_applications where id=$1', [id])).rows[0].status, 'under_review');

@@ -81,7 +81,7 @@ const Hero = () => {
       <section className="hero" id="hero" ref={sectionRef}>
         <div className="hero-bg">
           <img
-            src="/images/Group 1.png"
+            src="/images/Group%201.png"
             srcSet="
               /images/responsive/Group%201-480w.png 480w,
               /images/responsive/Group%201-768w.png 768w,

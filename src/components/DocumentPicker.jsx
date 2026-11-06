@@ -1,7 +1,8 @@
 import { useEffect, useRef, useState, useId } from 'react';
-import { BiCamera, BiCheck, BiCrop, BiFile, BiImage, BiRotateRight, BiShow, BiTrash, BiUpload, BiX, BiZoomIn } from 'react-icons/bi';
+import { BiCamera, BiCheck, BiCrop, BiFile, BiImage, BiRotateRight, BiShow, BiTrash, BiUpload, BiX, BiZoomIn, BiError } from 'react-icons/bi';
 import { documentFormatLabel, documentTypes, MAX_DOCUMENT_BYTES } from '../../shared/application.js';
 import { FULL_CROP, loadDocumentImage, renderDocumentImage } from '../utils/documentImage';
+import { assessDocumentQuality } from '../utils/imageQuality';
 import './DocumentPicker.css';
 
 export default function DocumentPicker({ docKey, label, file, onConfirm, onRemove, onError = () => {}, disabled = false, status = 'Selected on this device · Sent when you submit' }) {
@@ -11,6 +12,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
   const [error,setError]=useState('');const [zoom,setZoom]=useState(100);const [rotation,setRotation]=useState(0);const [crop,setCrop]=useState(FULL_CROP);const [applied,setApplied]=useState(true);
   const [confirmed,setConfirmed]=useState(false);const [dimensions,setDimensions]=useState('');
   const [thumbnail,setThumbnail]=useState('');
+  const [qualityWarnings, setQualityWarnings] = useState([]);
   const previousOverflow=useRef(null);
   const restoreScroll=()=>{if(previousOverflow.current!==null){document.body.style.overflow=previousOverflow.current;previousOverflow.current=null;}};
   const cleanup=()=>{generation.current++;bitmap.current?.close();bitmap.current=null;URL.revokeObjectURL(previewUrl.current);previewUrl.current='';};
@@ -21,12 +23,12 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
     return ()=>URL.revokeObjectURL(url);
   },[file]);
   const publish=file=>{URL.revokeObjectURL(previewUrl.current);previewUrl.current=URL.createObjectURL(file);setPreview(previewUrl.current);setCandidate(file);setConfirmed(false);};
-  const close=()=>{cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;trigger.current?.focus();};
+  const close=()=>{cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;setQualityWarnings([]);trigger.current?.focus();};
   const choose=(ref,e)=>{trigger.current=e.currentTarget;ref.current?.click();};
   const stage=async selected=>{
     if(!selected)return;
     if(busyRef.current)return;
-    cleanup();const ticket=generation.current;setError('');onError('');setRotation(0);setCrop(FULL_CROP);setZoom(100);setApplied(true);setConfirmed(false);setDimensions('');setCandidate(null);setPreview('');
+    cleanup();const ticket=generation.current;setError('');onError('');setRotation(0);setCrop(FULL_CROP);setZoom(100);setApplied(true);setConfirmed(false);setDimensions('');setCandidate(null);setPreview('');setQualityWarnings([]);
     dialog.current?.showModal();
     if(previousOverflow.current===null){previousOverflow.current=document.body.style.overflow;document.body.style.overflow='hidden';}
     setBusy(true);busyRef.current=true;
@@ -40,15 +42,15 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
         const image=await loadDocumentImage(selected);
         if(ticket!==generation.current){image.close();return;}
         bitmap.current=image;
-        const processed=await renderDocumentImage(image);
-        if(ticket===generation.current){publish(new File([processed.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${processed.width} × ${processed.height} pixels`);}
+        const processed=await renderDocumentImage(image, 0, FULL_CROP, { docKey, analyze: assessDocumentQuality });
+        if(ticket===generation.current){publish(new File([processed.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${processed.width} × ${processed.height} pixels`);setQualityWarnings(processed.quality?.issues || []);}
       }
     }catch(e){if(ticket===generation.current){setError(e.message);onError(e.message);}}
     finally {if(ticket===generation.current){setBusy(false);busyRef.current=false;}}
   };
   const apply=async()=>{
     if(busyRef.current || !bitmap.current)return;busyRef.current=true;setBusy(true);setError('');const ticket=generation.current;
-    try{const result=await renderDocumentImage(bitmap.current,rotation,crop);if(ticket===generation.current){publish(new File([result.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${result.width} × ${result.height} pixels`);setApplied(true);}}
+    try{const result=await renderDocumentImage(bitmap.current,rotation,crop,{ docKey, analyze: assessDocumentQuality });if(ticket===generation.current){publish(new File([result.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${result.width} × ${result.height} pixels`);setApplied(true);setQualityWarnings(result.quality?.issues || []);}}
     catch(e){if(ticket===generation.current)setError(e.message);}finally{if(ticket===generation.current){setBusy(false);busyRef.current=false;}}
   };
   const select=e=>{const selected=e.target.files?.[0];e.target.value='';stage(selected);};
@@ -82,6 +84,11 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
               <label className="document-zoom"><BiZoomIn aria-hidden="true"/><span>Zoom</span><input aria-label="Preview zoom" type="range" min="100" max="300" step="25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/><output>{zoom}%</output></label>
             </>}
             <p className="document-preview-resolution">{dimensions || 'PDF document'} · Preview before confirming</p>
+            {qualityWarnings.length > 0 && <div className="document-quality-warnings" role="status">
+              <div className="document-quality-warnings-header"><BiError aria-hidden="true" /><strong>Photo quality suggestions</strong></div>
+              <ul>{qualityWarnings.map(w => <li key={w.code}>{w.message}</li>)}</ul>
+              <p>These are suggestions only — they do not block submission.</p>
+            </div>}
           </div>
           <aside className="document-editor-controls" aria-label="Document preparation">
             {candidate.type==='application/pdf'?<div className="document-pdf-guidance"><BiFile aria-hidden="true"/><h4>Check every page.</h4><p>If your browser cannot display this PDF, inspect the original file in your document app before confirming it.</p><p>Make sure text is readable and all required details are included.</p></div>:<>
@@ -92,7 +99,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
                 <div className="document-edit-actions"><button type="button" onClick={apply} disabled={applied}>Apply edits</button><button type="button" onClick={()=>{setRotation(0);setCrop(FULL_CROP);setApplied(false);setConfirmed(false);}}>Reset</button></div>
               </fieldset>
               {!applied&&<p className="document-pending-edits" role="status">Apply your edits before confirming. The preview shows the last applied image.</p>}
-              <p className="document-processing-note">Photos are re-encoded as JPG to remove unnecessary metadata and limit size. No automatic readability or authenticity check is performed.</p>
+              <p className="document-processing-note">Photos are re-encoded as JPG to remove metadata and compress the file. An on-device quality check runs in your browser — it is never sent to the server.</p>
             </>}
             <div className="document-replace-actions"><span>Need a clearer copy?</span><button type="button" disabled={busy} onClick={()=>camera.current?.click()}><BiCamera aria-hidden="true"/>Retake photo</button><button type="button" disabled={busy} onClick={()=>upload.current?.click()}><BiUpload aria-hidden="true"/>Choose another file</button></div>
           </aside>

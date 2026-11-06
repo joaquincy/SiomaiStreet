@@ -5,13 +5,23 @@ import { isAcceptedScan } from './documentScanner.js';
 import { createUploadCheckQueue } from './uploadCheckQueue.js';
 import { DOCUMENT_POLICY_VERSION } from '../shared/documentPolicy.js';
 import { ONBOARDING_DOCUMENT_KEY } from '../shared/applicationFollowup.js';
-import { identityService } from './diditIdentity.js';
+import { duplicateIdSides, DUPLICATE_ID_MESSAGE } from '../shared/applicationQuality.js';
 
 const fail = (message, status = 400, extra = {}) => Object.assign(new Error(message), { status, ...extra });
 const canonical = value => Array.isArray(value) ? value.map(canonical) : value && typeof value === 'object'
   ? Object.fromEntries(Object.keys(value).sort().map(key => [key, canonical(value[key])])) : value;
 const sha256 = bytes => createHash('sha256').update(bytes).digest('hex');
 export const documentPath = (session, key) => `direct/${session}/${key}`;
+
+function checkReplacementSides(correction, manifest) {
+  if (!correction || correction.govIdType === 'Passport') return;
+  const item = manifest.find(entry => ['govIdFront', 'govIdBack'].includes(entry.key));
+  if (!item) return;
+  const otherKey = item.key === 'govIdFront' ? 'govIdBack' : 'govIdFront';
+  if (item.sha256 === correction.documentFingerprints?.[otherKey]) {
+    throw fail('This replacement is the same file as the other side of your ID. Choose the requested side. Your existing documents are kept.', 422);
+  }
+}
 
 export async function readUploadJson(req, maxBytes = 350000) {
   const length = req.headers['content-length'];
@@ -54,10 +64,6 @@ export function validateUploadRequest(body) {
   const validationErrors = validateApplication({ ...body.applicationData, documents }, { documentMetadata: true });
   if (validationErrors.length) throw fail('Please correct the application fields listed below.', 422, { validationErrors });
   const data = sanitizeApplication(body.applicationData);
-  if (data.identityProof) {
-    data.identityCheck = identityService().summary(data.identityProof, body.requestId, data);
-    delete data.identityProof;
-  }
   data.documentPolicyVersion = DOCUMENT_POLICY_VERSION;
   delete data.documents;
   data.email = data.email.trim().toLowerCase();
@@ -90,7 +96,7 @@ export function assertDocumentBytes(bytes, item) {
 }
 
 // All paths come from a server-created session. Client paths and scan flags are ignored.
-export function createDirectUploadHandler({ repository, storage, rate, verify, verifyStorage, access, scanDocument, json, receiptDetails, corrections, onboarding, changes, allowUnscanned = false, now = Date.now }) {
+export function createDirectUploadHandler({ repository, storage, rate, verify, verifyStorage, access, scanDocument, json, receiptDetails, corrections, onboarding, changes, emailVerification, allowUnscanned = false, now = Date.now }) {
   const acquireCheck = createUploadCheckQueue();
   const receipt = row => ({ version: CONTRACT_VERSION, id: row.id, status: 'submitted', submittedAt: row.submitted_at, ...receiptDetails(row) });
   const expired = row => Date.parse(row.expires_at) <= now();
@@ -111,6 +117,7 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
         if (body.version !== CONTRACT_VERSION || !UUID_PATTERN.test(body.requestId)) throw fail('Invalid supporting-document request.');
         manifest = validateManifest(body.manifest);
         if (manifest.length !== change.required_documents.length || manifest.some(item => !change.required_documents.includes(item.key))) throw fail('Select all and only the supporting documents listed for this change.', 422);
+        if (duplicateIdSides(change.proposed_values || {}, Object.fromEntries(manifest.map(item => [item.key, item.sha256])))) throw fail(DUPLICATE_ID_MESSAGE, 422);
         data = {};
         hash = sha256(JSON.stringify(canonical({ transport: 'change-evidence-v1', change: change.id, retry: body.requestId, manifest })));
         if (change.evidence_request_id) {
@@ -136,7 +143,12 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
           if (correction.request_id !== body.requestId || correction.request_hash !== hash) throw fail('This replacement request was already completed. Refresh the status.', 409);
           return json(res, 200, { receipt: { id: correction.id, requestId: body.requestId, status: 'received' } });
         }
+        checkReplacementSides(correction, manifest);
       } else ({ data, manifest, hash } = validateUploadRequest(body));
+      if (!correction && !requirement && !change) {
+        if (!emailVerification) throw fail('Email confirmation is not configured.', 503);
+        data.emailVerification = await emailVerification.assertProof({ requestId: applicationId, email: data.email, proof: body.emailProof });
+      }
       const existing = !correction && !requirement && !change && await repository.application(applicationId);
       if (existing) {
         if (existing.request_hash !== hash) throw fail('This application was already submitted with different answers. Use your original receipt to request a correction.', 409);
@@ -148,6 +160,8 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
         row = change ? await repository.prepareChange(applicationId, change.id, body.requestId, hash, manifest)
           : requirement ? await repository.prepareOnboarding(applicationId, requirement.id, body.onboardingRevision, body.requestId, hash, manifest)
           : await repository.prepare(applicationId, hash, data, manifest, correction?.id, correction ? body.requestId : undefined);
+      } else if (!correction && !requirement && !change) {
+        await repository.refreshEmail(row.id, data.emailVerification);
       }
       return json(res, 200, { sessionId: row.id, token: access.token(row), expiresAt: row.expires_at });
     }
@@ -155,7 +169,7 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
     const row = await repository.session(sessionId);
     const supplied = req.headers.authorization?.replace(/^Bearer /, '');
     if (!row || !access.verify(row, supplied)) throw fail('Upload permission is invalid. Retry from your saved application.', 403);
-    if (row.correction_id) await corrections.check(row.application_id, row.correction_id);
+    const currentCorrection = row.correction_id ? await corrections.check(row.application_id, row.correction_id) : null;
     if (row.onboarding_item_id) await onboarding.check(row.application_id, row.onboarding_item_id);
     if (row.answer_change_id) await changes.check(row.application_id, row.answer_change_id);
     if (expired(row)) throw fail('The upload session expired. Your draft is safe; submit again to start a new session.', 410);
@@ -167,13 +181,16 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
         return json(res, 200, receipt(existing));
       }
       const items = await repository.items(sessionId);
+      if (currentCorrection?.status !== 'received') checkReplacementSides(currentCorrection, items.map(item => ({ key: item.document_key, sha256: item.sha256 })));
       if (!row.correction_id && !row.onboarding_item_id && !row.answer_change_id) {
         // Pending sessions may have been created before the current validation rules.
         // Recheck before committing; already received applications above retain their receipt.
         const savedAnswers = await repository.answers(sessionId);
         if (!savedAnswers?.application_data) throw fail('Application answers could not be confirmed. Keep your draft and retry.', 503);
         const data = savedAnswers.application_data;
-        const documents = Object.fromEntries(items.map(item => [item.document_key, { size: Number(item.size), type: item.content_type }]));
+        if (!emailVerification) throw fail('Email confirmation is not configured.', 503);
+        await emailVerification.assertSaved(data.emailVerification, row.application_id, data.email);
+        const documents = Object.fromEntries(items.map(item => [item.document_key, { size: Number(item.size), type: item.content_type, sha256: item.sha256 }]));
         const validationErrors = validateApplication({ ...data, documents }, { documentMetadata: true });
         if (validationErrors.length) throw fail('Please review your current application answers before submitting again.', 422, { validationErrors });
         if (data.hasCoApplicant !== 'yes' && Object.hasOwn(data, 'coApplicant')) {
@@ -181,6 +198,7 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
         }
       }
       if (!items.length || items.some(item => item.state !== 'ready' || !isAcceptedScan(item.verified_document?.scan, allowUnscanned))) throw fail('Some documents still need checking. Retry this application to finish checking them.', 409);
+      if (row.answer_change_id && duplicateIdSides({}, Object.fromEntries(items.map(item => [item.document_key, item.sha256])))) throw fail(DUPLICATE_ID_MESSAGE, 422);
       // The RPC repeats checks and inserts exactly once within a database transaction.
       const result = row.answer_change_id ? await repository.finalizeChange(sessionId, allowUnscanned) : row.onboarding_item_id ? await repository.finalizeOnboarding(sessionId, allowUnscanned) : await repository.finalize(sessionId, allowUnscanned);
       return json(res, 201, row.correction_id || row.onboarding_item_id || row.answer_change_id ? result : receipt(result));
@@ -232,7 +250,7 @@ export function createDirectUploadHandler({ repository, storage, rate, verify, v
       const finalScan = normalized === original ? scan : await measure('rescan', () => scanDocument(normalized));
       if (!isAcceptedScan(finalScan, allowUnscanned)) throw fail('The processed document did not pass security scanning. Please retry.', ['rejected', 'infected'].includes(finalScan?.status) ? 422 : 503);
       await measure('promote', () => storage.promote(path, normalized));
-      const document = { path, name: normalized.name, contentType: normalized.type, size: normalized.size, scan: finalScan };
+      const document = { path, name: normalized.name, contentType: normalized.type, size: normalized.size, ...(['govIdFront', 'govIdBack'].includes(key) ? { sha256: item.sha256 } : {}), scan: finalScan };
       if (!await measure('finish', () => repository.finish(sessionId, key, lease, document))) throw fail('The document check expired. Keep your draft and retry.', 409);
       return json(res, 200, { state: 'ready' });
     } catch (error) {
