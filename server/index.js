@@ -157,7 +157,16 @@ const handleBranchesGet = async (_req, res) => {
 };
 
 const handleReviewPost = async (req, res) => {
+  res.setHeader('Connection', 'close');
   if (!await applicationRate(clientIP(req, trustedProxies), 'review-submit', 8)) return json(res, 429, { error: 'Too many review submissions. Please try again later.' });
+  // Check the header token before reading photo bytes. No unverified fallback.
+  try { await verifyPublic('review')(req); }
+  catch (error) {
+    return json(res, error.status === 400 ? 400 : 503, { error: error.status === 400
+      ? 'Security verification expired or failed. Post your review again to start a fresh check. Your answers have been kept.'
+      : 'Security verification is temporarily unavailable. Your review has not been sent; keep your answers and try again.' });
+  }
+  if (req.aborted || res.destroyed) return;
   const form = await readMultipart(req, { maxBytes: MAX_REVIEW_REQUEST_BYTES });
   const displayName = String(form.get('displayName') || '').trim();
   const reviewText = String(form.get('text') || '').trim();

@@ -1,6 +1,5 @@
 import { useState, useEffect, useRef } from 'react';
-import { rateAwareFetch } from '../../utils/rateLimits.js';
-import { MAX_REVIEW_PHOTO_BYTES, REVIEW_PHOTO_TYPES } from '../../../shared/reviewUpload.js';
+import { submitReview } from '../../api/reviewSubmission.js';
 import { BiCamera, BiChevronDown, BiStoreAlt, BiCheck, BiSearch } from 'react-icons/bi';
 import HelpfulButton from './HelpfulButton';
 import { FaStar, FaStarHalfAlt, FaRegStar } from 'react-icons/fa';
@@ -177,6 +176,9 @@ const ReviewsPage = () => {
   const [form, setForm] = useState({ name: '', text: '', photo: null });
   const [submitted, setSubmitted] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [submitPhase, setSubmitPhase] = useState('');
+  const submissionRef = useRef(null);
+  const successTimer = useRef(null);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
   const [loading, setLoading] = useState(true);
@@ -209,6 +211,8 @@ const ReviewsPage = () => {
   // Revoke all object URLs created during this component's lifetime
   useEffect(() => {
     return () => {
+      submissionRef.current?.abort();
+      clearTimeout(successTimer.current);
       objectUrlsRef.current.forEach((url) => {
         try { URL.revokeObjectURL(url); } catch { /* already revoked */ }
       });
@@ -232,28 +236,26 @@ const ReviewsPage = () => {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
+    if (submissionRef.current) return;
     if (!selectedRating || !selectedBranchId || !form.name.trim() || !form.text.trim()) return;
+    const controller = new AbortController();
+    submissionRef.current = controller;
+    clearTimeout(successTimer.current);
+    setSubmitted(false);
     setSubmitting(true);
     setSubmitError('');
     try {
-      if (form.photo && (form.photo.size > MAX_REVIEW_PHOTO_BYTES || !REVIEW_PHOTO_TYPES.includes(form.photo.type))) throw new Error('Choose a JPG, PNG or WebP review photo up to 3 MiB. Your review text has been kept.');
-      const body = new FormData();
-      body.append('displayName', form.name.trim());
-      body.append('text', form.text.trim());
-      body.append('rating', String(selectedRating));
-      body.append('branchId', selectedBranchId);
-      if (form.photo) body.append('photo', form.photo, form.photo.name);
-      const response = await rateAwareFetch('/api/reviews', { method: 'POST', body });
-      const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || 'Your review could not be submitted.');
+      await submitReview({ ...form, rating: selectedRating, branchId: selectedBranchId, signal: controller.signal, onPhase: setSubmitPhase });
+      if (controller.signal.aborted) return;
       setForm({ name: '', text: '', photo: null });
       setSelectedRating(0);
       setSubmitted(true);
-      setTimeout(() => setSubmitted(false), 5000);
+      successTimer.current = setTimeout(() => setSubmitted(false), 5000);
     } catch (error) {
-      setSubmitError(error.message || 'Your review could not be submitted.');
+      if (!controller.signal.aborted) setSubmitError(error.message || 'Your review could not be submitted.');
     } finally {
-      setSubmitting(false);
+      if (submissionRef.current === controller) submissionRef.current = null;
+      if (!controller.signal.aborted) { setSubmitting(false); setSubmitPhase(''); }
     }
   };
 
@@ -363,7 +365,7 @@ const ReviewsPage = () => {
                     branches={branches}
                     selectedBranchId={selectedBranchId}
                     onSelect={setSelectedBranchId}
-                    disabled={branches.length === 0}
+                    disabled={submitting || branches.length === 0}
                   />
                 </div>
                 <div className="cfb-form-group">
@@ -374,6 +376,7 @@ const ReviewsPage = () => {
                         key={s}
                         type="button"
                         className={`cfb-rating-star ${(hoverRating || selectedRating) >= s ? 'active' : ''}`}
+                        disabled={submitting}
                         onMouseEnter={() => setHoverRating(s)}
                         onMouseLeave={() => setHoverRating(0)}
                         onClick={() => setSelectedRating(s)}
@@ -389,6 +392,8 @@ const ReviewsPage = () => {
                   <label className="cfb-form-label" htmlFor="cfb-display-name">Display Name</label>
                   <input
                     id="cfb-display-name"
+                    disabled={submitting}
+                    maxLength={100}
                     type="text"
                     className="cfb-input"
                     placeholder="e.g. Juan Dela Cruz"
@@ -401,6 +406,8 @@ const ReviewsPage = () => {
                   <label className="cfb-form-label" htmlFor="cfb-review-text">Your Review</label>
                   <textarea
                     id="cfb-review-text"
+                    disabled={submitting}
+                    maxLength={5000}
                     className="cfb-textarea"
                     placeholder="What do you think of the siomai rice? How was the service?"
                     rows={4}
@@ -414,6 +421,7 @@ const ReviewsPage = () => {
                   <span>{form.photo ? form.photo.name : 'Add a photo (Optional · JPG, PNG or WebP · Up to 3 MiB)'}</span>
                   <input
                     id="cfb-photo-input"
+                    disabled={submitting}
                     type="file"
                     accept="image/*"
                     hidden
@@ -421,8 +429,8 @@ const ReviewsPage = () => {
                   />
                 </label>
 
-                <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn" disabled={submitting}>
-                  {submitting ? 'Submitting…' : '✉ Post Feedback'}
+                <button type="submit" className="cfb-submit-btn" id="cfb-post-feedback-btn" disabled={submitting} aria-live="polite">
+                  {submitting ? (submitPhase === 'verifying' ? 'Checking security…' : 'Submitting…') : 'Post Feedback'}
                 </button>
               </form>
             </div>
