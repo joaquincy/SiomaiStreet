@@ -1,10 +1,8 @@
 import { BiCamera, BiChevronDown, BiCrop, BiSearchAlt, BiSun } from 'react-icons/bi';
 
 /**
- * ID framing guide — a visual overlay that shows how to position a document
- * in the camera viewfinder. Uses the device's native camera (no getUserMedia),
- * keeping it lightweight and cross-browser. The frame is a pure CSS/SVG
- * illustration that renders instantly with zero network cost.
+ * Static preparation example. The optional guided camera adds its own frame
+ * over the live preview; the native phone-camera fallback has no site overlay.
  */
 const IdFrameGuide = () => (
   <div className="capture-frame-guide" aria-hidden="true">
@@ -58,7 +56,7 @@ export default function DocumentCaptureGuide() {
         <li><BiCrop aria-hidden="true" /><div><strong>Fill the frame with your ID</strong><p>Hold the camera straight and steady. Keep all four corners inside the dotted guide area.</p></div></li>
         <li><BiSearchAlt aria-hidden="true" /><div><strong>Zoom in before confirming</strong><p>Check names, numbers and fine print. Retake if blurred. For portraits, use a plain white background.</p></div></li>
       </ol>
-      <p className="capture-guide-note">The current application requires both sides of your ID. Changes need owner approval. Include only the evidence requested; a clear photo does not establish authenticity.</p>
+      <p className="capture-guide-note">Upload only the sides requested for your selected ID type. The guided camera shows an alignment frame; the phone-camera fallback uses your device's own controls. A clear photo does not establish authenticity.</p>
     </div>
   </details>;
 }

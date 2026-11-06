@@ -1,0 +1,71 @@
+<!doctype html>
+<html lang="en">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Document capture | Synthetic local QA</title></head>
+<body><main id="root" class="application-page"></main>
+<script type="module">
+import React from 'react';
+import { createRoot } from 'react-dom/client';
+import DocumentPicker from '/src/components/DocumentPicker.jsx';
+import OcrAutofill from '/src/components/OcrAutofill.jsx';
+import '/src/index.css';
+import '/src/pages/Application/ApplicationExperience.css';
+import '/src/pages/Application/steps/Steps.css';
+
+const h = React.createElement;
+async function syntheticPhoto(kind) {
+  const canvas = document.createElement('canvas');
+  canvas.width = 1600; canvas.height = 1000;
+  const c = canvas.getContext('2d');
+  c.fillStyle = kind === 'dark' ? '#151515' : '#ffffff';
+  c.fillRect(0, 0, canvas.width, canvas.height);
+  c.fillStyle = kind === 'dark' ? '#202020' : '#252525';
+  c.font = '48px Arial';
+  const lines = ['SYNTHETIC TEST DOCUMENT', 'NOT A REAL GOVERNMENT ID', 'Surname: DELA CRUZ', 'Given names: JUAN', 'ID number: AB1234567'];
+  for (let i = 0; i < lines.length; i++) c.fillText(lines[i], 90, 140 + 145 * i);
+  const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .9));
+  canvas.width = canvas.height = 0;
+  return new File([blob], `synthetic-${kind}.jpg`, { type: 'image/jpeg' });
+}
+
+function Fixture() {
+  const [file, setFile] = React.useState(null);
+  const [portrait, setPortrait] = React.useState(null);
+  const [error, setError] = React.useState('');
+  const [values, setValues] = React.useState({ firstName: 'Existing', lastName: 'Applicant', middleName: '', govIdNumber: '' });
+  const picker = React.useRef(null);
+  const selectSynthetic = async kind => {
+    try {
+      const file = await syntheticPhoto(kind);
+      const transfer = new DataTransfer(); transfer.items.add(file);
+      const input = picker.current.querySelector('input[type=file][accept="image/*"]:not([capture])');
+      input.files = transfer.files;
+      input.dispatchEvent(new Event('change', { bubbles: true }));
+    } catch (e) { setError(e.message); }
+  };
+  return h('div', { style: { maxWidth: '52rem', margin: 'auto', padding: '1rem' } },
+    h('h1', null, 'Document capture: local QA'),
+    h('p', null, 'Synthetic testing only. No submission API, server storage or draft persistence is connected. Do not select real IDs. Reload to clear this page.'),
+    h('ol', null,
+      h('li', null, 'Select a synthetic sample; inspect warnings, crop, rotate, enlarge and confirm.'),
+      h('li', null, 'Retake or replace, then cancel. The previous confirmed file must remain selected.'),
+      h('li', null, 'Try camera permission denied, switch camera, cancel while starting, hide the tab and reopen.'),
+      h('li', null, 'Read from ID, cancel, retry and change the file. Confirm suggestions before existing answers change.'),
+      h('li', null, 'At 320px and 200% zoom, check keyboard focus, modal scrolling and reachable controls.')),
+    h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '.75rem', marginBlock: '1rem' } },
+      h('button', { type: 'button', onClick: () => selectSynthetic('clear') }, 'Select synthetic clear document'),
+      h('button', { type: 'button', onClick: () => selectSynthetic('dark') }, 'Select synthetic dark document')),
+    error && h('p', { role: 'alert' }, error),
+    h('section', { ref: picker, 'aria-label': 'Synthetic document picker' },
+      h('h2', null, 'Government ID front: synthetic test'),
+      h(DocumentPicker, { docKey: 'govIdFront', label: 'Synthetic government ID front', file, onConfirm: setFile, onRemove: () => setFile(null), onError: setError })),
+    file && h(OcrAutofill, { file, formData: values, updateField: (key, value) => setValues(previous => ({ ...previous, [key]: value })) }),
+    h('p', { role: 'status' }, `Confirmed file: ${file?.name || 'none'}. Current name: ${values.firstName} ${values.middleName} ${values.lastName}. ID number: ${values.govIdNumber || 'empty'}.`),
+    h('section', { style: { marginTop: '2rem' } },
+      h('h2', null, 'Portrait context'),
+      h(DocumentPicker, { docKey: 'idPhoto', label: 'Synthetic portrait', file: portrait, onConfirm: setPortrait, onRemove: () => setPortrait(null), onError: setError })));
+}
+
+if (import.meta.env.DEV) createRoot(document.getElementById('root')).render(h(React.StrictMode, null, h(Fixture)));
+else document.getElementById('root').textContent = 'This fixture is available only on the local development server.';
+</script>
+</body></html>

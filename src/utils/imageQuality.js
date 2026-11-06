@@ -1,8 +1,9 @@
 /**
  * On-device photo quality check (brightness, blur, glare, resolution).
  *
- * Runs entirely in the browser on a small grayscale copy (≤ 640 px), so it
- * costs a few milliseconds even on low-end phones and needs no library.
+ * Runs after capture/editing on a small grayscale copy (at most 640 px).
+ * These inexpensive heuristics need no additional library. They cannot prove
+ * readability, the presence of a document, or authenticity.
  * Results are advisory only: they never block submission and are never sent
  * to the server or stored.
  */
@@ -15,7 +16,7 @@ const THRESHOLDS = {
   dark: 60,         // mean luminance (0–255) below this looks underexposed
   bright: 228,      // mean luminance above this looks washed out
   blurry: 35,       // variance of the Laplacian below this looks out of focus
-  glare: 0.07,      // share of near-white pixels that suggests flash glare
+  lowContrast: 18, // near-white paper with visible text must not trigger exposure hints
   minShortEdge: 700 // processed photos smaller than this may be hard to read
 };
 
@@ -24,11 +25,19 @@ const PORTRAIT_KEYS = new Set(['idPhoto']);
 /** Pure analysis of a grayscale buffer (Uint8 luminance values). */
 export function analyzeLuminance(gray, width, height) {
   const total = width * height;
-  if (!total || gray.length < total) throw new Error('Invalid image sample');
-  let sum = 0, bright = 0, dark = 0;
+  if (!Number.isInteger(width) || !Number.isInteger(height) || width < 1 || height < 1 || !gray || gray.length < total) throw new Error('Invalid image sample');
+  let sum = 0, sumSq = 0, bright = 0, dark = 0;
+  // Small spatial grid distinguishes a localized clipped highlight from a
+  // normal white page. Global white-pixel percentage alone is not glare.
+  const gridSize = 8;
+  const tiles = Array.from({ length: gridSize * gridSize }, () => ({ count: 0, sum: 0, bright: 0 }));
   for (let i = 0; i < total; i++) {
     const v = gray[i];
-    sum += v;
+    sum += v; sumSq += v * v;
+    const x = i % width, y = Math.floor(i / width);
+    const tile = tiles[Math.floor(y * gridSize / height) * gridSize + Math.floor(x * gridSize / width)];
+    tile.count++; tile.sum += v;
+    if (v >= 250) tile.bright++;
     if (v >= 250) bright++;
     else if (v <= 20) dark++;
   }
@@ -43,11 +52,26 @@ export function analyzeLuminance(gray, width, height) {
     }
   }
   const lapMean = count ? lapSum / count : 0;
+  let localizedHighlight = false;
+  if (bright / total < .3) {
+    for (let y = 1; y < gridSize - 1 && !localizedHighlight; y++) {
+      for (let x = 1; x < gridSize - 1; x++) {
+        const i = y * gridSize + x, tile = tiles[i];
+        if (!tile.count || tile.bright / tile.count < .8 || tile.sum / tile.count < 247) continue;
+        const neighbors = [tiles[i - 1], tiles[i + 1], tiles[i - gridSize], tiles[i + gridSize]];
+        if (neighbors.filter(t => t.count && t.sum / t.count < 210).length >= 3) {
+          localizedHighlight = true; break;
+        }
+      }
+    }
+  }
   return {
     brightness: sum / total,
+    contrast: Math.sqrt(Math.max(0, sumSq / total - (sum / total) ** 2)),
     sharpness: count ? lapSq / count - lapMean * lapMean : 0,
     glare: bright / total,
     shadow: dark / total,
+    localizedHighlight,
   };
 }
 
@@ -56,10 +80,11 @@ export function qualityIssues(metrics, { docKey, width, height } = {}) {
   const portrait = PORTRAIT_KEYS.has(docKey);
   const issues = [];
   if (metrics.brightness < THRESHOLDS.dark) issues.push({ code: 'dark', message: 'This photo looks too dark. Move to brighter, even light and retake it.' });
-  // Portraits need a white background, so brightness/glare rules would misfire.
-  else if (!portrait && metrics.brightness > THRESHOLDS.bright) issues.push({ code: 'bright', message: 'This photo looks washed out. Avoid direct light or flash and retake it.' });
-  if (metrics.sharpness < THRESHOLDS.blurry) issues.push({ code: 'blurry', message: 'This photo may be blurry. Hold the phone steady, tap to focus and retake it.' });
-  if (!portrait && metrics.glare > THRESHOLDS.glare && metrics.brightness <= THRESHOLDS.bright) issues.push({ code: 'glare', message: 'There may be glare on the document. Tilt it slightly or turn off the flash.' });
+  // A white page with crisp text is expected. Only suggest checking exposure
+  // when a bright sample also lacks contrast and fine detail.
+  else if (!portrait && metrics.brightness > THRESHOLDS.bright && metrics.contrast < THRESHOLDS.lowContrast && metrics.sharpness < THRESHOLDS.blurry) issues.push({ code: 'bright', message: 'Very little detail is visible in this bright photo. Inspect the enlarged preview; if text is washed out, avoid flash and retake it.' });
+  else if (metrics.sharpness < THRESHOLDS.blurry) issues.push({ code: 'blurry', message: 'Fine detail may be hard to read. Inspect the enlarged preview; if text or facial details are blurred, hold steady, tap to focus and retake.' });
+  if (!portrait && metrics.localizedHighlight) issues.push({ code: 'glare', message: 'Check the bright area in the enlarged preview. If a reflection hides details, tilt the document slightly or turn off flash and retake.' });
   if (width && height && Math.min(width, height) < THRESHOLDS.minShortEdge) issues.push({ code: 'small', message: 'This photo is low resolution. Move closer so the document fills the frame.' });
   return issues;
 }

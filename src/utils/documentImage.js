@@ -1,4 +1,5 @@
 import { MAX_DOCUMENT_BYTES } from '../../shared/application.js';
+import { QUALITY_SAMPLE_EDGE } from './imageQuality.js';
 
 export const MAX_CAMERA_BYTES = 40 * 1024 * 1024;
 export const MAX_IMAGE_PIXELS = 24_000_000;
@@ -22,20 +23,38 @@ export async function loadDocumentImage(file) {
 
 const toBlob = (canvas, quality) =>new Promise((resolve,reject)=>canvas.toBlob(blob=>blob ? resolve(blob) : reject(new Error('Your device could not process this photo. Choose a smaller JPG.')), 'image/jpeg', quality));
 
-// Long-edge limits keep text readable while cutting memory use on low-end
-// phones and upload size on mobile data. A 2400 px ID photo is well above
-// what a reviewer needs to read fine print; a 2x2 portrait needs far less.
+// Bound the processing buffers and upload size. Applicants must inspect fine
+// print after compression; resolution alone cannot guarantee readability.
 export const MAX_EDGE = { idPhoto: 1200, default: 2400 };
 // Stop at the first quality that is "small enough" instead of always using
-// the highest quality: typical phone photos land around 300–900 KB.
+// the highest quality. This is a target, not a guaranteed maximum file size.
 const TARGET_BYTES = 1.5 * 1024 * 1024;
 const QUALITY_STEPS = [.85, .78, .7];
+
+// Inspect the encoded JPEG that will actually be submitted. Request a small
+// decoder output so quality hints do not need another full-size pixel buffer.
+// Quality assessment is optional: decoder/analysis failure never loses a file.
+export async function analyzeCompressedImage(blob, width, height, docKey, analyze) {
+  if (!analyze) return null;
+  let decoded;
+  try {
+    const scale = Math.min(1, QUALITY_SAMPLE_EDGE / Math.max(width, height));
+    decoded = await createImageBitmap(blob, {
+      resizeWidth: Math.max(1, Math.round(width * scale)),
+      resizeHeight: Math.max(1, Math.round(height * scale)),
+      resizeQuality: 'high',
+    });
+    return await analyze(decoded, width, height, docKey);
+  } catch { return null; }
+  finally { decoded?.close(); }
+}
 
 export async function renderDocumentImage(bitmap, rotation = 0, crop = FULL_CROP, { docKey, analyze } = {}) {
   const rotated = document.createElement('canvas');
   const output = document.createElement('canvas');
   try {
     const quarter = ((rotation % 360)+360)%360;
+    if (!Number.isFinite(rotation) || ![0, 90, 180, 270].includes(quarter)) throw new Error('Rotate the photo in 90-degree steps.');
     const sideways = quarter === 90 || quarter === 270;
     const maxEdge = MAX_EDGE[docKey] || MAX_EDGE.default;
     const scale = Math.min(1, maxEdge / Math.max(bitmap.width, bitmap.height));
@@ -49,12 +68,16 @@ export async function renderDocumentImage(bitmap, rotation = 0, crop = FULL_CROP
     context.drawImage(bitmap,-bitmap.width*scale/2,-bitmap.height*scale/2,bitmap.width*scale,bitmap.height*scale);
     const rectangle=cropRectangle(rotated.width,rotated.height,crop);
     output.width=rectangle.width;output.height=rectangle.height;
-    output.getContext('2d').drawImage(rotated,rectangle.x,rectangle.y,rectangle.width,rectangle.height,0,0,output.width,output.height);
+    const outputContext = output.getContext('2d');
+    if (!outputContext) throw new Error('Image editing is unavailable on this device. Upload an exported JPG or PDF instead.');
+    outputContext.drawImage(rotated,rectangle.x,rectangle.y,rectangle.width,rectangle.height,0,0,output.width,output.height);
     rotated.width=rotated.height=0; // release the intermediate buffer early on low-memory devices
     let blob;
     for(const quality of QUALITY_STEPS) { blob=await toBlob(output,quality); if(blob.size<=TARGET_BYTES)break; }
     if(blob.size>MAX_DOCUMENT_BYTES)throw new Error('The processed photo is still over 10 MiB. Choose a smaller image without sacrificing readable text.');
-    const quality = analyze ? analyze(output, output.width, output.height) : null;
-    return {file:new File([blob],'document-photo.jpg',{type:'image/jpeg'}),width:output.width,height:output.height,quality};
+    const width = output.width, height = output.height;
+    output.width = output.height = 0;
+    const quality = await analyzeCompressedImage(blob, width, height, docKey, analyze);
+    return {file:new File([blob],'document-photo.jpg',{type:'image/jpeg'}),width,height,quality};
   } finally {rotated.width=rotated.height=output.width=output.height=0;}
 }

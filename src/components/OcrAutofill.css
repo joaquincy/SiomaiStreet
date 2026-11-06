@@ -282,3 +282,24 @@
     transition: none;
   }
 }
+
+/* Confirmation stays legible in a narrow document card. */
+.ocr-autofill .ocr-fields { grid-template-columns: minmax(0, 1fr); }
+.ocr-autofill .ocr-current-answer {
+  display: block; margin-top: var(--space-xs); color: var(--color-text-secondary);
+  overflow-wrap: anywhere; font-size: var(--text-sm);
+}
+.ocr-autofill .ocr-confirmation {
+  display: flex; align-items: flex-start; gap: var(--space-sm);
+  margin-top: var(--space-md); padding-block: var(--space-xs);
+  color: var(--color-text-secondary); font-size: var(--text-sm); line-height: 1.6;
+  cursor: pointer;
+}
+.ocr-confirmation input { flex: none; width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-red-dark); }
+.ocr-autofill button, .ocr-autofill .ocr-field input { min-height: var(--space-2xl); }
+.ocr-autofill .ocr-close { min-width: var(--space-2xl); }
+.ocr-autofill .ocr-results-actions, .ocr-autofill .ocr-error-actions { flex-wrap: wrap; }
+.ocr-autofill.ocr-results { background: var(--color-surface); border-color: var(--color-border); }
+.ocr-autofill .ocr-results-note, .ocr-autofill .ocr-privacy-note, .ocr-autofill .ocr-trigger-hint { color: var(--color-text-secondary); }
+.ocr-autofill .ocr-results-header svg:first-child { color: var(--color-red-dark); }
+.ocr-autofill :focus-visible { outline: solid var(--color-red-dark); outline-offset: var(--radius-xs); }

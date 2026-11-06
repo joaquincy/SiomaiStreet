@@ -1,4 +1,6 @@
 .document-picker { min-width: 0; color: #29241f; font-family: var(--app-font, -apple-system, BlinkMacSystemFont, 'Inter', sans-serif); }
+.document-quality-actions { display: flex; flex-wrap: wrap; gap: var(--space-xs); }
+.document-quality-actions button { flex: 1 1 10rem; }
 .document-picker button { display: inline-flex; align-items: center; justify-content: center; gap: .45rem; min-height: 44px; padding: .65rem .85rem; border: 1px solid #e2dbd1; border-radius: 9px; background: #fff; color: #51483e; cursor: pointer; font: inherit; font-size: .75rem; font-weight: 500; line-height: 1.4; transition: background .15s, border-color .15s; }
 .document-picker button:hover:not(:disabled) { background: #f5f1eb; border-color: #bfb2a0; }
 .document-picker button:disabled { opacity: .5; cursor: not-allowed; }

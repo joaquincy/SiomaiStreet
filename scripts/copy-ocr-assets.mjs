@@ -1,7 +1,7 @@
 /**
  * Copies the on-device OCR engine into public/ocr so it is served from our own
- * domain. Nothing is fetched from a third-party CDN at runtime, and no document
- * image ever leaves the applicant's browser.
+ * domain. OCR analysis uses no third-party CDN or document-processing API.
+ * Confirmed documents are uploaded separately when the application is submitted.
  *
  * Only the LSTM cores are copied (we always run LSTM-only), plus the compact
  * "best_int" English model (~2.9 MB gzipped instead of ~10.9 MB).
@@ -30,8 +30,8 @@ try {
     await copyFile(source, target);
   }
 } catch (error) {
-  // OCR is optional: never break the build. The UI falls back to manual entry
-  // when the engine cannot load.
-  console.warn(`[ocr] Skipped copying OCR assets: ${error.message}`);
+  // public/ocr is ignored in Git. Do not silently deploy missing OCR assets.
+  console.error(`[ocr] Required assets could not be copied: ${error.message}`);
+  process.exitCode = 1;
 }
 

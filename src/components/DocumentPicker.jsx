@@ -3,7 +3,11 @@ import { BiCamera, BiCheck, BiCrop, BiFile, BiImage, BiRotateRight, BiShow, BiTr
 import { documentFormatLabel, documentTypes, MAX_DOCUMENT_BYTES } from '../../shared/application.js';
 import { FULL_CROP, loadDocumentImage, renderDocumentImage } from '../utils/documentImage';
 import { assessDocumentQuality } from '../utils/imageQuality';
+import { lockDocumentScroll } from '../utils/documentScrollLock.js';
 import './DocumentPicker.css';
+
+let cameraModule;
+const loadCamera = () => cameraModule ||= import('./DocumentCamera').catch(error => { cameraModule = null; throw error; });
 
 export default function DocumentPicker({ docKey, label, file, onConfirm, onRemove, onError = () => {}, disabled = false, status = 'Selected on this device · Sent when you submit' }) {
   const id=useId(); const dialog=useRef(null); const camera=useRef(null);const gallery=useRef(null);const upload=useRef(null);
@@ -13,24 +17,44 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
   const [confirmed,setConfirmed]=useState(false);const [dimensions,setDimensions]=useState('');
   const [thumbnail,setThumbnail]=useState('');
   const [qualityWarnings, setQualityWarnings] = useState([]);
-  const previousOverflow=useRef(null);
-  const restoreScroll=()=>{if(previousOverflow.current!==null){document.body.style.overflow=previousOverflow.current;previousOverflow.current=null;}};
+  const [Camera, setCamera] = useState(null);
+  const [cameraOpen, setCameraOpen] = useState(false);
+  const [cameraLoading, setCameraLoading] = useState(false);
+  const [cameraError, setCameraError] = useState('');
+  const cameraRequest = useRef(0);
+  const previewPan = useRef(null);
+  const scrollRelease=useRef(null);
+  const restoreScroll=()=>{scrollRelease.current?.();scrollRelease.current=null;};
   const cleanup=()=>{generation.current++;bitmap.current?.close();bitmap.current=null;URL.revokeObjectURL(previewUrl.current);previewUrl.current='';};
-  useEffect(()=>()=>{cleanup();restoreScroll();},[]);
+  useEffect(()=>()=>{cameraRequest.current++;cleanup();restoreScroll();},[]);
   useEffect(()=>{
     if(!file?.type?.startsWith('image/')){setThumbnail('');return;}
     const url=URL.createObjectURL(file);setThumbnail(url);
     return ()=>URL.revokeObjectURL(url);
   },[file]);
   const publish=file=>{URL.revokeObjectURL(previewUrl.current);previewUrl.current=URL.createObjectURL(file);setPreview(previewUrl.current);setCandidate(file);setConfirmed(false);};
-  const close=()=>{cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;setQualityWarnings([]);trigger.current?.focus();};
+  const close=()=>{cameraRequest.current++;setCameraLoading(false);cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;setQualityWarnings([]);trigger.current?.focus();};
   const choose=(ref,e)=>{trigger.current=e.currentTarget;ref.current?.click();};
+  const openCamera = async e => {
+    trigger.current = e.currentTarget;
+    if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { camera.current?.click(); return; }
+    const ticket = ++cameraRequest.current;
+    setCameraError(''); setCameraLoading(true);
+    let timer;
+    try {
+      const module = await Promise.race([loadCamera(), new Promise((_, reject) => { timer = setTimeout(() => reject(new Error('Camera guide could not load. Choose a photo or file, or retry.')), 12000); })]);
+      if (ticket !== cameraRequest.current) return;
+      setCamera(() => module.default); setCameraOpen(true);
+    } catch { if (ticket === cameraRequest.current) setCameraError('Camera guide could not load. Choose a photo or file, or retry.'); }
+    finally { clearTimeout(timer); if (ticket === cameraRequest.current) setCameraLoading(false); }
+  };
   const stage=async selected=>{
     if(!selected)return;
     if(busyRef.current)return;
+    cameraRequest.current++;setCameraLoading(false);
     cleanup();const ticket=generation.current;setError('');onError('');setRotation(0);setCrop(FULL_CROP);setZoom(100);setApplied(true);setConfirmed(false);setDimensions('');setCandidate(null);setPreview('');setQualityWarnings([]);
     dialog.current?.showModal();
-    if(previousOverflow.current===null){previousOverflow.current=document.body.style.overflow;document.body.style.overflow='hidden';}
+    if(!scrollRelease.current)scrollRelease.current=lockDocumentScroll();
     setBusy(true);busyRef.current=true;
     try {
       if(selected.type==='application/pdf'){
@@ -64,23 +88,26 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
       <div className="document-current-actions"><button type="button" disabled={disabled} aria-label={`Preview ${label}`} onClick={e=>{trigger.current=e.currentTarget;stage(file);}}><BiShow aria-hidden="true"/>Preview / edit</button><button type="button" disabled={disabled} aria-label={`Remove ${label}`} onClick={()=>{onRemove?.();onError('');}}><BiTrash aria-hidden="true"/>Remove</button></div>
     </div>}
     <div className="document-source-actions" role="group" aria-label={`${file?'Replace':'Add'} ${label}`}>
-      <button className="document-camera-button" type="button" disabled={disabled} aria-label={`Take photo for ${label}`} onClick={e=>choose(camera,e)}><BiCamera aria-hidden="true"/><span>Take photo</span><span className="document-action-hint">Use camera</span></button>
+      <button className="document-camera-button" type="button" disabled={disabled||cameraLoading} aria-label={`Take photo for ${label}`} onClick={openCamera}><BiCamera aria-hidden="true"/><span>{cameraLoading?'Opening camera…':'Take photo'}</span><span className="document-action-hint">Use camera</span></button>
       <button type="button" disabled={disabled} aria-label={`Choose photo for ${label}`} onClick={e=>choose(gallery,e)}><BiImage aria-hidden="true"/>Choose photo</button>
       <button type="button" disabled={disabled} aria-label={`Upload file for ${label}`} onClick={e=>choose(upload,e)}><BiUpload aria-hidden="true"/>Upload file</button>
     </div>
     <p className="document-format">{documentFormatLabel(docKey)} <span aria-hidden="true">·</span> Maximum 10 MiB after processing</p>
     <p className="document-fallback">Camera not opening? Choose an existing photo or file.</p>
+    {cameraError&&<p role="alert">{cameraError}</p>}
+    {cameraOpen&&Camera&&<Camera label={label} docKey={docKey} onClose={()=>setCameraOpen(false)} onCapture={photo=>{setCameraOpen(false);stage(photo);}} onChoosePhoto={()=>gallery.current?.click()} onChooseFile={()=>upload.current?.click()} onNativeCamera={()=>camera.current?.click()}/>}
     <dialog ref={dialog} className="document-preview-dialog" aria-labelledby={`${id}-title`} aria-describedby={`${id}-instructions`} onCancel={e=>{e.preventDefault();close();}}>
       <header className="document-preview-header"><div><span className="document-editor-eyebrow">REVIEW YOUR DOCUMENT</span><h3 id={`${id}-title`}>Preview — {label}</h3></div><button className="document-dialog-close" type="button" onClick={close} autoFocus aria-label="Cancel preview"><BiX aria-hidden="true"/></button></header>
       <p className="document-preview-instructions" id={`${id}-instructions`}>{file?'Your previous document stays selected until you confirm this replacement.':'Take a moment to check your document before adding it.'} Check readability and all required edges. A photo is not proof of authenticity.</p>
       {busy&&<p className="document-processing" role="status"><span aria-hidden="true"/>Preparing preview on this device…</p>}
       {error&&<p className="document-preview-error" role="alert">{error}</p>}
+      {cameraError&&<p className="document-preview-error" role="alert">{cameraError}</p>}
       {candidate&&<>
         <div className="document-editor-layout">
           <div className="document-preview-workspace">
             <div className="document-preview-file"><BiFile aria-hidden="true"/><span>{candidate.name}</span><span>{(candidate.size/1024/1024).toFixed(2)} MiB</span></div>
             {candidate.type==='application/pdf'?<iframe title={`PDF preview for ${label}`} src={preview} sandbox="" />:<>
-              <div className="document-preview-pan" tabIndex={0} role="region" aria-label="Photo preview; scroll to inspect enlarged image"><img src={preview} alt={`Selected ${label}; inspect text and edges`} style={{width:`${zoom}%`,maxWidth:'none'}} /></div>
+              <div ref={previewPan} className="document-preview-pan" tabIndex={0} role="region" aria-label="Photo preview; scroll to inspect enlarged image"><img src={preview} alt={`Selected ${label}; inspect text and edges`} style={{width:`${zoom}%`,maxWidth:'none'}} /></div>
               <label className="document-zoom"><BiZoomIn aria-hidden="true"/><span>Zoom</span><input aria-label="Preview zoom" type="range" min="100" max="300" step="25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/><output>{zoom}%</output></label>
             </>}
             <p className="document-preview-resolution">{dimensions || 'PDF document'} · Preview before confirming</p>
@@ -88,6 +115,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
               <div className="document-quality-warnings-header"><BiError aria-hidden="true" /><strong>Photo quality suggestions</strong></div>
               <ul>{qualityWarnings.map(w => <li key={w.code}>{w.message}</li>)}</ul>
               <p>These are suggestions only — they do not block submission.</p>
+              <div className="document-quality-actions"><button type="button" onClick={()=>{setZoom(200);previewPan.current?.focus();}}>Inspect enlarged preview</button><button type="button" disabled={busy||cameraLoading} onClick={openCamera}>Retake photo</button></div>
             </div>}
           </div>
           <aside className="document-editor-controls" aria-label="Document preparation">
@@ -101,7 +129,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
               {!applied&&<p className="document-pending-edits" role="status">Apply your edits before confirming. The preview shows the last applied image.</p>}
               <p className="document-processing-note">Photos are re-encoded as JPG to remove metadata and compress the file. An on-device quality check runs in your browser — it is never sent to the server.</p>
             </>}
-            <div className="document-replace-actions"><span>Need a clearer copy?</span><button type="button" disabled={busy} onClick={()=>camera.current?.click()}><BiCamera aria-hidden="true"/>Retake photo</button><button type="button" disabled={busy} onClick={()=>upload.current?.click()}><BiUpload aria-hidden="true"/>Choose another file</button></div>
+            <div className="document-replace-actions"><span>Need a clearer copy?</span><button type="button" disabled={busy||cameraLoading} onClick={openCamera}><BiCamera aria-hidden="true"/>Retake photo</button><button type="button" disabled={busy} onClick={()=>upload.current?.click()}><BiUpload aria-hidden="true"/>Choose another file</button></div>
           </aside>
         </div>
         <footer className="document-preview-footer">
@@ -109,7 +137,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
           <button className="document-confirm" type="button" disabled={busy||!applied||!confirmed||!!error} onClick={()=>{onConfirm(candidate);onError('');close();}}><BiCheck aria-hidden="true"/>Confirm document</button>
         </footer>
       </>}
-      {!candidate&&!busy&&<div className="document-empty-recovery"><button type="button" onClick={()=>camera.current?.click()}><BiCamera aria-hidden="true"/>Retake photo</button><button type="button" onClick={()=>upload.current?.click()}><BiUpload aria-hidden="true"/>Choose another file</button></div>}
+      {!candidate&&!busy&&<div className="document-empty-recovery"><button type="button" disabled={cameraLoading} onClick={openCamera}><BiCamera aria-hidden="true"/>Retake photo</button><button type="button" onClick={()=>upload.current?.click()}><BiUpload aria-hidden="true"/>Choose another file</button></div>}
     </dialog>
   </div>;
 }

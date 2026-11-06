@@ -1,0 +1,188 @@
+.document-picker .document-camera-dialog {
+  margin: auto;
+  width: min(42rem, calc(100% - var(--space-lg)));
+  max-width: none;
+  max-height: calc(100dvh - var(--space-lg));
+  padding: var(--space-md);
+  overflow: auto;
+  overscroll-behavior: contain;
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-cream);
+  color: var(--color-text-primary);
+  text-align: left;
+  font-family: var(--font-interface);
+}
+
+.document-camera-dialog::backdrop {
+  background: color-mix(in srgb, var(--color-ink) 75%, transparent);
+}
+
+.document-camera-heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-sm);
+}
+
+.document-camera-heading>div {
+  min-width: 0;
+}
+
+.document-camera-heading h3 {
+  font-family: var(--font-heading);
+  font-size: var(--text-xl);
+  line-height: 1.2;
+  margin: var(--space-xs) 0;
+  overflow-wrap: anywhere;
+}
+
+.document-picker .document-camera-heading p {
+  font-size: var(--text-xs);
+  letter-spacing: .08em;
+  color: var(--color-text-secondary);
+  margin: 0;
+}
+
+.document-picker .document-camera-heading button {
+  flex: none;
+  padding: var(--space-sm);
+  border-radius: var(--radius-full);
+}
+
+.document-picker .document-camera-dialog>p {
+  margin: var(--space-sm) 0;
+  color: var(--color-text-secondary);
+  font-size: var(--text-sm);
+}
+
+.document-camera-view {
+  display: grid;
+  position: relative;
+  background: var(--color-ink);
+  border-radius: var(--radius-md);
+  overflow: hidden;
+}
+
+.document-camera-video {
+  position: relative;
+  width: min(100%, calc(42dvh * var(--camera-aspect)));
+  aspect-ratio: var(--camera-aspect);
+  margin-inline: auto;
+}
+
+.document-camera-view video {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+
+.document-camera-guide {
+  pointer-events: none;
+  position: absolute;
+  inset: 50% auto auto 50%;
+  transform: translate(-50%, -50%);
+  width: min(80%, 48dvh);
+  aspect-ratio: 1.58;
+  max-height: 78%;
+  border: medium dashed var(--color-white);
+  border-radius: var(--radius-md);
+  box-shadow: 0 0 0 .0625rem var(--color-ink);
+}
+
+.document-camera-guide.is-portrait {
+  width: min(55%, 22dvh);
+  aspect-ratio: .8;
+  border-radius: var(--radius-full);
+}
+
+.document-picker .document-camera-status {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-items: center;
+  padding: var(--space-lg);
+  margin: 0;
+  color: var(--color-white);
+  text-align: center;
+}
+
+.document-picker .document-camera-error {
+  padding: var(--space-sm);
+  border: thin solid var(--color-border-strong);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-primary);
+  background: var(--color-surface);
+}
+
+.document-camera-actions {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-xs);
+  margin-top: var(--space-md);
+}
+
+.document-picker .document-camera-dialog button {
+  min-height: 3rem;
+  white-space: normal;
+  font-size: var(--text-sm);
+}
+
+.document-picker .document-camera-actions .document-camera-capture {
+  order: -1;
+  color: var(--color-white);
+  background: var(--app-red-dark, var(--color-red-dark));
+  border-color: transparent;
+  font-weight: 600;
+}
+
+.document-picker .document-camera-capture:hover:not(:disabled) {
+  background: var(--app-red-deep, var(--color-ink));
+}
+
+.document-picker .document-camera-dialog button:active:not(:disabled) {
+  transform: translateY(.05rem);
+}
+
+.document-camera-fallbacks {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-xs);
+  padding-top: var(--space-sm);
+  border-top: thin solid var(--color-border);
+}
+
+.document-camera-fallbacks button {
+  flex: 1 1 8rem;
+}
+
+.document-picker .document-camera-note {
+  font-size: var(--text-xs);
+}
+
+.document-camera-dialog :focus-visible {
+  outline: medium solid var(--app-red-deep, var(--color-ink));
+  outline-offset: .2rem;
+}
+
+@media (min-width: 36rem) {
+  .document-picker .document-camera-dialog {
+    padding: var(--space-lg);
+  }
+
+  .document-camera-actions {
+    grid-template-columns: 1fr 1.4fr 1fr;
+  }
+
+  .document-picker .document-camera-actions .document-camera-capture {
+    order: initial;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .document-picker .document-camera-dialog button {
+    transition: none;
+    transform: none;
+  }
+}
