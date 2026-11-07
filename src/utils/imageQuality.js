@@ -17,7 +17,8 @@ const THRESHOLDS = {
   bright: 228,      // mean luminance above this looks washed out
   blurry: 35,       // variance of the Laplacian below this looks out of focus
   lowContrast: 18, // near-white paper with visible text must not trigger exposure hints
-  minShortEdge: 700 // processed photos smaller than this may be hard to read
+  minShortEdge: 700,
+  tinyShortEdge: 360 // even crisp outlines at this size can hide small print
 };
 
 const PORTRAIT_KEYS = new Set(['idPhoto']);
@@ -104,16 +105,16 @@ function cardRegion(pixels, w, h) {
       if (candidate && (!best || candidate.score > best.score)) best = candidate;
     }
   }
-  return best;
+  return { region: best, background };
 }
 
 function inspectIdStructure(gray, width, height) {
   const { pixels, width: w, height: h } = structureSample(gray, width, height);
-  const region = cardRegion(pixels, w, h);
+  const { region, background } = cardRegion(pixels, w, h);
   // Count short contrasting strokes between similar neighbors, inside the
   // candidate when possible. A sharp outer rectangle alone is insufficient.
-  let strokes = 0, observed = 0, light = 0;
-  let outside = 0, outsideLight = 0, outsideStrokes = 0, textBands = 0;
+  let strokes = 0, observed = 0, luminance = 0;
+  let outside = 0, outsideNearBackground = 0, outsideStrokes = 0, textBands = 0;
   for (let y = 2; y < h - 2; y++) {
     for (let x = 2; x < w - 2; x++) {
       let inside = true;
@@ -130,11 +131,11 @@ function inspectIdStructure(gray, width, height) {
       const stroke = Math.max(darkStroke, lightStroke) >= 25;
       if (inside) {
         observed++;
-        if (value > 215) light++;
+        luminance += value;
         if (stroke) strokes++;
       } else {
         outside++;
-        if (value > 215) outsideLight++;
+        if (Math.abs(value - background) <= 24) outsideNearBackground++;
         if (stroke) {
           outsideStrokes++;
           textBands |= 1 << Math.floor(y * 4 / h);
@@ -143,26 +144,27 @@ function inspectIdStructure(gray, width, height) {
     }
   }
   // A headshot or logo inside a full-bleed scan can itself be rectangular.
-  // Sharp lettering on a bright page extending past it makes a move-closer
-  // cue unreliable. Acknowledge that uncertainty and keep manual inspection.
-  if (outside > .35 * w * h && outsideLight / outside > .7 && outsideStrokes / outside > .012
+  // Lettering spread across a uniform surround suggests the rectangle is
+  // inside the document. This works for tinted stock as well as white paper.
+  if (outside > .35 * w * h && outsideNearBackground / outside > .7 && outsideStrokes / outside > .012
       && (textBands & (textBands - 1)) !== 0) {
-    return { region: null, lowDetail: false, lightPage: true };
+    return { region: null, lowDetail: false };
   }
-  return { region, lowDetail: !observed || strokes / observed < .004, lightPage: observed > 0 && light / observed > .65 };
+  return { region, lowDetail: !observed || strokes / observed < .004, regionBrightness: observed ? luminance / observed : null };
 }
 
 export function analyzeDocumentSample(gray, sampleWidth, sampleHeight, { docKey, width, height }) {
   const metrics = analyzeLuminance(gray, sampleWidth, sampleHeight);
-  const issues = qualityIssues(metrics, { docKey, width, height });
-  if (!ID_SIDES.has(docKey)) return { metrics, issues };
-  const { region, lowDetail, lightPage } = inspectIdStructure(gray, sampleWidth, sampleHeight);
-  if (!issues.some(issue => issue.code === 'dark') && metrics.brightness < 105 && lowDetail && metrics.contrast < 40) {
+  const structure = ID_SIDES.has(docKey) ? inspectIdStructure(gray, sampleWidth, sampleHeight) : null;
+  const issues = qualityIssues(metrics, { docKey, width, height, structure });
+  if (!structure) return { metrics, issues };
+  const { region, lowDetail, regionBrightness } = structure;
+  if (!issues.some(issue => issue.code === 'dark') && (regionBrightness ?? metrics.brightness) < 105 && lowDetail && metrics.contrast < 40) {
     issues.unshift({ code: 'dark', message: 'The image looks dim and fine details are hard to distinguish. Move into even light and retake.' });
   }
   if (region?.clipped) issues.push({ code: 'frame-cutoff', message: 'A possible document edge meets the frame. Leave a little space around all four corners.' });
   else if (region && region.area < .18) issues.push({ code: 'frame-small', message: 'The possible document area looks small. Move closer while keeping all four corners visible.' });
-  else if (!region && !(lightPage && !lowDetail)) issues.push({ code: 'frame-unclear', message: 'The ID outline is unclear. Place the whole ID or passport page on a contrasting surface and check all four corners.' });
+  else if (!region && lowDetail) issues.push({ code: 'frame-unclear', message: 'The ID outline is unclear. Place the whole ID or passport page on a contrasting surface and check all four corners.' });
   if (lowDetail && !issues.some(issue => ['bright', 'blurry', 'dark'].includes(issue.code))) {
     issues.push({ code: 'detail', message: 'Fine lettering is hard to distinguish. Hold steady, refocus on the ID and check the enlarged text.' });
   }
@@ -223,16 +225,22 @@ export function analyzeLuminance(gray, width, height) {
 }
 
 /** Turns raw metrics into plain-language, applicant-facing issues. */
-export function qualityIssues(metrics, { docKey, width, height } = {}) {
+export function qualityIssues(metrics, { docKey, width, height, structure } = {}) {
   const portrait = PORTRAIT_KEYS.has(docKey);
   const issues = [];
-  if (metrics.brightness < THRESHOLDS.dark) issues.push({ code: 'dark', message: 'This photo looks too dark. Move to brighter, even light and retake it.' });
+  // A lit card can sit on a dark tabletop, or have dark stock with light
+  // print. Use its brightness when located and seek corroborating loss of detail.
+  const brightness = structure?.region ? structure.regionBrightness ?? metrics.brightness : metrics.brightness;
+  if (brightness < THRESHOLDS.dark && (!structure || structure.lowDetail || metrics.contrast < THRESHOLDS.lowContrast)) issues.push({ code: 'dark', message: 'This photo looks too dark. Move to brighter, even light and retake it.' });
   // A white page with crisp text is expected. Only suggest checking exposure
   // when a bright sample also lacks contrast and fine detail.
   else if (!portrait && metrics.brightness > THRESHOLDS.bright && metrics.contrast < THRESHOLDS.lowContrast && metrics.sharpness < THRESHOLDS.blurry) issues.push({ code: 'bright', message: 'Very little detail is visible in this bright photo. Inspect the enlarged preview; if text is washed out, avoid flash and retake it.' });
   else if (metrics.sharpness < THRESHOLDS.blurry) issues.push({ code: 'blurry', message: 'Fine detail may be hard to read. Inspect the enlarged preview; if text or facial details are blurred, hold steady, tap to focus and retake.' });
   if (!portrait && metrics.localizedHighlight) issues.push({ code: 'glare', message: 'Check the bright area in the enlarged preview. If a reflection hides details, tilt the document slightly or turn off flash and retake.' });
-  if (width && height && Math.min(width, height) < THRESHOLDS.minShortEdge) issues.push({ code: 'small', message: 'This photo is low resolution. Move closer so the document fills the frame.' });
+  const shortEdge = Math.min(width, height);
+  if (shortEdge > 0 && shortEdge < THRESHOLDS.minShortEdge && (shortEdge < THRESHOLDS.tinyShortEdge || !structure || structure.lowDetail)) {
+    issues.push({ code: 'small', message: 'This image has limited resolution. If details are hard to read at full size, choose the original photo or retake it.' });
+  }
   return issues;
 }
 

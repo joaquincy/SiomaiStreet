@@ -12,9 +12,9 @@ const loadCamera = () => cameraModule ||= import('./DocumentCamera').catch(error
 function PhotoFeedback({ quality, applied, busy, cameraLoading, onInspect, onRetake, docKey }) {
   const issues = quality?.issues || [];
   const checking = busy || !applied;
-  const needsAttention = !checking && (!quality || issues.length > 0);
+  const needsAttention = !checking && issues.length > 0;
   const subject = docKey === 'idPhoto' ? 'facial features' : 'required details and edges';
-  let title = 'Photo check complete';
+  let title = 'Ready for your review';
   let hint = `Zoom in to inspect the ${subject} before confirming.`;
   if (checking) {
     title = busy ? 'Checking the edited photo…' : 'Changes awaiting review';
@@ -32,8 +32,8 @@ function PhotoFeedback({ quality, applied, busy, cameraLoading, onInspect, onRet
       {hint && <p>{hint}</p>}
       {!checking && issues.length > 0 && <ul>{issues.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>}
     </div>
-    {needsAttention && <div className="document-quality-actions">
-      <button type="button" disabled={cameraLoading} onClick={onRetake}><BiCamera aria-hidden="true"/>Retake photo</button>
+    {!checking && (needsAttention || !quality) && <div className="document-quality-actions">
+      {needsAttention && <button type="button" disabled={cameraLoading} onClick={onRetake}><BiCamera aria-hidden="true"/>Retake photo</button>}
       <button type="button" onClick={onInspect}><BiZoomIn aria-hidden="true"/>Inspect at 200%</button>
     </div>}
   </section>;

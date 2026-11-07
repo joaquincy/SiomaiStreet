@@ -37,8 +37,9 @@ export function monitorCameraQuality({ readFrame, canRead, onCue }) {
     const cue = liveCameraCue(assessment);
     matches = cue.code === pendingCode ? matches + 1 : 1;
     pendingCode = cue.code;
-    // Require two matching samples before changing or announcing guidance.
-    if (matches >= 2 && cue.code !== lastCode) {
+    // Let autofocus settle before raising a warning. Once the next readable
+    // sample clears it, remove the stale instruction immediately.
+    if ((matches >= 2 || cue.code === 'inspect') && cue.code !== lastCode) {
       lastCode = cue.code;
       onCue(cue);
     }

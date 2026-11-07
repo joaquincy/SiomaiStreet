@@ -11,7 +11,7 @@ test('a person adjusting the camera receives one actionable lighting or framing 
   assert.equal(liveCameraCue(null).code, 'unavailable');
 });
 
-test('feedback changes only after two consistent samples and stops after cleanup', t => {
+test('warnings require two consistent samples, clear on the first clean sample and stop after cleanup', t => {
   t.mock.timers.enable({ apis: ['setTimeout'] });
   let code = 'dark', samples = 0;
   const cues = [];
@@ -25,7 +25,9 @@ test('feedback changes only after two consistent samples and stops after cleanup
   sample(); sample(); assert.deepEqual(cues, ['dark']);
   code = 'blurry'; sample();
   code = 'dark'; sample(); assert.deepEqual(cues, ['dark']);
-  code = ''; sample(); sample(); assert.deepEqual(cues, ['dark', 'inspect']);
+  code = ''; sample(); assert.deepEqual(cues, ['dark', 'inspect']);
+  code = 'blurry'; sample();
+  code = ''; sample(); assert.deepEqual(cues, ['dark', 'inspect']);
   stop();
   const before = samples;
   sample(); assert.equal(samples, before);
