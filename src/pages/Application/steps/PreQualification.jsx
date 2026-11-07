@@ -47,7 +47,9 @@ const PreQualification = ({ formData, updateField, onEditStep }) => {
       {/* Q1: Liquid Capital */}
       {hasCapitalAmount ? <SavedAnswer
         id="pq-liquidCapital"
+        number={1}
         label="Available Liquid Capital"
+        syncLabel="Synced with Step 4"
         value={`₱${parseAmount(formData.totalLiquidCapital).toLocaleString('en-PH')} · ${capitalRangeLabel(formData.liquidCapital)}`}
         editLabel="Review or change amount in Step 4"
         onEdit={() => onEditStep(3)}

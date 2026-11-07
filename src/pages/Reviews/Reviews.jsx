@@ -178,6 +178,7 @@ const ReviewsPage = () => {
   const [submitting, setSubmitting] = useState(false);
   const [submitPhase, setSubmitPhase] = useState('');
   const submissionRef = useRef(null);
+  const submissionIdRef = useRef(crypto.randomUUID());
   const successTimer = useRef(null);
   const [submitError, setSubmitError] = useState('');
   const [loadError, setLoadError] = useState('');
@@ -245,8 +246,16 @@ const ReviewsPage = () => {
     setSubmitting(true);
     setSubmitError('');
     try {
-      await submitReview({ ...form, rating: selectedRating, branchId: selectedBranchId, signal: controller.signal, onPhase: setSubmitPhase });
+      await submitReview({
+        ...form,
+        submissionId: submissionIdRef.current,
+        rating: selectedRating,
+        branchId: selectedBranchId,
+        signal: controller.signal,
+        onPhase: setSubmitPhase,
+      });
       if (controller.signal.aborted) return;
+      submissionIdRef.current = crypto.randomUUID();
       setForm({ name: '', text: '', photo: null });
       setSelectedRating(0);
       setSubmitted(true);

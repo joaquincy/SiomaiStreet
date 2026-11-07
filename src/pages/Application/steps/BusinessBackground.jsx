@@ -361,7 +361,8 @@ const BusinessBackground = ({ formData, updateField, onEditStep }) => {
         </h3>
 
         <SavedAnswer id="bb-priorBusinessOwned" label="Previous business ownership (from Step 1)"
-          value={formData.ownedBusiness === 'yes' ? 'Yes' : formData.ownedBusiness === 'no' ? 'No' : ''}
+          syncLabel="Synced with Step 1"
+          value={formData.ownedBusiness === 'yes' ? 'Yes — Prior Business Owner' : formData.ownedBusiness === 'no' ? 'No — First-Time Business Owner' : ''}
           onEdit={() => onEditStep(0)}>
           <p className="field-help">You have already answered this. Add relevant experience below, or change your answer in Step 1.</p>
           {formData.priorBusinessOwned && formData.ownedBusiness && formData.priorBusinessOwned !== formData.ownedBusiness && <p className="field-help">This older draft also recorded {formData.priorBusinessOwned === 'yes' ? 'Yes' : 'No'} here. Confirm the answer you want to submit in Step 1.</p>}

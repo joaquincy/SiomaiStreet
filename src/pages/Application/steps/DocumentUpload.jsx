@@ -1,7 +1,7 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { documentFingerprint } from '../../../utils/documentFingerprint.js';
 import { duplicateIdSides, DUPLICATE_ID_MESSAGE } from '../../../../shared/applicationQuality.js';
-import { BiFile, BiIdCard, BiMap, BiReceipt, BiUser, BiWallet, BiShield } from 'react-icons/bi';
+import { BiFile, BiIdCard, BiInfoCircle, BiMap, BiReceipt, BiUser, BiWallet, BiShield, BiX } from 'react-icons/bi';
 import './Steps.css';
 import { getApplicationDocuments } from '../../../../shared/application.js';
 import { ApplicationField, RequirementBadge, FieldErrorList } from '../../../components/ApplicationField';
@@ -27,7 +27,7 @@ const DOCUMENT_HINTS = {
   siteProposal: 'Photos, floor plan, or sketch of your proposed branch location.',
 };
 
-const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileSelect, onFileRemove, fileError, onError, saveStatus, children }) => {
+const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileSelect, onFileRemove, fileError, onError, saveStatus, onOpenPolicy, children }) => {
   const feedback = useApplicationFeedback();
   const cardId = 'doc-'+docKey;
   const errors = [...(fileError ? [fileError] : []), ...feedback.errorsFor(cardId)];
@@ -36,10 +36,16 @@ const FileUploadCard = ({ docKey, label, required, deferred, hint, file, onFileS
     <div className={'file-upload-card '+(file?'file-attached':'')}>
       <div className="file-card-top"><div className="file-card-title-group"><span className="document-type-icon"><Icon aria-hidden="true"/></span><h4 className="file-upload-label">{label}</h4></div><RequirementBadge required={required} conditional={deferred ? 'Deferred until verification' : undefined}/></div>
       <p className="file-upload-description">{hint || DOCUMENT_HINTS[docKey]}</p>
-      <ApplicationDisclosure title="Purpose, pages & alternatives" compact>
-        <p><strong>Purpose:</strong> {DOCUMENT_POLICY[docKey].purpose}</p><p><strong>When:</strong> {DOCUMENT_POLICY[docKey].stage}</p>
-        <p><strong>Include:</strong> {DOCUMENT_POLICY[docKey].pages}</p><p><strong>Alternatives:</strong> {DOCUMENT_POLICY[docKey].alternatives}</p>
-      </ApplicationDisclosure>
+      <button
+        type="button"
+        className="document-policy-trigger"
+        aria-haspopup="dialog"
+        aria-label={`Purpose, pages and alternatives for ${label}`}
+        onClick={event => onOpenPolicy(docKey, label, event.currentTarget)}
+      >
+        <BiInfoCircle aria-hidden="true" />
+        <span>Purpose, pages &amp; alternatives</span>
+      </button>
       <DocumentPicker docKey={docKey} label={label} file={file} onConfirm={selected=>onFileSelect(docKey,selected)} onRemove={()=>onFileRemove(docKey)} onError={message=>onError(docKey,message)}
         status={saveStatus==='Saved on this device'?'Selected on this device · Saved in this browser · Submit to upload or retry':saveStatus?.startsWith('Save failed')?'Selected on this device · Save failed; keep this page open · Submit to upload or retry':'Selected on this device · Saving not yet confirmed · Submit to upload or retry'} />
       {children}
@@ -54,6 +60,36 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
   const documents = formData.documents || {};
   const [fileErrors,setFileErrors]=useState({});
   const [idSidesError, setIdSidesError] = useState('');
+  const [activePolicy, setActivePolicy] = useState(null);
+  const policyDialogRef = useRef(null);
+  const policyTriggerRef = useRef(null);
+  const previousOverflowRef = useRef(null);
+
+  const restorePolicyScroll = () => {
+    if (previousOverflowRef.current !== null) {
+      document.body.style.overflow = previousOverflowRef.current;
+      previousOverflowRef.current = null;
+    }
+  };
+
+  const openPolicyModal = (docKey, label, triggerEl) => {
+    policyTriggerRef.current = triggerEl;
+    setActivePolicy({ key: docKey, label });
+    if (previousOverflowRef.current === null) {
+      previousOverflowRef.current = document.body.style.overflow;
+      document.body.style.overflow = 'hidden';
+    }
+    policyDialogRef.current?.showModal();
+  };
+
+  const closePolicyModal = () => {
+    policyDialogRef.current?.close();
+    restorePolicyScroll();
+    setActivePolicy(null);
+    policyTriggerRef.current?.focus();
+  };
+
+  useEffect(() => () => restorePolicyScroll(), []);
   const visibleFileErrors = { ...fileErrors, govIdBack: [fileErrors.govIdBack, idSidesError].filter(Boolean).join(' ') };
   const applicableFileErrors = Object.entries(visibleFileErrors).filter(([key, message]) => message && applicableDocuments.some(doc => doc.key === key));
   const reportError=(key,message)=>setFileErrors(previous=>({...previous,[key]:message}));
@@ -198,6 +234,7 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
                 fileError={visibleFileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
+                onOpenPolicy={openPolicyModal}
               >
                 {doc.key === 'govIdFront' && documents.govIdFront && (
                   <OcrAutofill file={documents.govIdFront} formData={formData} updateField={updateField} />
@@ -227,6 +264,7 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
                 onFileSelect={handleFileSelect}
                 onFileRemove={handleFileRemove}
                 fileError={visibleFileErrors[doc.key]} onError={reportError} saveStatus={saveStatus}
+                onOpenPolicy={openPolicyModal}
               />
             ))}
           </div>
@@ -238,6 +276,66 @@ const DocumentUpload = ({ formData, updateField, saveStatus }) => {
           For proof of funds, a bank certificate is an alternative to a statement. Do not upload extra records unrelated to the requested evidence.
         </p>
       </section>
+
+      <dialog
+        ref={policyDialogRef}
+        className="document-policy-dialog"
+        aria-labelledby="document-policy-dialog-title"
+        onCancel={event => { event.preventDefault(); closePolicyModal(); }}
+        onClick={event => { if (event.target === policyDialogRef.current) closePolicyModal(); }}
+      >
+        {activePolicy && DOCUMENT_POLICY[activePolicy.key] && (() => {
+          const PolicyIcon = DOCUMENT_ICONS[activePolicy.key] || BiFile;
+          const policy = DOCUMENT_POLICY[activePolicy.key];
+          return (
+            <div className="document-policy-dialog__surface">
+              <header className="document-policy-dialog__header">
+                <div className="document-policy-dialog__heading">
+                  <span className="document-policy-dialog__icon" aria-hidden="true">
+                    <PolicyIcon />
+                  </span>
+                  <div>
+                    <span className="document-policy-dialog__eyebrow">DOCUMENT GUIDELINES</span>
+                    <h3 id="document-policy-dialog-title">{activePolicy.label}</h3>
+                  </div>
+                </div>
+                <button
+                  type="button"
+                  className="document-policy-dialog__close"
+                  onClick={closePolicyModal}
+                  aria-label="Close document guidelines"
+                >
+                  <BiX aria-hidden="true" />
+                </button>
+              </header>
+              <dl className="document-policy-dialog__list">
+                <div className="document-policy-dialog__item">
+                  <dt>Purpose</dt>
+                  <dd>{policy.purpose}</dd>
+                </div>
+                <div className="document-policy-dialog__item">
+                  <dt>When needed</dt>
+                  <dd>{policy.stage}</dd>
+                </div>
+                <div className="document-policy-dialog__item">
+                  <dt>Pages to include</dt>
+                  <dd>{policy.pages}</dd>
+                </div>
+                <div className="document-policy-dialog__item">
+                  <dt>Accepted alternatives</dt>
+                  <dd>{policy.alternatives}</dd>
+                </div>
+              </dl>
+              <footer className="document-policy-dialog__footer">
+                <p>You may permanently redact unrelated account numbers or personal details before uploading.</p>
+                <button type="button" className="document-policy-dialog__done" onClick={closePolicyModal}>
+                  Got it
+                </button>
+              </footer>
+            </div>
+          );
+        })()}
+      </dialog>
     </div>
   );
 };

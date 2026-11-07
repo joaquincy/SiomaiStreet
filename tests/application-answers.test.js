@@ -33,7 +33,6 @@ test('every repeated-answer conflict is rejected by shared and direct-upload val
 test('edits from either step update the same answer without losing unrelated answers or files', () => {
   for (const [first, second, value] of [
     ['franchiseType', 'selectedPackage', 'not-sure'],
-    ['territory', 'targetRegion', 'Bicol Region'],
     ['ownedBusiness', 'priorBusinessOwned', 'yes'],
   ]) {
     for (const field of [first, second]) {
@@ -47,6 +46,17 @@ test('edits from either step update the same answer without losing unrelated ans
       assert.deepEqual(validate(next), []);
     }
   }
+  // Choosing different regions in Step 1 (territory) and Step 6 (targetRegion) must block validation until reconciled.
+  const step1Bicol = updateApplicationAnswer({ ...valid(), territory: '', targetRegion: '' }, 'territory', 'Bicol Region');
+  assert.equal(step1Bicol.territory, 'Bicol Region');
+  assert.equal(step1Bicol.targetRegion, 'Bicol Region');
+  const step6Calabarzon = updateApplicationAnswer(step1Bicol, 'targetRegion', 'CALABARZON');
+  assert.equal(step6Calabarzon.territory, 'Bicol Region');
+  assert.equal(step6Calabarzon.targetRegion, 'CALABARZON');
+  assert.ok(validate(step6Calabarzon).some(issue => issue.step === 5));
+  assert.ok(stepFeedback(5, step6Calabarzon).some(issue => issue.id === 'fp-targetRegion'));
+  const reconciled = updateApplicationAnswer(step6Calabarzon, 'targetRegion', 'Bicol Region');
+  assert.deepEqual(validate(reconciled), []);
 });
 
 test('exact capital deterministically updates ranges including every boundary and cents', () => {

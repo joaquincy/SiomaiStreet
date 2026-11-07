@@ -118,18 +118,32 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
     <input hidden ref={camera} type="file" accept="image/*" capture={docKey==='idPhoto'?'user':'environment'} onChange={select} />
     <input hidden ref={gallery} type="file" accept="image/*" onChange={select} />
     <input hidden ref={upload} type="file" accept={documentTypes(docKey).join(',')} onChange={select} />
-    {file&&<div className="document-current">
-      <div className="document-current-file"><span className="document-thumbnail">{thumbnail?<img src={thumbnail} alt=""/>:<BiFile aria-hidden="true"/>}</span><div><strong>{file.name}</strong><span>{(file.size/1024/1024).toFixed(2)} MiB · {file.type==='application/pdf'?'PDF':'Image'}</span></div></div>
-      <p className="document-local-status" role="status">{status}</p>
-      <div className="document-current-actions"><button type="button" disabled={disabled} aria-label={`Preview ${label}`} onClick={e=>{trigger.current=e.currentTarget;stage(file);}}><BiShow aria-hidden="true"/>Preview / edit</button><button type="button" disabled={disabled} aria-label={`Remove ${label}`} onClick={()=>{onRemove?.();onError('');}}><BiTrash aria-hidden="true"/>Remove</button></div>
-    </div>}
-    <div className="document-source-actions" role="group" aria-label={`${file?'Replace':'Add'} ${label}`}>
-      <button className="document-camera-button" type="button" disabled={disabled||cameraLoading} aria-label={`Take photo for ${label}`} onClick={openCamera}><BiCamera aria-hidden="true"/><span>{cameraLoading?'Opening camera…':'Take photo'}</span><span className="document-action-hint">Use camera</span></button>
-      <button type="button" disabled={disabled} aria-label={`Choose photo for ${label}`} onClick={e=>choose(gallery,e)}><BiImage aria-hidden="true"/>Choose photo</button>
-      <button type="button" disabled={disabled} aria-label={`Upload file for ${label}`} onClick={e=>choose(upload,e)}><BiUpload aria-hidden="true"/>Upload file</button>
-    </div>
-    <p className="document-format">{documentFormatLabel(docKey)} <span aria-hidden="true">·</span> Maximum 10 MiB after processing</p>
-    <p className="document-fallback">Camera not opening? Choose an existing photo or file.</p>
+    {file ? <div className="document-current">
+      <div className="document-current-file">
+        <span className="document-thumbnail">{thumbnail?<img src={thumbnail} alt=""/>:<BiFile aria-hidden="true"/>}</span>
+        <div className="document-current-meta">
+          <div className="document-current-title">
+            <strong>{file.name}</strong>
+            <span className="document-current-badge">{(file.size/1024/1024).toFixed(2)} MiB · {file.type==='application/pdf'?'PDF':'Image'}</span>
+          </div>
+          <p className="document-local-status" role="status">{status}</p>
+        </div>
+      </div>
+      <div className="document-current-actions" role="group" aria-label={`Actions for ${label}`}>
+        <button type="button" disabled={disabled} aria-label={`Preview ${label}`} onClick={e=>{trigger.current=e.currentTarget;stage(file);}}><BiShow aria-hidden="true"/>Preview / edit</button>
+        <button type="button" disabled={disabled||cameraLoading} aria-label={`Retake photo for ${label}`} onClick={openCamera}><BiCamera aria-hidden="true"/>{cameraLoading?'Opening…':'Retake'}</button>
+        <button type="button" disabled={disabled} aria-label={`Replace file for ${label}`} onClick={e=>choose(upload,e)}><BiUpload aria-hidden="true"/>Replace</button>
+        <button type="button" className="document-remove-button" disabled={disabled} aria-label={`Remove ${label}`} onClick={()=>{onRemove?.();onError('');}}><BiTrash aria-hidden="true"/>Remove</button>
+      </div>
+    </div> : <>
+      <div className="document-source-actions" role="group" aria-label={`Add ${label}`}>
+        <button className="document-camera-button" type="button" disabled={disabled||cameraLoading} aria-label={`Take photo for ${label}`} onClick={openCamera}><BiCamera aria-hidden="true"/><span>{cameraLoading?'Opening camera…':'Take photo'}</span><span className="document-action-hint">Use camera</span></button>
+        <button type="button" disabled={disabled} aria-label={`Choose photo for ${label}`} onClick={e=>choose(gallery,e)}><BiImage aria-hidden="true"/>Choose photo</button>
+        <button type="button" disabled={disabled} aria-label={`Upload file for ${label}`} onClick={e=>choose(upload,e)}><BiUpload aria-hidden="true"/>Upload file</button>
+      </div>
+      <p className="document-format">{documentFormatLabel(docKey)} <span aria-hidden="true">·</span> Maximum 10 MiB after processing</p>
+      <p className="document-fallback">Camera not opening? Choose an existing photo or file.</p>
+    </>}
     {cameraError&&<p role="alert">{cameraError}</p>}
     {cameraOpen&&Camera&&<Camera label={label} docKey={docKey} onClose={()=>setCameraOpen(false)} onCapture={photo=>{setCameraOpen(false);stage(photo);}} onChoosePhoto={()=>gallery.current?.click()} onChooseFile={()=>upload.current?.click()} onNativeCamera={()=>camera.current?.click()}/>}
     <dialog ref={dialog} className="document-preview-dialog" aria-labelledby={`${id}-title`} aria-describedby={`${id}-instructions`} onCancel={e=>{e.preventDefault();close();}}>

@@ -1,26 +1,26 @@
 /* OCR Autofill — "Read from ID" button and results confirmation */
 .ocr-autofill {
-  margin-top: .85rem;
-  padding-top: .75rem;
-  border-top: 1px solid #e8e1d6;
+  margin-top: .55rem;
+  padding-top: .55rem;
+  border-top: 1px solid #eae4da;
 }
 
 .ocr-trigger {
   display: flex;
   align-items: center;
-  gap: .5rem;
+  gap: .45rem;
   width: 100%;
-  min-height: 44px;
-  padding: .6rem .85rem;
-  border: 1px solid #d1c7b7;
-  border-radius: 9px;
+  min-height: 38px;
+  padding: .45rem .75rem;
+  border: 1px solid #d9d0c1;
+  border-radius: 8px;
   background: #f8f5ef;
   color: #51483e;
   cursor: pointer;
   font: inherit;
   font-size: .75rem;
   font-weight: 500;
-  line-height: 1.4;
+  line-height: 1.35;
   transition: background .15s, border-color .15s;
 }
 
@@ -296,7 +296,7 @@
   cursor: pointer;
 }
 .ocr-confirmation input { flex: none; width: var(--space-lg); height: var(--space-lg); accent-color: var(--color-red-dark); }
-.ocr-autofill button, .ocr-autofill .ocr-field input { min-height: var(--space-2xl); }
+.ocr-results button, .ocr-autofill .ocr-field input { min-height: var(--space-2xl); }
 .ocr-autofill .ocr-close { min-width: var(--space-2xl); }
 .ocr-autofill .ocr-results-actions, .ocr-autofill .ocr-error-actions { flex-wrap: wrap; }
 .ocr-autofill.ocr-results { background: var(--color-surface); border-color: var(--color-border); }

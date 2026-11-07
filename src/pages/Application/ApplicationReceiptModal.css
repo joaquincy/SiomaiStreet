@@ -13,7 +13,11 @@
   overflow: auto;
   overscroll-behavior: contain;
 }
-.receipt-dialog::backdrop { background: rgb(25 17 17 / 65%); }
+
+.receipt-dialog::backdrop {
+  background: rgb(25 17 17 / 65%);
+}
+
 .receipt-dialog-bar {
   position: sticky;
   top: 0;
@@ -28,6 +32,7 @@
   font-size: .875rem;
   font-weight: 600;
 }
+
 .receipt-dialog-bar button {
   display: grid;
   place-items: center;
@@ -40,15 +45,26 @@
   color: var(--app-red-dark);
   font-size: 1.25rem;
 }
-.receipt-dialog-content { padding-bottom: 1.25rem; }
+
+.receipt-dialog-content {
+  padding-bottom: 1.25rem;
+}
+
 .receipt-dialog-reminder {
   padding: 1rem 1.25rem 0;
   font-size: .8125rem;
   line-height: 1.6;
   color: var(--app-text-secondary);
 }
-.receipt-dialog .application-receipt { padding-top: 1rem; }
-.receipt-dialog .receipt-masthead { display: none; }
+
+.receipt-dialog .application-receipt {
+  padding-top: 1rem;
+}
+
+.receipt-dialog .receipt-masthead {
+  display: none;
+}
+
 .receipt-return {
   max-width: 36rem;
   margin: 3rem auto;
@@ -56,9 +72,25 @@
   text-align: center;
   font-family: var(--app-font);
 }
-.receipt-return-check { color: var(--app-red-dark); width: 2.5rem; height: 2.5rem; }
-.receipt-return h1 { font-family: var(--app-font-display); font-size: clamp(2rem, 5vw, 3rem); line-height: 1.15; }
-.receipt-return p { margin: 1rem 0; color: var(--app-text-secondary); line-height: 1.7; }
+
+.receipt-return-check {
+  color: var(--app-red-dark);
+  width: 2.5rem;
+  height: 2.5rem;
+}
+
+.receipt-return h1 {
+  font-family: var(--app-font-display);
+  font-size: clamp(2rem, 5vw, 3rem);
+  line-height: 1.15;
+}
+
+.receipt-return p {
+  margin: 1rem 0;
+  color: var(--app-text-secondary);
+  line-height: 1.7;
+}
+
 .receipt-return button {
   min-height: 3rem;
   padding: .75rem 1.25rem;
@@ -67,12 +99,30 @@
   color: var(--app-canvas);
   font-weight: 600;
 }
-.receipt-return a { display: inline-flex; align-items: center; min-height: 2.75rem; color: var(--app-red-dark); text-decoration: underline; }
-.receipt-dialog button:focus-visible, .receipt-dialog a:focus-visible, .receipt-return button:focus-visible, .receipt-return a:focus-visible {
+
+.receipt-return a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 2.75rem;
+  color: var(--app-red-dark);
+  text-decoration: underline;
+}
+
+.receipt-dialog button:focus-visible,
+.receipt-dialog a:focus-visible,
+.receipt-return button:focus-visible,
+.receipt-return a:focus-visible {
   outline: 2px solid var(--app-red-dark);
   outline-offset: 3px;
 }
-.receipt-dialog-bar button:hover { background: var(--app-border); }
+
+.receipt-dialog-bar button:hover {
+  background: var(--app-border);
+}
+
 @media (min-width: 700px) {
-  .receipt-dialog { width: min(66rem, calc(100% - 3rem)); max-height: calc(100dvh - 3rem); }
+  .receipt-dialog {
+    width: min(66rem, calc(100% - 3rem));
+    max-height: calc(100dvh - 3rem);
+  }
 }

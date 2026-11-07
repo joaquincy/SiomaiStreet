@@ -4,9 +4,14 @@ import { PRIVACY_NOTICE_VERSION } from './privacy.js';
 
 // Linked API fields describe one current answer, not an initial and final preference.
 // Keep the existing keys for the connected reviewer app.
+// Note: territory (Step 1) and targetRegion (Step 6) are validated for consistency
+// rather than silently overwriting each other when changed to different regions.
 const linkedFields = [
   ['ownedBusiness', 'priorBusinessOwned'],
   ['franchiseType', 'selectedPackage'],
+];
+const draftLinkedFields = [
+  ...linkedFields,
   ['territory', 'targetRegion'],
 ];
 
@@ -91,6 +96,8 @@ export function updateApplicationAnswer(previous, field, value) {
   }
   const pair = linkedFields.find(fields => fields.includes(field));
   if (pair) for (const key of pair) next[key] = value;
+  if (field === 'territory' && !previous.targetRegion) next.targetRegion = value;
+  if (field === 'targetRegion' && !previous.territory) next.territory = value;
   if (field === 'totalLiquidCapital') {
     const range = capitalRangeFor(value);
     if (range) next.liquidCapital = range;
@@ -108,7 +115,7 @@ export function updateApplicationAnswer(previous, field, value) {
 // Server validation deliberately does not call this helper: API conflicts must be rejected.
 export function restoreApplicationAnswers(data) {
   const next = { ...data };
-  for (const [first, second] of linkedFields) {
+  for (const [first, second] of draftLinkedFields) {
     if (!next[first] && next[second]) next[first] = next[second];
     if (!next[second] && next[first]) next[second] = next[first];
   }

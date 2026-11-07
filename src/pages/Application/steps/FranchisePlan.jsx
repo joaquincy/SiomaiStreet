@@ -138,13 +138,50 @@ const FranchisePlan = ({ formData, updateField }) => {
           <span>Location Details</span>
         </h3>
 
-        <div className="form-row two-cols">
-          <div id="fp-targetRegion" tabIndex={-1} role="group" aria-labelledby="fp-region-label" aria-describedby={`fp-region-hint${regionErrors.length ? ' fp-targetRegion-error' : ''}`} className={`form-field ${regionErrors.length ? 'has-errors' : ''}`}>
+        <div className="form-row two-cols location-details-row">
+          <div id="fp-targetRegion" tabIndex={-1} role="group" aria-labelledby="fp-region-label" aria-describedby={`fp-region-hint${regionErrors.length ? ' fp-targetRegion-error' : ''}`} className={`form-field ${regionErrors.length || (formData.territory && formData.targetRegion && formData.territory !== formData.targetRegion) ? 'has-errors' : ''}`}>
             <label id="fp-region-label" htmlFor="fp-region-select" className="field-label-row">
-              <span>Target Region</span><RequirementBadge required />
+              <span>Target Region</span>
+              <span className="field-label-badges">
+                {formData.territory && formData.targetRegion === formData.territory && (
+                  <span className="region-sync-pill synced">
+                    <BiCheck aria-hidden="true" />
+                    <span>Matched with Step 1</span>
+                  </span>
+                )}
+                {formData.territory && formData.targetRegion && formData.territory !== formData.targetRegion && (
+                  <span className="region-sync-pill mismatch">
+                    <span>Step 1: {formData.territory}</span>
+                  </span>
+                )}
+                <RequirementBadge required />
+              </span>
             </label>
             <p id="fp-region-hint" className="field-help">Choose your region here. If you change it, review the city or municipality beside it too.</p>
             <FormSelect id="fp-region-select" value={formData.targetRegion} onChange={value => updateField('targetRegion', value)} options={REGIONS} placeholder="Select a region" icon={BiMap} ariaLabel="Target Region (required)" />
+            {formData.territory && formData.targetRegion && formData.territory !== formData.targetRegion && (
+              <div className="region-mismatch-card" role="status">
+                <p className="region-mismatch-text">
+                  Step 1 is set to <strong>{formData.territory}</strong>, while <strong>{formData.targetRegion}</strong> is selected here. Both steps must use the same region before continuing.
+                </p>
+                <div className="region-mismatch-actions">
+                  <button
+                    type="button"
+                    className="region-mismatch-btn primary"
+                    onClick={() => updateField('targetRegion', formData.territory)}
+                  >
+                    Use {formData.territory}
+                  </button>
+                  <button
+                    type="button"
+                    className="region-mismatch-btn secondary"
+                    onClick={() => updateField('territory', formData.targetRegion)}
+                  >
+                    Update Step 1 to {formData.targetRegion}
+                  </button>
+                </div>
+              </div>
+            )}
             <FieldErrorList id="fp-targetRegion" errors={regionErrors} />
           </div>
 

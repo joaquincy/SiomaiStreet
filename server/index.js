@@ -7,6 +7,7 @@ import { readMultipart } from './multipart.js';
 import { createStoreLocationsReader } from './storeLocations.js';
 import { createPlaceSearch } from './placeSearch.js';
 import { createHelpfulHandler } from './reviewHelpful.js';
+import { createReviewSubmissionHandler } from './reviewSubmission.js';
 import { withRateFeedback, recordRateFeedback, rateFeedbackResponse } from './rateFeedback.js';
 import { createStoreRoute } from './storeRoute.js';
 import { mapDevelopmentOrigins } from './mapOrigins.js';
@@ -22,8 +23,6 @@ import { isDocumentScanDisabled, createSkippedScanner, createDocumentScanner } f
 import { createServer } from 'node:http';
 import { readFile } from 'node:fs/promises';
 import { join, normalize } from 'node:path';
-import { randomUUID } from 'node:crypto';
-import { MAX_REVIEW_PHOTO_BYTES, MAX_REVIEW_REQUEST_BYTES, REVIEW_PHOTO_TYPES } from '../shared/reviewUpload.js';
 
 const root = process.cwd();
 const serverless = process.env.SIOMAI_SERVERLESS === 'true' || process.env.VERCEL === '1';
@@ -49,8 +48,6 @@ for (const file of envFiles) {
 const supabaseUrl = process.env.SUPABASE_URL?.replace(/\/$/, '');
 const serviceKey = process.env.SUPABASE_SERVICE_ROLE_KEY;
 const port = Number(process.env.API_PORT || 3001);
-
-const allowedReviewTypes = new Set(REVIEW_PHOTO_TYPES);
 
 const json = (res, status, body) => {
   body = rateFeedbackResponse(res, status, body);
@@ -80,7 +77,6 @@ const supabaseRequest = async (path, options = {}) => {
   return responseText ? JSON.parse(responseText) : null;
 };
 
-const safeFileName = (name) => name.normalize('NFKD').replace(/[^a-zA-Z0-9._-]+/g, '-').slice(-100) || 'upload';
 const readStoreLocations = createStoreLocationsReader(supabaseRequest);
 const storagePath = (bucket, path) => `${supabaseUrl}/storage/v1/object/${bucket}/${path.split('/').map(encodeURIComponent).join('/')}`;
 
@@ -156,47 +152,8 @@ const handleBranchesGet = async (_req, res) => {
   json(res, 200, { branches: branches || [] });
 };
 
-const handleReviewPost = async (req, res) => {
-  res.setHeader('Connection', 'close');
-  if (!await applicationRate(clientIP(req, trustedProxies), 'review-submit', 8)) return json(res, 429, { error: 'Too many review submissions. Please try again later.' });
-  // Check the header token before reading photo bytes. No unverified fallback.
-  try { await verifyPublic('review')(req); }
-  catch (error) {
-    return json(res, error.status === 400 ? 400 : 503, { error: error.status === 400
-      ? 'Security verification expired or failed. Post your review again to start a fresh check. Your answers have been kept.'
-      : 'Security verification is temporarily unavailable. Your review has not been sent; keep your answers and try again.' });
-  }
-  if (req.aborted || res.destroyed) return;
-  const form = await readMultipart(req, { maxBytes: MAX_REVIEW_REQUEST_BYTES });
-  const displayName = String(form.get('displayName') || '').trim();
-  const reviewText = String(form.get('text') || '').trim();
-  const rating = Number(form.get('rating'));
-  const branchId = Number(form.get('branchId'));
-  const photo = form.get('photo');
-  if (displayName.length < 1 || displayName.length > 100) throw Object.assign(new Error('Enter a display name (up to 100 characters).'), { status: 400 });
-  if (reviewText.length < 1 || reviewText.length > 5000) throw Object.assign(new Error('Enter a review up to 5,000 characters.'), { status: 400 });
-  if (!Number.isInteger(rating) || rating < 1 || rating > 5) throw Object.assign(new Error('Choose a rating from 1 to 5.'), { status: 400 });
-  if (!Number.isSafeInteger(branchId) || branchId <= 0) throw Object.assign(new Error('Choose an active branch.'), { status: 400 });
-  const activeBranches = await supabaseRequest(`/rest/v1/branches?select=branch_id&branch_id=eq.${branchId}&branch_status=eq.Active&limit=1`);
-  if (!activeBranches?.length) throw Object.assign(new Error('That branch is no longer available for reviews.'), { status: 400 });
-  let photoPath = null;
-  if (photo instanceof File && photo.size > 0) {
-    if (photo.size > MAX_REVIEW_PHOTO_BYTES || !allowedReviewTypes.has(photo.type)) throw Object.assign(new Error('Review photos must be JPG, PNG, or WebP files up to 3 MiB.'), { status: 400 });
-    photoPath = `${randomUUID()}/${safeFileName(photo.name)}`;
-    await uploadFile('review-photos', photoPath, photo, photo.type);
-  }
-  try {
-    const rows = await supabaseRequest('/rest/v1/reviews', {
-      method: 'POST',
-      headers: { prefer: 'return=representation' },
-      body: JSON.stringify({ branch_id: branchId, display_name: displayName, rating, review_text: reviewText, photo_path: photoPath, status: 'pending', helpful_count: 0, is_verified: false }),
-    });
-    json(res, 201, { id: rows[0]?.id, status: 'pending' });
-  } catch (error) {
-    if (photoPath) await deleteStorageObjects('review-photos', [photoPath]);
-    throw error;
-  }
-};
+// Idempotent review submission (submission ID + unique index): see server/reviewSubmission.js.
+const handleReviewPost = (req, res) => reviewSubmission(req, res);
 
 const trustedProxies = (process.env.TRUSTED_PROXY_IPS || '').split(',').map(ip => ip.trim()).filter(Boolean);
 const applicationRate = createSharedApplicationRateLimit({
@@ -225,6 +182,11 @@ const verifyTurnstile = createTurnstileVerifier({ secret: process.env.TURNSTILE_
 const verifyPublic = action => async req => {
   if (turnstileEnabled) await verifyTurnstile({ token: req.headers['x-turnstile-token'], action });
 };
+const reviewSubmission = createReviewSubmissionHandler({
+  json, readMultipart, request: supabaseRequest, uploadFile, deleteStorageObjects,
+  rate: req => applicationRate(clientIP(req, trustedProxies), 'review-submit', 8),
+  verify: req => verifyPublic('review')(req),
+});
 const handleContactEmailMaintenance = createContactEmailMaintenance({ env: process.env, request: supabaseRequest, json });
 const applicationEmail = createApplicationEmail({ env: process.env, request: supabaseRequest, json,
   send: createTransactionalSender({ apiKey: process.env.RESEND_API_KEY, from: process.env.EMAIL_FROM, replyTo: process.env.EMAIL_REPLY_TO }),
@@ -249,7 +211,7 @@ const handleContactPost = createContactHandler({
 // Scanning is required by default. Only the server's explicit off setting skips it.
 const schoolDemo = process.env.VERCEL_ENV === 'preview' && process.env.APPLICATION_DEMO_MODE === 'true';
 const scanDisabled = isDocumentScanDisabled(process.env);
-if (scanDisabled) console.warn('⚠ DOCUMENT SCANNING IS DISABLED. Documents will NOT be virus-checked.');
+if (scanDisabled) console.warn('âš  DOCUMENT SCANNING IS DISABLED. Documents will NOT be virus-checked.');
 const scanDocument = scanDisabled
   ? createSkippedScanner()
   : createDocumentScanner({ host: process.env.CLAMD_HOST, port: Number(process.env.CLAMD_PORT || 3310) });
