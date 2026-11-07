@@ -1,5 +1,5 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { BiCamera, BiError, BiRefresh, BiX } from 'react-icons/bi';
+import { BiCamera, BiError, BiImage, BiRefresh, BiUpload, BiX } from 'react-icons/bi';
 import { cameraErrorMessage, captureDimensions, createCameraSession } from '../utils/documentCamera.js';
 import { lockDocumentScroll } from '../utils/documentScrollLock.js';
 import { assessDocumentQuality } from '../utils/imageQuality.js';
@@ -122,14 +122,22 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
     } finally { canvas.width = canvas.height = 0; captureBusy.current = false; }
   };
   return <dialog ref={dialog} className="document-camera-dialog" aria-labelledby={`${id}-title`} aria-describedby={`${id}-hint`} onCancel={e => { e.preventDefault(); leave(); }}>
-    <header className="document-camera-heading"><div><p>DOCUMENT CAMERA</p><h3 id={`${id}-title`}>{label}</h3></div><button type="button" onClick={() => leave()} aria-label="Close camera" autoFocus><BiX aria-hidden="true" /></button></header>
-    <p id={`${id}-hint`}>{docKey === 'idPhoto' ? 'Centre your face with space around your head and shoulders.' : 'Keep all four corners visible. Use even light and hold steady.'} The frame is a guide; your photo will not be cropped automatically.</p>
+    <header className="document-camera-heading">
+      <span className="document-camera-heading-icon" aria-hidden="true"><BiCamera /></span>
+      <div><h3 id={`${id}-title`}>{label}</h3><p>Take a photo, then review it.</p></div>
+      <button type="button" onClick={() => leave()} aria-label="Close camera" autoFocus><BiX aria-hidden="true" /></button>
+    </header>
+    <p className="document-camera-instructions" id={`${id}-hint`}>{docKey === 'idPhoto' ? 'Centre your face with room around your head and shoulders.' : 'Place your document on a plain surface. Keep all four corners in the guide.'}</p>
     <div className="document-camera-view">
       <div className="document-camera-video" style={{ '--camera-aspect': aspect }}>
-      <video ref={video} playsInline muted aria-label="Live camera preview" />
-      {state === 'ready' && <div className={`document-camera-guide ${docKey === 'idPhoto' ? 'is-portrait' : ''} ${hasWarning ? 'needs-adjustment' : ''}`} aria-hidden="true" />}
+        <video ref={video} playsInline muted aria-label="Live camera preview" />
+        {state === 'ready' && <div className={`document-camera-guide ${docKey === 'idPhoto' ? 'is-portrait' : ''} ${hasWarning ? 'needs-adjustment' : ''}`} aria-hidden="true">
+          <span data-corner="top-left"/><span data-corner="top-right"/><span data-corner="bottom-left"/><span data-corner="bottom-right"/>
+        </div>}
       </div>
-      {state === 'starting' && <p className="document-camera-status" role="status">Opening camera. Allow access when your browser asks.</p>}
+      {state === 'starting' && <div className="document-camera-status" role="status"><BiCamera aria-hidden="true"/><strong>Opening your camera</strong><span>Allow camera access when prompted.</span></div>}
+      {state === 'capturing' && <div className="document-camera-status" role="status"><BiImage aria-hidden="true"/><strong>Preparing your preview</strong><span>You can inspect and retake your photo next.</span></div>}
+      {state === 'error' && <div className="document-camera-status"><BiCamera aria-hidden="true"/><strong>Camera unavailable</strong><span>Retry below or choose an existing photo.</span></div>}
     </div>
     {state === 'ready' && <div className="document-camera-guidance" data-warning={Boolean(hasWarning)} role="status" aria-live="polite" aria-atomic="true">
       {hasWarning ? <BiError aria-hidden="true" /> : <BiCamera aria-hidden="true" />}
@@ -138,11 +146,14 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
     {error && <p className="document-camera-error" role="alert">{error}</p>}
     <div className="document-camera-actions">
       {state === 'error' ? <button type="button" onClick={() => setRetry(n => n + 1)}><BiRefresh aria-hidden="true" />Retry camera</button> : <button type="button" disabled={state !== 'ready'} onClick={() => setFacing(f => f === 'environment' ? 'user' : 'environment')}><BiRefresh aria-hidden="true" />Switch camera</button>}
-      <button type="button" className="document-camera-capture" disabled={state !== 'ready'} onClick={capture}><BiCamera aria-hidden="true" />{state === 'capturing' ? 'Preparing photo…' : 'Capture photo'}</button>
+      <button type="button" className="document-camera-capture" disabled={state !== 'ready'} onClick={capture}><span className="document-camera-shutter" aria-hidden="true"/>{state === 'capturing' ? 'Preparing photo…' : 'Capture photo'}</button>
       <button type="button" onClick={() => leave()}>Cancel</button>
     </div>
-    {state === 'capturing' && <p className="document-camera-feedback" role="status">Preparing your preview.</p>}
-    <div className="document-camera-fallbacks" aria-label="Other ways to add your document"><button type="button" onClick={() => leave(onChoosePhoto)}>Choose photo</button><button type="button" onClick={() => leave(onChooseFile)}>Upload file</button><button type="button" onClick={() => leave(onNativeCamera)}>Use phone camera</button></div>
-    <p className="document-camera-note">Capture stays on this device until you confirm and submit your application. Your previous confirmed file stays selected.</p>
+    <div className="document-camera-fallbacks" aria-label="Other ways to add your document">
+      <button type="button" onClick={() => leave(onChoosePhoto)}><BiImage aria-hidden="true"/>Choose photo</button>
+      <button type="button" onClick={() => leave(onChooseFile)}><BiUpload aria-hidden="true"/>Upload file</button>
+      <button type="button" onClick={() => leave(onNativeCamera)}><BiCamera aria-hidden="true"/>Use phone camera</button>
+    </div>
+    <p className="document-camera-note">Your photo stays on this device until you submit your application. Review it before replacing your current document.</p>
   </dialog>;
 }
