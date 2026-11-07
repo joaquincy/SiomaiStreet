@@ -1,7 +1,9 @@
 import { useEffect, useId, useRef, useState } from 'react';
-import { BiCamera, BiRefresh, BiX } from 'react-icons/bi';
+import { BiCamera, BiError, BiRefresh, BiX } from 'react-icons/bi';
 import { cameraErrorMessage, captureDimensions, createCameraSession } from '../utils/documentCamera.js';
 import { lockDocumentScroll } from '../utils/documentScrollLock.js';
+import { assessDocumentQuality } from '../utils/imageQuality.js';
+import { monitorCameraQuality } from '../utils/liveCameraQuality.js';
 import './DocumentCamera.css';
 
 export default function DocumentCamera({ label, docKey, onCapture, onClose, onChoosePhoto, onChooseFile, onNativeCamera }) {
@@ -15,6 +17,7 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
   const [state, setState] = useState('starting');
   const [error, setError] = useState('');
   const [aspect, setAspect] = useState(4 / 3);
+  const [liveCue, setLiveCue] = useState(null);
   const callbacks = useRef({ onCapture, onClose });
   callbacks.current = { onCapture, onClose };
   useEffect(() => {
@@ -45,7 +48,7 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
       camera.stop(); clearTimeout(readyTimer);
       setError(cameraErrorMessage(e)); setState('error');
     };
-    setError(''); setState('starting');
+    setError(''); setLiveCue(null); setState('starting');
     const ready = () => {
       if (active.current && ticket === attempt.current && node.videoWidth > 0 && node.videoHeight > 0 && !captureBusy.current) {
         clearTimeout(readyTimer); setAspect(node.videoWidth / node.videoHeight); setState('ready');
@@ -74,6 +77,22 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
       document.removeEventListener('visibilitychange', hide);
     };
   }, [facing, retry]);
+  useEffect(() => {
+    if (state !== 'ready') return;
+    const ticket = attempt.current;
+    const node = video.current;
+    const canvas = document.createElement('canvas');
+    const stop = monitorCameraQuality({
+      canRead: () => active.current && !captureBusy.current && !document.hidden &&
+        ticket === attempt.current && Boolean(node.srcObject),
+      readFrame: () => node.readyState >= 2
+        ? assessDocumentQuality(node, node.videoWidth, node.videoHeight, docKey, 256, canvas)
+        : null,
+      onCue: setLiveCue,
+    });
+    return () => { stop(); canvas.width = canvas.height = 0; };
+  }, [state, docKey, facing, retry]);
+  const hasWarning = liveCue && !['unavailable', 'inspect'].includes(liveCue.code);
   const leave = action => {
     attempt.current++; session.current?.stop(); dialog.current?.close();
     restoreScroll();
@@ -108,17 +127,21 @@ export default function DocumentCamera({ label, docKey, onCapture, onClose, onCh
     <div className="document-camera-view">
       <div className="document-camera-video" style={{ '--camera-aspect': aspect }}>
       <video ref={video} playsInline muted aria-label="Live camera preview" />
-      {state === 'ready' && <div className={`document-camera-guide ${docKey === 'idPhoto' ? 'is-portrait' : ''}`} aria-hidden="true" />}
+      {state === 'ready' && <div className={`document-camera-guide ${docKey === 'idPhoto' ? 'is-portrait' : ''} ${hasWarning ? 'needs-adjustment' : ''}`} aria-hidden="true" />}
       </div>
       {state === 'starting' && <p className="document-camera-status" role="status">Opening camera. Allow access when your browser asks.</p>}
     </div>
+    {state === 'ready' && <div className="document-camera-guidance" data-warning={Boolean(hasWarning)} role="status" aria-live="polite" aria-atomic="true">
+      {hasWarning ? <BiError aria-hidden="true" /> : <BiCamera aria-hidden="true" />}
+      <span>{liveCue?.message || 'Hold steady while the camera checks the picture.'}</span>
+    </div>}
     {error && <p className="document-camera-error" role="alert">{error}</p>}
     <div className="document-camera-actions">
       {state === 'error' ? <button type="button" onClick={() => setRetry(n => n + 1)}><BiRefresh aria-hidden="true" />Retry camera</button> : <button type="button" disabled={state !== 'ready'} onClick={() => setFacing(f => f === 'environment' ? 'user' : 'environment')}><BiRefresh aria-hidden="true" />Switch camera</button>}
       <button type="button" className="document-camera-capture" disabled={state !== 'ready'} onClick={capture}><BiCamera aria-hidden="true" />{state === 'capturing' ? 'Preparing photo…' : 'Capture photo'}</button>
       <button type="button" onClick={() => leave()}>Cancel</button>
     </div>
-    <p className="document-camera-feedback" role="status">{state === 'ready' ? 'Camera ready. You can inspect and retake before confirming.' : state === 'capturing' ? 'Camera stopped. Preparing your preview.' : ''}</p>
+    {state === 'capturing' && <p className="document-camera-feedback" role="status">Preparing your preview.</p>}
     <div className="document-camera-fallbacks" aria-label="Other ways to add your document"><button type="button" onClick={() => leave(onChoosePhoto)}>Choose photo</button><button type="button" onClick={() => leave(onChooseFile)}>Upload file</button><button type="button" onClick={() => leave(onNativeCamera)}>Use phone camera</button></div>
     <p className="document-camera-note">Capture stays on this device until you confirm and submit your application. Your previous confirmed file stays selected.</p>
   </dialog>;

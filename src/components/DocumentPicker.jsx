@@ -9,6 +9,36 @@ import './DocumentPicker.css';
 let cameraModule;
 const loadCamera = () => cameraModule ||= import('./DocumentCamera').catch(error => { cameraModule = null; throw error; });
 
+function PhotoFeedback({ quality, applied, busy, cameraLoading, onInspect, onRetake, docKey }) {
+  const issues = quality?.issues || [];
+  const checking = busy || !applied;
+  const needsAttention = !checking && (!quality || issues.length > 0);
+  const subject = docKey === 'idPhoto' ? 'facial features' : 'required details and edges';
+  let title = 'Photo check complete';
+  let hint = `Zoom in to inspect the ${subject} before confirming.`;
+  if (checking) {
+    title = busy ? 'Checking the edited photo…' : 'Changes awaiting review';
+    hint = busy ? '' : 'Apply your edits to check the new image.';
+  } else if (!quality) {
+    title = 'Inspect this photo manually';
+    hint = `Automatic checks are unavailable. Zoom in and check the ${subject} yourself.`;
+  } else if (issues.length) {
+    title = 'Check this photo before confirming';
+    hint = '';
+  }
+  return <section className="document-photo-feedback" data-attention={needsAttention}>
+    <div role="status" aria-atomic="true">
+      <strong>{needsAttention ? <BiError aria-hidden="true"/> : <BiShow aria-hidden="true"/>}{title}</strong>
+      {hint && <p>{hint}</p>}
+      {!checking && issues.length > 0 && <ul>{issues.map(issue => <li key={issue.code}>{issue.message}</li>)}</ul>}
+    </div>
+    {needsAttention && <div className="document-quality-actions">
+      <button type="button" disabled={cameraLoading} onClick={onRetake}><BiCamera aria-hidden="true"/>Retake photo</button>
+      <button type="button" onClick={onInspect}><BiZoomIn aria-hidden="true"/>Inspect at 200%</button>
+    </div>}
+  </section>;
+}
+
 export default function DocumentPicker({ docKey, label, file, onConfirm, onRemove, onError = () => {}, disabled = false, status = 'Selected on this device · Sent when you submit' }) {
   const id=useId(); const dialog=useRef(null); const camera=useRef(null);const gallery=useRef(null);const upload=useRef(null);
   const bitmap=useRef(null); const previewUrl=useRef(''); const generation=useRef(0); const trigger=useRef(null);const busyRef=useRef(false);
@@ -16,7 +46,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
   const [error,setError]=useState('');const [zoom,setZoom]=useState(100);const [rotation,setRotation]=useState(0);const [crop,setCrop]=useState(FULL_CROP);const [applied,setApplied]=useState(true);
   const [confirmed,setConfirmed]=useState(false);const [dimensions,setDimensions]=useState('');
   const [thumbnail,setThumbnail]=useState('');
-  const [qualityWarnings, setQualityWarnings] = useState([]);
+  const [photoQuality, setPhotoQuality] = useState(null);
   const [Camera, setCamera] = useState(null);
   const [cameraOpen, setCameraOpen] = useState(false);
   const [cameraLoading, setCameraLoading] = useState(false);
@@ -33,10 +63,10 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
     return ()=>URL.revokeObjectURL(url);
   },[file]);
   const publish=file=>{URL.revokeObjectURL(previewUrl.current);previewUrl.current=URL.createObjectURL(file);setPreview(previewUrl.current);setCandidate(file);setConfirmed(false);};
-  const close=()=>{cameraRequest.current++;setCameraLoading(false);cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;setQualityWarnings([]);trigger.current?.focus();};
+  const close=()=>{cameraRequest.current++;setCameraLoading(false);cleanup();dialog.current?.close();restoreScroll();setCandidate(null);setPreview('');setError('');setBusy(false);busyRef.current=false;setPhotoQuality(null);trigger.current?.focus();};
   const choose=(ref,e)=>{trigger.current=e.currentTarget;ref.current?.click();};
   const openCamera = async e => {
-    trigger.current = e.currentTarget;
+    if (!dialog.current?.open) trigger.current = e.currentTarget;
     if (!window.isSecureContext || !navigator.mediaDevices?.getUserMedia) { camera.current?.click(); return; }
     const ticket = ++cameraRequest.current;
     setCameraError(''); setCameraLoading(true);
@@ -52,7 +82,7 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
     if(!selected)return;
     if(busyRef.current)return;
     cameraRequest.current++;setCameraLoading(false);
-    cleanup();const ticket=generation.current;setError('');onError('');setRotation(0);setCrop(FULL_CROP);setZoom(100);setApplied(true);setConfirmed(false);setDimensions('');setCandidate(null);setPreview('');setQualityWarnings([]);
+    cleanup();const ticket=generation.current;setError('');onError('');setRotation(0);setCrop(FULL_CROP);setZoom(100);setApplied(true);setConfirmed(false);setDimensions('');setCandidate(null);setPreview('');setPhotoQuality(null);
     dialog.current?.showModal();
     if(!scrollRelease.current)scrollRelease.current=lockDocumentScroll();
     setBusy(true);busyRef.current=true;
@@ -67,15 +97,21 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
         if(ticket!==generation.current){image.close();return;}
         bitmap.current=image;
         const processed=await renderDocumentImage(image, 0, FULL_CROP, { docKey, analyze: assessDocumentQuality });
-        if(ticket===generation.current){publish(new File([processed.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${processed.width} × ${processed.height} pixels`);setQualityWarnings(processed.quality?.issues || []);}
+        if(ticket===generation.current){publish(new File([processed.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${processed.width} × ${processed.height} pixels`);setPhotoQuality(processed.quality);}
       }
     }catch(e){if(ticket===generation.current){setError(e.message);onError(e.message);}}
     finally {if(ticket===generation.current){setBusy(false);busyRef.current=false;}}
   };
   const apply=async()=>{
     if(busyRef.current || !bitmap.current)return;busyRef.current=true;setBusy(true);setError('');const ticket=generation.current;
-    try{const result=await renderDocumentImage(bitmap.current,rotation,crop,{ docKey, analyze: assessDocumentQuality });if(ticket===generation.current){publish(new File([result.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${result.width} × ${result.height} pixels`);setApplied(true);setQualityWarnings(result.quality?.issues || []);}}
+    try{const result=await renderDocumentImage(bitmap.current,rotation,crop,{ docKey, analyze: assessDocumentQuality });if(ticket===generation.current){publish(new File([result.file],`${docKey}.jpg`,{type:'image/jpeg'}));setDimensions(`${result.width} × ${result.height} pixels`);setApplied(true);setPhotoQuality(result.quality);}}
     catch(e){if(ticket===generation.current)setError(e.message);}finally{if(ticket===generation.current){setBusy(false);busyRef.current=false;}}
+  };
+  const checkPreviewIfNeeded = e => {
+    const img = e.currentTarget;
+    if (photoQuality || !previewUrl.current || img.currentSrc !== previewUrl.current) return;
+    const result = assessDocumentQuality(img, img.naturalWidth, img.naturalHeight, docKey);
+    if (result) setPhotoQuality(result);
   };
   const select=e=>{const selected=e.target.files?.[0];e.target.value='';stage(selected);};
   return <div className="document-picker">
@@ -107,16 +143,11 @@ export default function DocumentPicker({ docKey, label, file, onConfirm, onRemov
           <div className="document-preview-workspace">
             <div className="document-preview-file"><BiFile aria-hidden="true"/><span>{candidate.name}</span><span>{(candidate.size/1024/1024).toFixed(2)} MiB</span></div>
             {candidate.type==='application/pdf'?<iframe title={`PDF preview for ${label}`} src={preview} sandbox="" />:<>
-              <div ref={previewPan} className="document-preview-pan" tabIndex={0} role="region" aria-label="Photo preview; scroll to inspect enlarged image"><img src={preview} alt={`Selected ${label}; inspect text and edges`} style={{width:`${zoom}%`,maxWidth:'none'}} /></div>
+              <PhotoFeedback quality={photoQuality} docKey={docKey} busy={busy} applied={applied} cameraLoading={cameraLoading} onRetake={openCamera} onInspect={()=>{setZoom(200);previewPan.current?.focus();}}/>
+              <div ref={previewPan} className="document-preview-pan" tabIndex={0} role="region" aria-label="Photo preview; scroll to inspect enlarged image"><img src={preview} alt={`Selected ${label}; inspect text and edges`} onLoad={checkPreviewIfNeeded} style={{width:`${zoom}%`,maxWidth:'none'}} /></div>
               <label className="document-zoom"><BiZoomIn aria-hidden="true"/><span>Zoom</span><input aria-label="Preview zoom" type="range" min="100" max="300" step="25" value={zoom} onChange={e=>setZoom(Number(e.target.value))}/><output>{zoom}%</output></label>
             </>}
             <p className="document-preview-resolution">{dimensions || 'PDF document'} · Preview before confirming</p>
-            {qualityWarnings.length > 0 && <div className="document-quality-warnings" role="status">
-              <div className="document-quality-warnings-header"><BiError aria-hidden="true" /><strong>Photo quality suggestions</strong></div>
-              <ul>{qualityWarnings.map(w => <li key={w.code}>{w.message}</li>)}</ul>
-              <p>These are suggestions only — they do not block submission.</p>
-              <div className="document-quality-actions"><button type="button" onClick={()=>{setZoom(200);previewPan.current?.focus();}}>Inspect enlarged preview</button><button type="button" disabled={busy||cameraLoading} onClick={openCamera}>Retake photo</button></div>
-            </div>}
           </div>
           <aside className="document-editor-controls" aria-label="Document preparation">
             {candidate.type==='application/pdf'?<div className="document-pdf-guidance"><BiFile aria-hidden="true"/><h4>Check every page.</h4><p>If your browser cannot display this PDF, inspect the original file in your document app before confirming it.</p><p>Make sure text is readable and all required details are included.</p></div>:<>

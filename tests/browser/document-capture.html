@@ -12,6 +12,23 @@ import '/src/pages/Application/ApplicationExperience.css';
 import '/src/pages/Application/steps/Steps.css';
 
 const h = React.createElement;
+function drawScene(canvas, dark = false) {
+  const ctx = canvas.getContext('2d');
+  const { width, height } = canvas;
+  const light = ctx.createLinearGradient(0, 0, width, height);
+  light.addColorStop(0, dark ? '#100e0d' : '#aba38e');
+  light.addColorStop(1, dark ? '#232123' : '#7c6b56');
+  ctx.fillStyle = light;
+  ctx.fillRect(0, 0, width, height);
+  ctx.beginPath();
+  ctx.moveTo(0, height * .62);
+  ctx.quadraticCurveTo(width * .55, height * .39, width, height * .66);
+  ctx.lineTo(width, height);
+  ctx.lineTo(0, height);
+  ctx.closePath();
+  ctx.fillStyle = dark ? '#171616' : '#6b675e';
+  ctx.fill();
+}
 async function syntheticPhoto(kind) {
   const canvas = document.createElement('canvas');
   canvas.width = 1600; canvas.height = 1000;
@@ -22,9 +39,45 @@ async function syntheticPhoto(kind) {
   c.font = '48px Arial';
   const lines = ['SYNTHETIC TEST DOCUMENT', 'NOT A REAL GOVERNMENT ID', 'Surname: DELA CRUZ', 'Given names: JUAN', 'ID number: AB1234567'];
   for (let i = 0; i < lines.length; i++) c.fillText(lines[i], 90, 140 + 145 * i);
+  if (kind === 'scene') drawScene(canvas);
   const blob = await new Promise(resolve => canvas.toBlob(resolve, 'image/jpeg', .9));
   canvas.width = canvas.height = 0;
   return new File([blob], `synthetic-${kind}.jpg`, { type: 'image/jpeg' });
+}
+
+// Local fixture only. This opt-in shim supplies generated pixels without
+// requesting device permissions. Restore the original descriptor on exit.
+function enableSimulatedCamera() {
+  const devices = navigator.mediaDevices;
+  const previous = Object.getOwnPropertyDescriptor(devices, 'getUserMedia');
+  const stops = new Set();
+  const simulated = async () => {
+    const canvas = document.createElement('canvas');
+    canvas.width = 1024; canvas.height = 768;
+    drawScene(canvas, true);
+    const stream = canvas.captureStream(2);
+    const started = performance.now();
+    const stop = () => {
+      clearInterval(timer);
+      stream.getTracks().forEach(track => track.stop());
+      canvas.width = canvas.height = 0;
+      stops.delete(stop);
+    };
+    const timer = setInterval(() => {
+      if (!stream.active || document.hidden) { stop(); return; }
+      drawScene(canvas, performance.now() - started < 7000);
+    }, 500);
+    stops.add(stop);
+    return stream;
+  };
+  Object.defineProperty(devices, 'getUserMedia', { configurable: true, writable: true, value: simulated });
+  return () => {
+    for (const stop of stops) stop();
+    if (devices.getUserMedia === simulated) {
+      if (previous) Object.defineProperty(devices, 'getUserMedia', previous);
+      else delete devices.getUserMedia;
+    }
+  };
 }
 
 function Fixture() {
@@ -33,6 +86,19 @@ function Fixture() {
   const [error, setError] = React.useState('');
   const [values, setValues] = React.useState({ firstName: 'Existing', lastName: 'Applicant', middleName: '', govIdNumber: '' });
   const picker = React.useRef(null);
+  const resetCamera = React.useRef(null);
+  const [simulated, setSimulated] = React.useState(false);
+  React.useEffect(() => {
+    const reset = () => { resetCamera.current?.(); resetCamera.current = null; setSimulated(false); };
+    window.addEventListener('pagehide', reset);
+    return () => { window.removeEventListener('pagehide', reset); resetCamera.current?.(); resetCamera.current = null; };
+  }, []);
+  const toggleSimulated = () => {
+    try {
+      if (resetCamera.current) { resetCamera.current(); resetCamera.current = null; setSimulated(false); }
+      else { resetCamera.current = enableSimulatedCamera(); setSimulated(true); }
+    } catch (e) { setError(e.message); }
+  };
   const selectSynthetic = async kind => {
     try {
       const file = await syntheticPhoto(kind);
@@ -53,7 +119,10 @@ function Fixture() {
       h('li', null, 'At 320px and 200% zoom, check keyboard focus, modal scrolling and reachable controls.')),
     h('div', { style: { display: 'flex', flexWrap: 'wrap', gap: '.75rem', marginBlock: '1rem' } },
       h('button', { type: 'button', onClick: () => selectSynthetic('clear') }, 'Select synthetic clear document'),
-      h('button', { type: 'button', onClick: () => selectSynthetic('dark') }, 'Select synthetic dark document')),
+      h('button', { type: 'button', onClick: () => selectSynthetic('dark') }, 'Select synthetic dark document'),
+      h('button', { type: 'button', onClick: () => selectSynthetic('scene') }, 'Select synthetic scene without an ID'),
+      h('button', { type: 'button', 'aria-pressed': simulated, disabled: !window.isSecureContext || !navigator.mediaDevices || !HTMLCanvasElement.prototype.captureStream, onClick: toggleSimulated }, simulated ? 'Disable simulated camera' : 'Enable simulated camera')),
+    simulated && h('p', { role: 'status' }, 'Simulated camera enabled. Tap Take photo. The generated scene starts dark and brightens after seven seconds; no ID appears.'),
     error && h('p', { role: 'alert' }, error),
     h('section', { ref: picker, 'aria-label': 'Synthetic document picker' },
       h('h2', null, 'Government ID front: synthetic test'),

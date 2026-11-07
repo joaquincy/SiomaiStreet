@@ -97,6 +97,34 @@
   border-radius: var(--radius-full);
 }
 
+.document-camera-guide.needs-adjustment {
+  border-color: var(--app-warning-border, var(--color-cream));
+}
+
+.document-camera-guidance {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-sm) var(--space-md);
+  margin-top: var(--space-xs);
+  border: thin solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface);
+  color: var(--color-text-primary);
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+
+.document-camera-guidance svg {
+  flex: none;
+  font-size: var(--text-lg);
+}
+
+.document-camera-guidance[data-warning="true"] {
+  border-color: var(--app-warning-border, var(--color-border-strong));
+  background: var(--app-warning-bg, var(--color-cream));
+}
+
 .document-picker .document-camera-status {
   position: absolute;
   inset: 0;

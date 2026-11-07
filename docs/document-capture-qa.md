@@ -3,9 +3,10 @@
 ## Behavior
 
 - Take photo loads the guided camera only on demand over HTTPS or localhost. The camera requests video only and prefers the rear camera for documents, front camera for portraits. Native camera, gallery and file selection remain available.
-- The frame is guidance, not edge detection or automatic cropping. Full captures go to the existing preview/editor and require confirmation. Cancelling never replaces the previously confirmed document.
+- The guide frame helps position the document. Small camera samples check lighting, fine detail and possible ID outlines about once per second, with slower sampling when processing takes longer. Two consistent readings update one actionable hint. Full captures go to the preview/editor for confirmation.
 - Camera tracks stop after capture, cancellation, switching, unmount, a permission deadline or hiding the tab. Streams arriving after a cancelled permission prompt are stopped. Video dimensions follow orientation changes.
-- Quality analysis samples the final compressed JPEG at a maximum 640px edge. White-paper text and portraits use conservative rules. Warnings are advisory and include inspect/retake actions, not a readable/authentic/verified verdict.
+- Quality analysis samples the final compressed JPEG at a maximum 640px edge. ID fronts/backs also receive conservative outline, distance, cutoff and fine-lettering hints. The structure analysis uses a grid with a maximum 160px edge. Portraits and supporting documents receive their appropriate lighting/quality checks.
+- Feedback appears above the image, including warnings, a completed-check state, edits awaiting recheck and a manual-inspection fallback if analysis is unavailable. A failed small-image decode retries through the already-loaded preview image. Applicants can inspect at 200% or retake before confirming. Quality guidance remains advisory because backgrounds, printing and lighting can affect these estimates.
 - OCR loads only after Read from ID, reads text locally and offers editable suggestions. It requires explicit confirmation before changing answers. It has a bounded job deadline and cancellation; replacement discards stale results. Manual entry always remains available.
 - Photo preview processing uses bounded canvases. OCR still downloads an engine and language model and consumes CPU/memory while running. Lazy loading defers this cost; it does not eliminate it or establish privacy-law compliance.
 
@@ -19,7 +20,7 @@ After deployment, check that `/ocr/worker.min.js`, `/ocr/tesseract-core-lstm.was
 
 ## Device/browser acceptance checks still required
 
-Run `npm run dev:web` and open `/tests/browser/document-capture.html` on its local development origin. This dev-only harness has synthetic clear/dark samples, a portrait picker and current answers to check overwrite behavior. It makes no submission API calls or persistent drafts. Phone cameras require HTTPS when accessing a development server over a LAN; an HTTP LAN IP is not a secure camera origin. Use a protected HTTPS preview for phone testing instead of weakening browser security.
+Run `npm run dev:web` and open `/tests/browser/document-capture.html` on its local development origin. This dev-only harness has synthetic clear/dark/no-ID samples, a portrait picker and current answers to check overwrite behavior. Enable simulated camera to exercise hints with generated frames. It makes no submission API calls or persistent drafts. Phone cameras require HTTPS when accessing a development server over a LAN; an HTTP LAN IP is not a secure camera origin. Use a protected HTTPS preview for phone testing.
 
 - Android Chrome and iPhone Safari: allow/deny permission, rear/front switch, portrait/landscape rotation, hide/resume tab, capture/retake/cancel.
 - Wait beyond the permission timeout, then allow the old prompt: no old preview or live camera should remain. Retry should work.
@@ -31,8 +32,8 @@ Run `npm run dev:web` and open `/tests/browser/document-capture.html` on its loc
 
 ## Verification limits
 
-On this change: the full suite passed 253 tests before the final OCR tests were added; the final targeted camera/image/OCR run passed 30 tests, including recognition with the actual installed Tesseract engine and local model. The final production build and scoped Oxlint passed. The browser harness has not been exercised here.
+On November 7, the full suite passed 273 tests and the production build and scoped Oxlint passed. Synthetic regressions include rotated/distant/cut-off cards, noisy dim scenes, readable scans and live-hint cancellation. The photo region of the reported screenshot produces dim-light and unclear-outline warnings at 256px and 640px samples.
 
 Automated tests cover camera-session cancellation/timeouts and bounds, nested scroll locks, encoded-image quality/portrait handling, and OCR result parsing/lifecycle. Build output confirms separate on-demand camera/OCR chunks. These do not substitute for physical-device camera permission, video orientation, low-end phone performance or browser/screen-reader checks.
 
-The available browser tool reports disabled access. Design-kit browser gates report missing Playwright/skip rather than a pass; the Python launcher for token checks is unavailable. No rendered UI or real-phone pass is claimed.
+The local browser harness opened, then browser access became disabled before interaction checks could run. The design-kit render gates report missing Playwright, and its Python launcher is unavailable. Rendered warning states, physical Android/iPhone capture, screen-reader output and low-end phone performance still need verification.
